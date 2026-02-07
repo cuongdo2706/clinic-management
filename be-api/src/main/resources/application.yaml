@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: be-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/clinic_management
+    username: conan09040
+    password: conan14121
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+      jakarta:
+        persistence:
+          query:
+            timeout: 3000
+          lock:
+            timeout: 5000
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 3MB
+      max-request-size: 3MB
+
+  threads:
+    virtual:
+      enabled: true
+logging:
+  level:
+    org:
+      hibernate:
+        orm:
+          connections:
+            pooling: WARN
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+jwt:
+  secret-key: DPWdHXAEgdgOtzTclhZuqSF0ye18QzM3kQbLltuBw9EF99Vk51pBB0IsyFtZBuvmaJcrDZnVz6q530Ket6Xl63
+  token:
+    access-token-expiration: 1800000
+    refresh-token-expiration: 604800000
+server:
+  servlet:
+    context-path: /api/v1/
