@@ -1,8 +1,11 @@
 spring:
+  data:
+    redis:
+      host: localhost
   application:
     name: be-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/clinic_management
+    url: jdbc:postgresql://localhost:5432/dental_clinic_management
     username: conan09040
     password: conan14121
     driver-class-name: org.postgresql.Driver
@@ -44,10 +47,10 @@ logging:
             sql:
               BasicBinder: TRACE
 jwt:
-  secret-key: DPWdHXAEgdgOtzTclhZuqSF0ye18QzM3kQbLltuBw9EF99Vk51pBB0IsyFtZBuvmaJcrDZnVz6q530Ket6Xl63
+  secret: DPWdHXAEgdgOtzTclhZuqSF0ye18QzM3kQbLltuBw9EF99Vk51pBB0IsyFtZBuvmaJcrDZnVz6q530Ket6Xl63
   token:
-    access-token-expiration: 1800000
-    refresh-token-expiration: 604800000
+    access-expiration: 1800000
+    refresh-expiration: 604800000
 server:
   servlet:
     context-path: /api/v1/

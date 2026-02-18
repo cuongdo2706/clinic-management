@@ -1,4 +1,5 @@
 package cd.beapi.entity;
 
-public class Appointment {
+public class Appointment extends BaseEntity{
+
 }

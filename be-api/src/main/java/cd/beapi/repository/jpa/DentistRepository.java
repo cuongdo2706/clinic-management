@@ -1,4 +1,4 @@
-package cd.beapi.repository;
+package cd.beapi.repository.jpa;
 
 public interface DentistRepository {
 }
