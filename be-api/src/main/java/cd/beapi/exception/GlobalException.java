@@ -6,6 +6,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -19,6 +20,19 @@ import java.util.Objects;
 
 @RestControllerAdvice
 public class GlobalException {
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ErrorResponse> handleDataConflictException(AppException ex, WebRequest request) {
+        return ResponseEntity.status(ex.getHttpStatus()).body(
+                new ErrorResponse(
+                        Instant.now(),
+                        ex.getHttpStatus().value(),
+                        request.getDescription(false).replace("uri=", ""),
+                        ex.getHttpStatus().getReasonPhrase(),
+                        ex.getMessage()
+                )
+        );
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidation(MethodArgumentNotValidException ex, WebRequest request) {
@@ -50,30 +64,6 @@ public class GlobalException {
                 HttpStatus.BAD_REQUEST.value(),
                 request.getDescription(false).replace("uri=", ""),
                 "Failed to convert value of type",
-                ex.getMessage()
-        );
-    }
-
-    @ExceptionHandler(DataExistedException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleDataExisted(DataExistedException ex, WebRequest request) {
-        return new ErrorResponse(
-                Instant.now(),
-                HttpStatus.CONFLICT.value(),
-                request.getDescription(false).replace("uri=", ""),
-                "Data Existed",
-                ex.getMessage()
-        );
-    }
-
-    @ExceptionHandler(DataNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleDataNotFound(DataNotFoundException ex, WebRequest request) {
-        return new ErrorResponse(
-                Instant.now(),
-                HttpStatus.NOT_FOUND.value(),
-                request.getDescription(false).replace("uri=", ""),
-                "Data Not Found",
                 ex.getMessage()
         );
     }
@@ -114,6 +104,7 @@ public class GlobalException {
         );
     }
 
+
     @ExceptionHandler(UnsupportedJwtException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ErrorResponse handleUnsupportedJwtException(UnsupportedJwtException ex, WebRequest request) {
@@ -138,15 +129,4 @@ public class GlobalException {
         );
     }
 
-    @ExceptionHandler(DataConflictException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleDataConflictException(DataConflictException ex, WebRequest request) {
-        return new ErrorResponse(
-                Instant.now(),
-                HttpStatus.CONFLICT.value(),
-                request.getDescription(false).replace("uri=", ""),
-                "Data conflicted",
-                ex.getMessage()
-        );
-    }
 }

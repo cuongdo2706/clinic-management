@@ -9,13 +9,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -24,8 +20,8 @@ import java.util.Collections;
 @SQLRestriction("deleted_at is null")
 @SQLDelete(sql = "UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class User extends BaseEntity implements UserDetails {
-    @Column(unique = true)
+public class User extends BaseEntity {
+    @Column(unique = true, nullable = false)
     String username;
 
     @Column(unique = true)
@@ -48,24 +44,11 @@ public class User extends BaseEntity implements UserDetails {
     @UpdateTimestamp
     Instant modifiedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    Role role;
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(
-                new SimpleGrantedAuthority(role.getName())
-        );
-    }
-
-    @Override
-    public String getUsername() {
-        return phone != null ? phone : email;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return Boolean.TRUE.equals(isActive) && deletedAt == null;
-    }
+    @ManyToMany
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    Set<Role> roles;
 }

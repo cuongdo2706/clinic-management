@@ -1,0 +1,15 @@
+package cd.beapi.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
+
+@Getter
+@Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class RefreshTokenRequest {
+    @NotBlank(message = "Refresh token must not be blank")
+    String refreshToken;
+}

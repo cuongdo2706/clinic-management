@@ -38,6 +38,8 @@ spring:
 logging:
   level:
     org:
+      springframework:
+        security: TRACE
       hibernate:
         orm:
           connections:
@@ -48,9 +50,8 @@ logging:
               BasicBinder: TRACE
 jwt:
   secret: DPWdHXAEgdgOtzTclhZuqSF0ye18QzM3kQbLltuBw9EF99Vk51pBB0IsyFtZBuvmaJcrDZnVz6q530Ket6Xl63
-  token:
-    access-expiration: 1800000
-    refresh-expiration: 604800000
+  access-token-expiration: 1800000
+  refresh-token-expiration: 604800000
 server:
   servlet:
     context-path: /api/v1/

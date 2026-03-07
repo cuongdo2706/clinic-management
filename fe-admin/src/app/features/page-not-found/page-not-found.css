@@ -1,0 +1,130 @@
+.not-found-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(45deg, #1f1f1f, #111);
+    font-family: 'Arial', sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+.content {
+    text-align: center;
+    color: white;
+    z-index: 1;
+}
+
+.error-code {
+    font-size: 150px;
+    margin: 0;
+    background: linear-gradient(45deg, #f06, #3cf);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+}
+
+.glitch-wrapper {
+    margin-bottom: 25px;
+}
+
+.glitch {
+    font-size: 40px;
+    font-weight: bold;
+    position: relative;
+    text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff,
+    0.025em 0.04em 0 #fffc00;
+    animation: glitch 725ms infinite;
+}
+
+.glitch span {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.error-description {
+    font-size: 18px;
+    margin: 20px 0;
+    color: #ccc;
+}
+
+.home-button {
+    padding: 15px 30px;
+    font-size: 18px;
+    background: linear-gradient(45deg, #f06, #3cf);
+    border: none;
+    border-radius: 25px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.home-button:hover {
+    transform: scale(1.05);
+}
+
+.astronaut {
+    position: absolute;
+    width: 300px;
+    right: 10%;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+@keyframes glitch {
+    0% {
+        text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff,
+        0.025em 0.04em 0 #fffc00;
+    }
+    15% {
+        text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff,
+        0.025em 0.04em 0 #fffc00;
+    }
+    16% {
+        text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.035em 0 #fc00ff,
+        -0.05em -0.05em 0 #fffc00;
+    }
+    49% {
+        text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.035em 0 #fc00ff,
+        -0.05em -0.05em 0 #fffc00;
+    }
+    50% {
+        text-shadow: 0.05em 0.035em 0 #00fffc, 0.03em 0 0 #fc00ff,
+        0 -0.04em 0 #fffc00;
+    }
+    99% {
+        text-shadow: 0.05em 0.035em 0 #00fffc, 0.03em 0 0 #fc00ff,
+        0 -0.04em 0 #fffc00;
+    }
+    100% {
+        text-shadow: -0.05em 0 0 #00fffc, -0.025em -0.04em 0 #fc00ff,
+        -0.04em -0.025em 0 #fffc00;
+    }
+}
+
+@media (max-width: 768px) {
+    .error-code {
+        font-size: 100px;
+    }
+
+    .glitch {
+        font-size: 30px;
+    }
+
+    .astronaut {
+        width: 200px;
+        right: -50px;
+    }
+}

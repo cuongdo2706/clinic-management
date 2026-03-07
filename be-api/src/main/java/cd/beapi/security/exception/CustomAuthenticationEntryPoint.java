@@ -29,25 +29,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                 HttpStatus.UNAUTHORIZED.value(),
                 request.getRequestURI(),
                 "Unauthorized",
-                getDetailedMessage(authException));
+                authException.getMessage());
 
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
-    }
-
-    private String getDetailedMessage(AuthenticationException ex) {
-        String message = ex.getMessage();
-
-        // Customize message cho từng loại lỗi
-        if (message.contains("Jwt expired")) {
-            return "Token đã hết hạn";
-        } else if (message.contains("Invalid JWT")) {
-            return "Token không hợp lệ";
-        } else if (message.contains("token_revoked")) {
-            return "Token đã bị thu hồi";
-        } else if (message.contains("Full authentication is required")) {
-            return "Vui lòng đăng nhập để tiếp tục";
-        }
-
-        return "Xác thực thất bại";
     }
 }

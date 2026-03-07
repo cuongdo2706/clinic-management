@@ -1,57 +1,71 @@
 package cd.beapi.security.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.security.Key;
 import java.util.Date;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.token.access-expiration}")
+    @Value("${jwt.access-token-expiration}")
     private long accessExpiration;
 
-    @Value("${jwt.token.refresh-expiration}")
+    @Value("${jwt.refresh-token-expiration}")
     private long refreshExpiration;
 
-    private Key key() {
+    private SecretKey key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
     }
 
-    public String getRoleFromToken(String token) {
-        return Jwts.parser().verifyWith((SecretKey) key()).build().parseSignedClaims(token).getPayload().get("role", String.class);
+    public Claims getClaims(String token) {
+        return Jwts.parser().verifyWith(key()).build().parseSignedClaims(token).getPayload();
     }
 
-    public String getUsernameFromToken(String token) {
-        return Jwts.parser().verifyWith((SecretKey) key()).build().parseSignedClaims(token).getPayload().getSubject();
+    public Set<String> extractRole(Authentication authentication) {
+        return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
     }
 
-    public String generateAccessToken(UserDetails userDetails) {
+    public String generateAccessToken(Authentication authentication) {
         return Jwts.builder()
-                .subject(userDetails.getUsername())
-                .claim("role", userDetails.getAuthorities().iterator().next().getAuthority())
-                .issuedAt(new Date())
+                .id(UUID.randomUUID().toString())
+                .subject(authentication.getName())
+                .claim("role", extractRole(authentication))
+                .claim("type", "access").issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessExpiration))
                 .signWith(key())
                 .compact();
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
+    public String generateRefreshToken(Authentication authentication) {
         return Jwts.builder()
-                .subject(userDetails.getUsername())
+                .id(UUID.randomUUID().toString())
+                .subject(authentication.getName())
+                .claim("type", "refresh")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshExpiration))
                 .signWith(key())
                 .compact();
     }
 
+    public long getAccessExpirationInSeconds() {
+        return accessExpiration / 1000;
+    }
+
+    public long getRefreshExpirationInSeconds() {
+        return refreshExpiration / 1000;
+    }
 
 }

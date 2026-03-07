@@ -18,6 +18,9 @@ public class Role extends BaseEntity {
 
     String description;
 
+    @ManyToMany(mappedBy = "roles")
+    Set<User> users;
+
     @ManyToMany
     @JoinTable(
             name = "role_permissions",
