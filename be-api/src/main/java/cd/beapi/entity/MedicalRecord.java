@@ -1,21 +1,19 @@
 package cd.beapi.entity;
 
-import cd.beapi.enumerate.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "appointments")
+@Table(name = "medical_records")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,42 +21,41 @@ import java.time.LocalTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SQLRestriction("deleted_at is null")
-public class Appointment extends BaseEntity{
-    @Column(unique = true,nullable = false)
+@SQLDelete(sql = "UPDATE medical_records SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+public class MedicalRecord extends BaseEntity{
+    @Column(nullable = false,unique = true)
     String code;
 
-    LocalDateTime appointmentDate;
+    @Column(columnDefinition = "TEXT")
+    String chiefComplaint;
 
-    LocalTime startTime;
+    @Column(columnDefinition = "TEXT")
+    String diagnosis;
 
-    LocalTime endTime;
+    @Column(columnDefinition = "TEXT")
+    String treatmentPlan;
+
+    @Column(columnDefinition = "TEXT")
+    String notes;
+
+    Instant deletedAt;
 
     @CreatedDate
     @Column(updatable = false)
-    Instant createdAt;
+    Instant createdDate;
 
     @LastModifiedDate
     Instant modifiedAt;
-
-    @Column(columnDefinition = "TEXT")
-    String note;
-
-    @Enumerated(EnumType.STRING)
-    AppointmentStatus status;
-
-    @ManyToOne
-    @JoinColumn(name = "staff_id")
-    Staff staff;
 
     @ManyToOne
     @JoinColumn(name = "patient_id")
     Patient patient;
 
-//    @ManyToOne
-//    @JoinColumn(name = "room_id")
-//    Room room;
+    @ManyToOne
+    @JoinColumn(name = "dentist_id")
+    Staff staff;
 
     @ManyToOne
-    @JoinColumn(name = "service_id")
-    Service service;
+    @JoinColumn(name = "appointment_id")
+    Appointment appointment;
 }

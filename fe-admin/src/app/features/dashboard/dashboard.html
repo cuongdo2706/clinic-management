@@ -1,1 +1,69 @@
-<h1>THONG KE</h1>
+<div class="page-header">
+    <h2>Tổng quan</h2>
+    <span class="page-subtitle">Chào mừng bạn quay trở lại!</span>
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-grid">
+    @for (card of statCards(); track card.label) {
+        <div class="stat-card">
+            <div class="stat-icon" [style.background]="card.bg" [style.color]="card.color">
+                <i [class]="card.icon"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-value" [style.color]="card.color">{{ card.value }}</span>
+                <span class="stat-label">{{ card.label }}</span>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Charts -->
+<div class="chart-grid">
+    <div class="chart-card">
+        <h3>Lịch hẹn theo tháng</h3>
+        <div class="chart-wrapper">
+            <canvas #barCanvas></canvas>
+        </div>
+    </div>
+    <div class="chart-card">
+        <h3>Tỷ lệ dịch vụ</h3>
+        <div class="chart-wrapper">
+            <canvas #pieCanvas></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Appointments -->
+<div class="recent-card">
+    <h3>Lịch hẹn gần đây</h3>
+    <p-table [value]="recentAppointments()" [rows]="5" styleClass="mt-2">
+        <ng-template #header>
+            <tr>
+                <th>Bệnh nhân</th>
+                <th>Nha sĩ</th>
+                <th>Ngày</th>
+                <th>Giờ</th>
+                <th>Trạng thái</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-appt>
+            <tr>
+                <td>{{ appt.patientName }}</td>
+                <td>{{ appt.dentistName }}</td>
+                <td>{{ appt.appointmentDate }}</td>
+                <td>{{ appt.timeSlot }}</td>
+                <td>
+                    <p-tag [value]="getStatusLabel(appt.status)"
+                           [severity]="getStatusSeverity(appt.status)"></p-tag>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="5" class="text-center p-4">Không có dữ liệu</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+

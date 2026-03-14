@@ -1,1 +1,36 @@
-<div class="sidebar">a</div>
+<aside class="sidebar" [class.collapsed]="collapsed()">
+    <!-- Logo -->
+    <div class="sidebar-header">
+        <img src="/logo.png" alt="Logo" class="sidebar-logo"/>
+        @if (!collapsed()) {
+            <span class="sidebar-title">Phòng khám</span>
+        }
+    </div>
+
+    <!-- Menu -->
+    <nav class="sidebar-menu">
+        @for (item of menuItems; track item.route) {
+            <a [routerLink]="item.route"
+               routerLinkActive="active"
+               class="menu-item"
+               [pTooltip]="collapsed() ? item.label : ''"
+               tooltipPosition="right">
+                <i [class]="item.icon" class="menu-icon"></i>
+                @if (!collapsed()) {
+                    <span class="menu-label">{{ item.label }}</span>
+                }
+            </a>
+        }
+    </nav>
+
+    <!-- Collapse toggle -->
+    <div class="sidebar-footer">
+        <button class="collapse-btn" (click)="toggleCollapse()">
+            <i [class]="collapsed() ? 'pi pi-angle-double-right' : 'pi pi-angle-double-left'"></i>
+            @if (!collapsed()) {
+                <span class="menu-label">Thu gọn</span>
+            }
+        </button>
+    </div>
+</aside>
+

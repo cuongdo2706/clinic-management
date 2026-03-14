@@ -1,0 +1,97 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+    <h2>Quản lý lịch hẹn</h2>
+</div>
+
+<p-toolbar>
+    <ng-template #start>
+        <p-button label="Thêm mới" icon="pi pi-plus" severity="success" (onClick)="openNew()"></p-button>
+    </ng-template>
+    <ng-template #end>
+        <p-iconfield>
+            <p-inputicon class="pi pi-search"></p-inputicon>
+            <input pInputText placeholder="Tìm kiếm..." [(ngModel)]="searchKeyword" (keyup.enter)="onSearch()"/>
+        </p-iconfield>
+    </ng-template>
+</p-toolbar>
+
+<p-table [value]="appointments()" [loading]="loading()" [paginator]="true" [rows]="10"
+         [rowsPerPageOptions]="[5, 10, 20]" [showCurrentPageReport]="true"
+         currentPageReportTemplate="Hiển thị {first} - {last} / {totalRecords} lịch hẹn"
+         styleClass="mt-4">
+    <ng-template #header>
+        <tr>
+            <th>Bệnh nhân</th>
+            <th>Nha sĩ</th>
+            <th>Ngày hẹn</th>
+            <th>Giờ</th>
+            <th>Trạng thái</th>
+            <th>Ghi chú</th>
+            <th style="width: 150px">Thao tác</th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-appt>
+        <tr>
+            <td>{{ appt.patientName }}</td>
+            <td>{{ appt.dentistName }}</td>
+            <td>{{ appt.appointmentDate }}</td>
+            <td>{{ appt.timeSlot }}</td>
+            <td>
+                <p-tag [value]="appt.status" [severity]="getStatusSeverity(appt.status)"></p-tag>
+            </td>
+            <td>{{ appt.notes }}</td>
+            <td>
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                          (onClick)="openEdit(appt)"></p-button>
+                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                          (onClick)="confirmDelete(appt)"></p-button>
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+        <tr>
+            <td colspan="7" class="text-center p-4">Không có dữ liệu</td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<!-- Dialog thêm/sửa -->
+<p-dialog [header]="isEdit() ? 'Cập nhật lịch hẹn' : 'Thêm lịch hẹn mới'" [(visible)]="dialogVisible"
+          [style]="{width: '480px'}" [modal]="true">
+    <div class="flex flex-col gap-6 mt-4">
+        <p-floatlabel variant="on">
+            <input pInputText id="patientId" [(ngModel)]="formData.patientId" style="width: 100%"/>
+            <label for="patientId">Mã bệnh nhân</label>
+        </p-floatlabel>
+
+        <p-floatlabel variant="on">
+            <input pInputText id="dentistId" [(ngModel)]="formData.dentistId" style="width: 100%"/>
+            <label for="dentistId">Mã nha sĩ</label>
+        </p-floatlabel>
+
+        <p-floatlabel variant="on">
+            <input pInputText id="appointmentDate" [(ngModel)]="formData.appointmentDate" type="date"
+                   style="width: 100%"/>
+            <label for="appointmentDate">Ngày hẹn</label>
+        </p-floatlabel>
+
+        <p-floatlabel variant="on">
+            <input pInputText id="timeSlot" [(ngModel)]="formData.timeSlot" style="width: 100%"/>
+            <label for="timeSlot">Giờ (vd: 08:00 - 09:00)</label>
+        </p-floatlabel>
+
+        <p-floatlabel variant="on">
+            <textarea pTextarea id="notes" [(ngModel)]="formData.notes" rows="3" style="width: 100%"></textarea>
+            <label for="notes">Ghi chú</label>
+        </p-floatlabel>
+    </div>
+
+    <ng-template #footer>
+        <p-button label="Huỷ" icon="pi pi-times" [text]="true" severity="secondary"
+                  (onClick)="dialogVisible.set(false)"></p-button>
+        <p-button label="Lưu" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    </ng-template>
+</p-dialog>
+

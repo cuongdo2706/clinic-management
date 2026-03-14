@@ -1,6 +1,6 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
-import {DentistService} from "./service/dentist.service";
-import {DentistRequest, DentistResponse} from "./model/dentist.model";
+import {AppointmentService} from "./service/appointment.service";
+import {AppointmentRequest, AppointmentResponse} from "./model/appointment.model";
 import {MessageService, ConfirmationService} from "primeng/api";
 import {Toast} from "primeng/toast";
 import {ConfirmDialog} from "primeng/confirmdialog";
@@ -14,10 +14,12 @@ import {Tag} from "primeng/tag";
 import {IconField} from "primeng/iconfield";
 import {InputIcon} from "primeng/inputicon";
 import {Toolbar} from "primeng/toolbar";
+import {DatePicker} from "primeng/datepicker";
+import {Textarea} from "primeng/textarea";
 import {HttpErrorResponse} from "@angular/common/http";
 
 @Component({
-    selector: 'app-dentist',
+    selector: 'app-appointment',
     imports: [
         Toast,
         ConfirmDialog,
@@ -31,24 +33,27 @@ import {HttpErrorResponse} from "@angular/common/http";
         IconField,
         InputIcon,
         Toolbar,
+        Textarea,
     ],
     providers: [MessageService, ConfirmationService],
-    templateUrl: './dentist.html',
-    styleUrl: './dentist.css',
+    templateUrl: './appointment.html',
+    styleUrl: './appointment.css',
 })
-export class Dentist implements OnInit {
-    private readonly dentistService = inject(DentistService);
+export class Appointment implements OnInit {
+    private readonly appointmentService = inject(AppointmentService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
 
-    dentists = signal<DentistResponse[]>([]);
+    appointments = signal<AppointmentResponse[]>([]);
     loading = signal(false);
     dialogVisible = signal(false);
     isEdit = signal(false);
     searchKeyword = signal('');
 
     selectedId = '';
-    formData: DentistRequest = {fullName: '', phone: '', email: '', specialty: ''};
+    formData: AppointmentRequest = {
+        patientId: '', dentistId: '', appointmentDate: '', timeSlot: '', notes: ''
+    };
 
     ngOnInit() {
         this.loadData();
@@ -56,9 +61,9 @@ export class Dentist implements OnInit {
 
     loadData() {
         this.loading.set(true);
-        this.dentistService.getAll(0, 100, this.searchKeyword()).subscribe({
+        this.appointmentService.getAll(0, 100, this.searchKeyword()).subscribe({
             next: (res) => {
-                this.dentists.set(res.data?.content ?? res.data ?? []);
+                this.appointments.set(res.data?.content ?? res.data ?? []);
                 this.loading.set(false);
             },
             error: () => this.loading.set(false),
@@ -70,28 +75,39 @@ export class Dentist implements OnInit {
     }
 
     openNew() {
-        this.formData = {fullName: '', phone: '', email: '', specialty: ''};
+        this.formData = {patientId: '', dentistId: '', appointmentDate: '', timeSlot: '', notes: ''};
         this.isEdit.set(false);
         this.dialogVisible.set(true);
     }
 
-    openEdit(dentist: DentistResponse) {
-        this.selectedId = dentist.id;
+    openEdit(appointment: AppointmentResponse) {
+        this.selectedId = appointment.id;
         this.formData = {
-            fullName: dentist.fullName,
-            phone: dentist.phone,
-            email: dentist.email,
-            specialty: dentist.specialty,
+            patientId: '',
+            dentistId: '',
+            appointmentDate: appointment.appointmentDate,
+            timeSlot: appointment.timeSlot,
+            notes: appointment.notes,
         };
         this.isEdit.set(true);
         this.dialogVisible.set(true);
     }
 
+    getStatusSeverity(status: string): "success" | "info" | "warn" | "danger" | "secondary" | "contrast" {
+        switch (status?.toUpperCase()) {
+            case 'CONFIRMED': return 'success';
+            case 'PENDING': return 'warn';
+            case 'CANCELLED': return 'danger';
+            case 'COMPLETED': return 'info';
+            default: return 'secondary';
+        }
+    }
+
     save() {
         if (this.isEdit()) {
-            this.dentistService.update(this.selectedId, this.formData).subscribe({
+            this.appointmentService.update(this.selectedId, this.formData).subscribe({
                 next: () => {
-                    this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Cập nhật nha sĩ thành công'});
+                    this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Cập nhật lịch hẹn thành công'});
                     this.dialogVisible.set(false);
                     this.loadData();
                 },
@@ -100,9 +116,9 @@ export class Dentist implements OnInit {
                 },
             });
         } else {
-            this.dentistService.create(this.formData).subscribe({
+            this.appointmentService.create(this.formData).subscribe({
                 next: () => {
-                    this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Thêm nha sĩ thành công'});
+                    this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Thêm lịch hẹn thành công'});
                     this.dialogVisible.set(false);
                     this.loadData();
                 },
@@ -113,17 +129,17 @@ export class Dentist implements OnInit {
         }
     }
 
-    confirmDelete(dentist: DentistResponse) {
+    confirmDelete(appointment: AppointmentResponse) {
         this.confirmationService.confirm({
-            message: `Bạn có chắc muốn xoá nha sĩ <b>${dentist.fullName}</b>?`,
+            message: `Bạn có chắc muốn xoá lịch hẹn của <b>${appointment.patientName}</b>?`,
             header: 'Xác nhận xoá',
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Xoá',
             rejectLabel: 'Huỷ',
             accept: () => {
-                this.dentistService.delete(dentist.id).subscribe({
+                this.appointmentService.delete(appointment.id).subscribe({
                     next: () => {
-                        this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Đã xoá nha sĩ'});
+                        this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Đã xoá lịch hẹn'});
                         this.loadData();
                     },
                     error: (err: HttpErrorResponse) => {
@@ -134,5 +150,7 @@ export class Dentist implements OnInit {
         });
     }
 }
+
+
 
 

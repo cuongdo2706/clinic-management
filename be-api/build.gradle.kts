@@ -33,7 +33,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
+    //Postgres
     runtimeOnly("org.postgresql:postgresql")
+    //QueryDSL
+    implementation("com.querydsl:querydsl-jpa:5.1.0")
+    annotationProcessor("com.querydsl:querydsl-apt:5.1.0:jakarta")
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
     //JJWT
     implementation("io.jsonwebtoken:jjwt-api:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")

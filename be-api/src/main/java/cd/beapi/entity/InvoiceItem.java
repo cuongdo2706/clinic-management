@@ -1,4 +1,4 @@
 package cd.beapi.entity;
 
-public class Dentist {
+public class InvoiceItem {
 }

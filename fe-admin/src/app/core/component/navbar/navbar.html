@@ -1,4 +1,15 @@
-<div class="navbar">
-    a
-    <p-button (onClick)="logout()" label="dang xuat"></p-button>
-</div>
+<header class="navbar">
+    <div class="navbar-left">
+        <span class="navbar-title">Quản lý phòng khám</span>
+    </div>
+    <div class="navbar-right">
+        <p-menu #userMenu [model]="userMenuItems" [popup]="true"></p-menu>
+        <p-button
+            icon="pi pi-user"
+            [rounded]="true"
+            [text]="true"
+            severity="secondary"
+            (onClick)="userMenu.toggle($event)"
+        />
+    </div>
+</header>

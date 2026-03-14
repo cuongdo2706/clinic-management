@@ -5,6 +5,10 @@ import {MainLayout} from "./core/component/main-layout/main-layout";
 import {authGuard} from "./core/guard/auth-guard";
 import {Dashboard} from "./features/dashboard/dashboard";
 import {PageNotFound} from "./features/page-not-found/page-not-found";
+import {Dentist} from "./features/dentist/dentist";
+import {Appointment} from "./features/appointment/appointment";
+import {Patient} from "./features/patient/patient";
+import {ClinicService} from "./features/service/clinic-service";
 
 export const routes: Routes = [
     {
@@ -26,8 +30,28 @@ export const routes: Routes = [
                 path: "thong-ke",
                 title: "Thống kê",
                 component: Dashboard,
-                canActivate:[]
-            }
+                canActivate: []
+            },
+            {
+                path: "nha-si",
+                title: "Nha sĩ",
+                component: Dentist,
+            },
+            {
+                path: "lich-hen",
+                title: "Lịch hẹn",
+                component: Appointment,
+            },
+            {
+                path: "benh-nhan",
+                title: "Bệnh nhân",
+                component: Patient,
+            },
+            {
+                path: "dich-vu",
+                title: "Dịch vụ",
+                component: ClinicService,
+            },
         ]
     },
     {

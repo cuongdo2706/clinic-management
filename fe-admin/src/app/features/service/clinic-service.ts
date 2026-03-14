@@ -1,6 +1,6 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
-import {DentistService} from "./service/dentist.service";
-import {DentistRequest, DentistResponse} from "./model/dentist.model";
+import {ClinicServiceService} from "./service/clinic-service.service";
+import {ClinicServiceRequest, ClinicServiceResponse} from "./model/clinic-service.model";
 import {MessageService, ConfirmationService} from "primeng/api";
 import {Toast} from "primeng/toast";
 import {ConfirmDialog} from "primeng/confirmdialog";
@@ -14,10 +14,13 @@ import {Tag} from "primeng/tag";
 import {IconField} from "primeng/iconfield";
 import {InputIcon} from "primeng/inputicon";
 import {Toolbar} from "primeng/toolbar";
+import {InputNumber} from "primeng/inputnumber";
+import {Textarea} from "primeng/textarea";
 import {HttpErrorResponse} from "@angular/common/http";
+import {CurrencyPipe} from "@angular/common";
 
 @Component({
-    selector: 'app-dentist',
+    selector: 'app-clinic-service',
     imports: [
         Toast,
         ConfirmDialog,
@@ -31,24 +34,27 @@ import {HttpErrorResponse} from "@angular/common/http";
         IconField,
         InputIcon,
         Toolbar,
+        InputNumber,
+        Textarea,
+        CurrencyPipe,
     ],
     providers: [MessageService, ConfirmationService],
-    templateUrl: './dentist.html',
-    styleUrl: './dentist.css',
+    templateUrl: './clinic-service.html',
+    styleUrl: './clinic-service.css',
 })
-export class Dentist implements OnInit {
-    private readonly dentistService = inject(DentistService);
+export class ClinicService implements OnInit {
+    private readonly clinicServiceService = inject(ClinicServiceService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
 
-    dentists = signal<DentistResponse[]>([]);
+    services = signal<ClinicServiceResponse[]>([]);
     loading = signal(false);
     dialogVisible = signal(false);
     isEdit = signal(false);
     searchKeyword = signal('');
 
     selectedId = '';
-    formData: DentistRequest = {fullName: '', phone: '', email: '', specialty: ''};
+    formData: ClinicServiceRequest = {name: '', description: '', price: 0, duration: 30};
 
     ngOnInit() {
         this.loadData();
@@ -56,9 +62,9 @@ export class Dentist implements OnInit {
 
     loadData() {
         this.loading.set(true);
-        this.dentistService.getAll(0, 100, this.searchKeyword()).subscribe({
+        this.clinicServiceService.getAll(0, 100, this.searchKeyword()).subscribe({
             next: (res) => {
-                this.dentists.set(res.data?.content ?? res.data ?? []);
+                this.services.set(res.data?.content ?? res.data ?? []);
                 this.loading.set(false);
             },
             error: () => this.loading.set(false),
@@ -70,18 +76,18 @@ export class Dentist implements OnInit {
     }
 
     openNew() {
-        this.formData = {fullName: '', phone: '', email: '', specialty: ''};
+        this.formData = {name: '', description: '', price: 0, duration: 30};
         this.isEdit.set(false);
         this.dialogVisible.set(true);
     }
 
-    openEdit(dentist: DentistResponse) {
-        this.selectedId = dentist.id;
+    openEdit(service: ClinicServiceResponse) {
+        this.selectedId = service.id;
         this.formData = {
-            fullName: dentist.fullName,
-            phone: dentist.phone,
-            email: dentist.email,
-            specialty: dentist.specialty,
+            name: service.name,
+            description: service.description,
+            price: service.price,
+            duration: service.duration,
         };
         this.isEdit.set(true);
         this.dialogVisible.set(true);
@@ -89,9 +95,9 @@ export class Dentist implements OnInit {
 
     save() {
         if (this.isEdit()) {
-            this.dentistService.update(this.selectedId, this.formData).subscribe({
+            this.clinicServiceService.update(this.selectedId, this.formData).subscribe({
                 next: () => {
-                    this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Cập nhật nha sĩ thành công'});
+                    this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Cập nhật dịch vụ thành công'});
                     this.dialogVisible.set(false);
                     this.loadData();
                 },
@@ -100,9 +106,9 @@ export class Dentist implements OnInit {
                 },
             });
         } else {
-            this.dentistService.create(this.formData).subscribe({
+            this.clinicServiceService.create(this.formData).subscribe({
                 next: () => {
-                    this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Thêm nha sĩ thành công'});
+                    this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Thêm dịch vụ thành công'});
                     this.dialogVisible.set(false);
                     this.loadData();
                 },
@@ -113,17 +119,17 @@ export class Dentist implements OnInit {
         }
     }
 
-    confirmDelete(dentist: DentistResponse) {
+    confirmDelete(service: ClinicServiceResponse) {
         this.confirmationService.confirm({
-            message: `Bạn có chắc muốn xoá nha sĩ <b>${dentist.fullName}</b>?`,
+            message: `Bạn có chắc muốn xoá dịch vụ <b>${service.name}</b>?`,
             header: 'Xác nhận xoá',
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Xoá',
             rejectLabel: 'Huỷ',
             accept: () => {
-                this.dentistService.delete(dentist.id).subscribe({
+                this.clinicServiceService.delete(service.id).subscribe({
                     next: () => {
-                        this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Đã xoá nha sĩ'});
+                        this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Đã xoá dịch vụ'});
                         this.loadData();
                     },
                     error: (err: HttpErrorResponse) => {
@@ -134,5 +140,6 @@ export class Dentist implements OnInit {
         });
     }
 }
+
 
 

@@ -1,5 +1,32 @@
+:host {
+    display: block;
+    width: 100%;
+}
+
 .navbar {
-    border: darkseagreen solid 1px;
-    border-radius: 8px;
-    margin: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    padding: 0 24px;
+    background-color: #fff;
+    border-bottom: 2px solid #dcfce7;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.navbar-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #14532d;
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }

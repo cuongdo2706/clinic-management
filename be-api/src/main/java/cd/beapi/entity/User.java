@@ -9,6 +9,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.util.Set;
@@ -16,6 +19,7 @@ import java.util.Set;
 @Entity
 @Table(name = "users")
 @Getter
+@EntityListeners(AuditingEntityListener.class)
 @Setter
 @SQLRestriction("deleted_at is null")
 @SQLDelete(sql = "UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
@@ -23,9 +27,6 @@ import java.util.Set;
 public class User extends BaseEntity {
     @Column(unique = true, nullable = false)
     String username;
-
-    @Column(unique = true)
-    String phone;
 
     @Column(unique = true)
     String email;
@@ -37,11 +38,11 @@ public class User extends BaseEntity {
 
     Instant deletedAt;
 
-    @CreationTimestamp
+    @CreatedDate
     @Column(updatable = false)
     Instant createdAt;
 
-    @UpdateTimestamp
+    @LastModifiedDate
     Instant modifiedAt;
 
     @ManyToMany
@@ -50,5 +51,5 @@ public class User extends BaseEntity {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    Set<Role> roles;
+    Set<Role> roles;;
 }

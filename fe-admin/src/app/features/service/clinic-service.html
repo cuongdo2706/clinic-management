@@ -2,7 +2,7 @@
 <p-confirmDialog></p-confirmDialog>
 
 <div class="page-header">
-    <h2>Quản lý nha sĩ</h2>
+    <h2>Quản lý dịch vụ</h2>
 </div>
 
 <p-toolbar>
@@ -17,35 +17,35 @@
     </ng-template>
 </p-toolbar>
 
-<p-table [value]="dentists()" [loading]="loading()" [paginator]="true" [rows]="10"
+<p-table [value]="services()" [loading]="loading()" [paginator]="true" [rows]="10"
          [rowsPerPageOptions]="[5, 10, 20]" [showCurrentPageReport]="true"
-         currentPageReportTemplate="Hiển thị {first} - {last} / {totalRecords} nha sĩ"
+         currentPageReportTemplate="Hiển thị {first} - {last} / {totalRecords} dịch vụ"
          styleClass="mt-4">
     <ng-template #header>
         <tr>
-            <th>Họ tên</th>
-            <th>SĐT</th>
-            <th>Email</th>
-            <th>Chuyên khoa</th>
+            <th>Tên dịch vụ</th>
+            <th>Mô tả</th>
+            <th>Giá (VNĐ)</th>
+            <th>Thời gian (phút)</th>
             <th>Trạng thái</th>
             <th style="width: 150px">Thao tác</th>
         </tr>
     </ng-template>
-    <ng-template #body let-dentist>
+    <ng-template #body let-svc>
         <tr>
-            <td>{{ dentist.fullName }}</td>
-            <td>{{ dentist.phone }}</td>
-            <td>{{ dentist.email }}</td>
-            <td>{{ dentist.specialty }}</td>
+            <td>{{ svc.name }}</td>
+            <td>{{ svc.description }}</td>
+            <td>{{ svc.price | currency:'VND':'symbol':'1.0-0' }}</td>
+            <td>{{ svc.duration }} phút</td>
             <td>
-                <p-tag [value]="dentist.active ? 'Hoạt động' : 'Ngưng'"
-                       [severity]="dentist.active ? 'success' : 'danger'"></p-tag>
+                <p-tag [value]="svc.active ? 'Hoạt động' : 'Ngưng'"
+                       [severity]="svc.active ? 'success' : 'danger'"></p-tag>
             </td>
             <td>
                 <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
-                          (onClick)="openEdit(dentist)"></p-button>
+                          (onClick)="openEdit(svc)"></p-button>
                 <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
-                          (onClick)="confirmDelete(dentist)"></p-button>
+                          (onClick)="confirmDelete(svc)"></p-button>
             </td>
         </tr>
     </ng-template>
@@ -57,27 +57,30 @@
 </p-table>
 
 <!-- Dialog thêm/sửa -->
-<p-dialog [header]="isEdit() ? 'Cập nhật nha sĩ' : 'Thêm nha sĩ mới'" [(visible)]="dialogVisible"
+<p-dialog [header]="isEdit() ? 'Cập nhật dịch vụ' : 'Thêm dịch vụ mới'" [(visible)]="dialogVisible"
           [style]="{width: '480px'}" [modal]="true">
     <div class="flex flex-col gap-6 mt-4">
         <p-floatlabel variant="on">
-            <input pInputText id="fullName" [(ngModel)]="formData.fullName" style="width: 100%"/>
-            <label for="fullName">Họ tên</label>
+            <input pInputText id="name" [(ngModel)]="formData.name" style="width: 100%"/>
+            <label for="name">Tên dịch vụ</label>
         </p-floatlabel>
 
         <p-floatlabel variant="on">
-            <input pInputText id="phone" [(ngModel)]="formData.phone" style="width: 100%"/>
-            <label for="phone">Số điện thoại</label>
+            <textarea pTextarea id="description" [(ngModel)]="formData.description" rows="3"
+                      style="width: 100%"></textarea>
+            <label for="description">Mô tả</label>
         </p-floatlabel>
 
         <p-floatlabel variant="on">
-            <input pInputText id="email" [(ngModel)]="formData.email" style="width: 100%"/>
-            <label for="email">Email</label>
+            <p-inputnumber id="price" [(ngModel)]="formData.price" mode="currency" currency="VND" locale="vi-VN"
+                           [style]="{width: '100%'}"></p-inputnumber>
+            <label for="price">Giá</label>
         </p-floatlabel>
 
         <p-floatlabel variant="on">
-            <input pInputText id="specialty" [(ngModel)]="formData.specialty" style="width: 100%"/>
-            <label for="specialty">Chuyên khoa</label>
+            <p-inputnumber id="duration" [(ngModel)]="formData.duration" suffix=" phút"
+                           [style]="{width: '100%'}"></p-inputnumber>
+            <label for="duration">Thời gian</label>
         </p-floatlabel>
     </div>
 

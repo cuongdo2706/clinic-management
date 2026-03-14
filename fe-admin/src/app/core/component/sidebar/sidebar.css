@@ -1,6 +1,124 @@
+:host {
+    display: block;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
 .sidebar {
-    border: darkseagreen solid 1px;
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+    height: 100%;
+    background: linear-gradient(180deg, #14532d 0%, #1a3c2a 100%);
+    color: #fff;
+    transition: width 0.3s ease;
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: 68px;
+}
+
+/* Header / Logo */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    min-height: 64px;
+}
+
+.sidebar-logo {
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
-    margin: 5px;
-    width: 20vw;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.sidebar-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    color: #bbf7d0;
+}
+
+/* Menu */
+.sidebar-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #a7f3d0;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background 0.2s, color 0.2s;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.menu-item.active {
+    background-color: #16a34a;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.35);
+}
+
+.menu-icon {
+    font-size: 1.15rem;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.menu-label {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Footer / Collapse */
+.sidebar-footer {
+    padding: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.collapse-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #86efac;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+}
+
+.collapse-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
 }

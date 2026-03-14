@@ -14,9 +14,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 
-@Entity
-@EntityListeners(AuditingEntityListener.class)
-@Table(name = "patients")
+//@Entity
+//@EntityListeners(AuditingEntityListener.class)
+//@Table(name = "rooms")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,10 +24,16 @@ import java.time.Instant;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SQLRestriction("deleted_at is null")
-@SQLDelete(sql = "UPDATE patients SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
-public class Patient extends BaseEntity{
-    @Column(unique = true,nullable = false)
+@SQLDelete(sql = "UPDATE rooms SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+public class Room extends BaseEntity{
     String code;
+
+    String name;
+
+    Boolean isActive;
+
+    @Column(columnDefinition = "TEXT")
+    String description;
 
     Instant deletedAt;
 

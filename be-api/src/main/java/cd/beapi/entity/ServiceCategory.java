@@ -16,7 +16,7 @@ import java.time.Instant;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "patients")
+@Table(name = "service_categories")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,10 +24,15 @@ import java.time.Instant;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SQLRestriction("deleted_at is null")
-@SQLDelete(sql = "UPDATE patients SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
-public class Patient extends BaseEntity{
-    @Column(unique = true,nullable = false)
+@SQLDelete(sql = "UPDATE service_categories SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+public class ServiceCategory extends BaseEntity {
+    @Column(unique = true)
     String code;
+
+    String name;
+
+    @Column(columnDefinition = "TEXT")
+    String description;
 
     Instant deletedAt;
 

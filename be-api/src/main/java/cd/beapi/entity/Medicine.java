@@ -1,4 +1,49 @@
 package cd.beapi.entity;
 
-public class Medicine {
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.Table;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.Instant;
+
+@Entity
+@Table(name = "medicines")
+@Getter
+@Setter
+@EntityListeners(AuditingEntityListener.class)
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@SQLRestriction("deleted_at is null")
+@SQLDelete(sql = "UPDATE medicines SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+public class Medicine extends BaseEntity {
+    @Column(unique = true, nullable = false)
+    String code;
+
+    String name;
+
+    String unit;
+
+    @Column(columnDefinition = "TEXT")
+    String description;
+
+    Boolean isActive;
+
+    Instant deletedAt;
+
+    @CreatedDate
+    @Column(updatable = false)
+    Instant createdDate;
+
+    @LastModifiedDate
+    Instant modifiedAt;
 }
