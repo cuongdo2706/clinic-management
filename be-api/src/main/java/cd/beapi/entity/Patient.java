@@ -13,6 +13,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
@@ -28,6 +29,20 @@ import java.time.Instant;
 public class Patient extends BaseEntity{
     @Column(unique = true,nullable = false)
     String code;
+
+    String fullName;
+
+    LocalDate dob;
+
+    Boolean gender;
+
+    String phone;
+
+    String identityNumber;
+
+    String email;
+
+    String address;
 
     Instant deletedAt;
 

@@ -61,4 +61,7 @@ public class Appointment extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "service_id")
     Service service;
+
+    @OneToOne(mappedBy = "appointment")
+    VisitRegistration visitRegistration;
 }
