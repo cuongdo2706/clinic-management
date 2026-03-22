@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 //                    AND is_active = TRUE
 //            """)
 //    Optional<User> findByEmailOrPhone(@Param("username") String username);
-    @EntityGraph(attributePaths = {"roles"})
+    @EntityGraph(attributePaths = {"role"})
     @Query(value = """
                     SELECT u FROM User u
                     WHERE u.username = :username

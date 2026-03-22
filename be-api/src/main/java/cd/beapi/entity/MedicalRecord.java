@@ -10,6 +10,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.util.Set;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
@@ -42,7 +43,7 @@ public class MedicalRecord extends BaseEntity{
 
     @CreatedDate
     @Column(updatable = false)
-    Instant createdDate;
+    Instant createdAt;
 
     @LastModifiedDate
     Instant modifiedAt;
@@ -55,7 +56,15 @@ public class MedicalRecord extends BaseEntity{
     @JoinColumn(name = "dentist_id")
     Staff staff;
 
-    @ManyToOne
-    @JoinColumn(name = "appointment_id")
+    @OneToOne
+    @JoinColumn(name = "appointment_id",unique = true)
     Appointment appointment;
+
+    @ManyToMany
+    @JoinTable(
+            name = "medical_record_services",
+            joinColumns = @JoinColumn(name = "medical_record_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_id")
+    )
+    Set<Service> services;
 }

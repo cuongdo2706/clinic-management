@@ -52,6 +52,11 @@ export const routes: Routes = [
                 title: "Dịch vụ",
                 component: ClinicService,
             },
+            {
+                path: "kham-benh",
+                title: "Luồng khám bệnh",
+                loadComponent: () => import("./features/examination/examination").then(m => m.Examination),
+            },
         ]
     },
     {

@@ -1,0 +1,590 @@
+<p-toast></p-toast>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<div class="page-header">
+    <h2>🦷 Luồng khám bệnh</h2>
+    @if (activeStep() > 0) {
+        <p-button label="Bắt đầu lại" icon="pi pi-refresh" severity="secondary" [text]="true"
+                  (onClick)="resetFlow()"></p-button>
+    }
+</div>
+
+<!-- ═══════════════════ STEP INDICATOR ═══════════════════ -->
+<div class="step-indicator">
+    @for (step of stepsModel; track $index) {
+        <div class="step-item" [class.active]="$index === activeStep()" [class.completed]="$index < activeStep()">
+            <div class="step-circle">
+                @if ($index < activeStep()) {
+                    <i class="pi pi-check"></i>
+                } @else {
+                    <span>{{ $index + 1 }}</span>
+                }
+            </div>
+            <span class="step-label">{{ step.label }}</span>
+        </div>
+        @if ($index < stepsModel.length - 1) {
+            <div class="step-connector" [class.completed]="$index < activeStep()"></div>
+        }
+    }
+</div>
+
+<!-- ═══════════════════ CONTEXT BAR ═══════════════════ -->
+@if (selectedPatient()) {
+    <div class="context-bar">
+        <span><i class="pi pi-user"></i> {{ selectedPatient()!.fullName }} ({{ selectedPatient()!.code }})</span>
+        @if (createdAppointment()) {
+            <span class="context-divider">|</span>
+            <span><i class="pi pi-calendar"></i> {{ createdAppointment()!.code }} — {{ createdAppointment()!.appointmentDate }} {{ createdAppointment()!.startTime }}-{{ createdAppointment()!.endTime }}</span>
+        }
+        @if (checkInResult()) {
+            <span class="context-divider">|</span>
+            <span><i class="pi pi-hashtag"></i> STT: {{ checkInResult()!.queueNumber }}</span>
+        }
+    </div>
+}
+
+<!-- ═══════════════════ STEP CONTENT ═══════════════════ -->
+@switch (activeStep()) {
+
+    <!-- ─────────── STEP 0: BỆNH NHÂN ─────────── -->
+    @case (0) {
+        <div class="step-panel">
+            <h3 class="step-title">Bước 1: Chọn hoặc tạo bệnh nhân</h3>
+
+            <div class="flex gap-3 mb-4">
+                <p-button label="Tìm bệnh nhân" icon="pi pi-search"
+                          [outlined]="patientMode() !== 'search'" (onClick)="patientMode.set('search')"></p-button>
+                <p-button label="Tạo BN mới (Walk-in)" icon="pi pi-user-plus"
+                          [outlined]="patientMode() !== 'create'" (onClick)="patientMode.set('create')"></p-button>
+            </div>
+
+            @if (patientMode() === 'search') {
+                <div class="flex gap-2 mb-4">
+                    <input pInputText placeholder="Nhập tên, SĐT hoặc mã bệnh nhân..."
+                           [(ngModel)]="patientSearchKeyword" (keyup.enter)="searchPatients()" class="flex-1"/>
+                    <p-button icon="pi pi-search" (onClick)="searchPatients()" [loading]="loading()"></p-button>
+                </div>
+
+                @if (patientSearchResults().length > 0) {
+                    <p-table [value]="patientSearchResults()" styleClass="p-datatable-sm" [paginator]="true"
+                             [rows]="5">
+                        <ng-template #header>
+                            <tr>
+                                <th>Mã</th>
+                                <th>Họ tên</th>
+                                <th>SĐT</th>
+                                <th>Email</th>
+                                <th style="width: 80px"></th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-p>
+                            <tr [class.selected-row]="selectedPatient()?.id === p.id">
+                                <td>{{ p.code }}</td>
+                                <td>{{ p.fullName }}</td>
+                                <td>{{ p.phone }}</td>
+                                <td>{{ p.email }}</td>
+                                <td>
+                                    <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success"
+                                              (onClick)="selectPatient(p)" pTooltip="Chọn"></p-button>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                }
+            } @else {
+                <div class="form-grid">
+                    <p-floatlabel variant="on">
+                        <input pInputText id="wk_fullName" [(ngModel)]="walkInForm.fullName" style="width: 100%"/>
+                        <label for="wk_fullName">Họ tên *</label>
+                    </p-floatlabel>
+                    <p-floatlabel variant="on">
+                        <input pInputText id="wk_phone" [(ngModel)]="walkInForm.phone" style="width: 100%"/>
+                        <label for="wk_phone">Số điện thoại *</label>
+                    </p-floatlabel>
+                    <p-floatlabel variant="on">
+                        <input pInputText id="wk_dob" [(ngModel)]="walkInForm.dob" type="date" style="width: 100%"/>
+                        <label for="wk_dob">Ngày sinh</label>
+                    </p-floatlabel>
+                    <p-floatlabel variant="on">
+                        <p-select id="wk_gender" [(ngModel)]="walkInForm.gender" [options]="genderOptions"
+                                  optionLabel="label" optionValue="value" placeholder=" "
+                                  [style]="{width: '100%'}"></p-select>
+                        <label for="wk_gender">Giới tính</label>
+                    </p-floatlabel>
+                    <p-floatlabel variant="on">
+                        <input pInputText id="wk_email" [(ngModel)]="walkInForm.email" style="width: 100%"/>
+                        <label for="wk_email">Email</label>
+                    </p-floatlabel>
+                    <p-floatlabel variant="on">
+                        <input pInputText id="wk_address" [(ngModel)]="walkInForm.address" style="width: 100%"/>
+                        <label for="wk_address">Địa chỉ</label>
+                    </p-floatlabel>
+                </div>
+                <div class="mt-4">
+                    <p-button label="Tạo bệnh nhân" icon="pi pi-plus" severity="success"
+                              (onClick)="createWalkInPatient()" [loading]="loading()"></p-button>
+                </div>
+            }
+
+            <!-- Selected patient result -->
+            @if (selectedPatient()) {
+                <p-divider></p-divider>
+                <div class="result-box">
+                    <p-tag value="Đã chọn bệnh nhân" severity="success"></p-tag>
+                    <div class="result-detail mt-2">
+                        <span><strong>{{ selectedPatient()!.fullName }}</strong></span>
+                        <span>Mã: {{ selectedPatient()!.code }}</span>
+                        <span>SĐT: {{ selectedPatient()!.phone }}</span>
+                        @if (selectedPatient()!.isWalkIn) {
+                            <p-tag value="Walk-in" severity="info" [style]="{fontSize: '0.75rem'}"></p-tag>
+                        }
+                    </div>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <p-button label="Tiếp tục → Đặt lịch" icon="pi pi-arrow-right" iconPos="right"
+                              (onClick)="goToStep(1)"></p-button>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- ─────────── STEP 1: ĐẶT LỊCH HẸN ─────────── -->
+    @case (1) {
+        <div class="step-panel">
+            <h3 class="step-title">Bước 2: Đặt lịch hẹn</h3>
+
+            <div class="form-grid">
+                <p-floatlabel variant="on">
+                    @if (dentistOptions().length > 0) {
+                        <p-select id="dentistId" [(ngModel)]="appointmentForm.dentistId"
+                                  [options]="dentistOptions()" optionLabel="label" optionValue="value"
+                                  placeholder=" " [filter]="true" filterPlaceholder="Tìm nha sĩ..."
+                                  [style]="{width: '100%'}"></p-select>
+                    } @else {
+                        <p-inputnumber id="dentistId" [(ngModel)]="appointmentForm.dentistId"
+                                       [useGrouping]="false" placeholder="Nhập ID nha sĩ"
+                                       [style]="{width: '100%'}"></p-inputnumber>
+                    }
+                    <label for="dentistId">Nha sĩ *</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on">
+                    <input pInputText id="apptDate" [(ngModel)]="appointmentForm.appointmentDate" type="date"
+                           style="width: 100%"/>
+                    <label for="apptDate">Ngày hẹn *</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on">
+                    <input pInputText id="startTime" [(ngModel)]="appointmentForm.startTime" type="time"
+                           style="width: 100%"/>
+                    <label for="startTime">Giờ bắt đầu *</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on">
+                    <input pInputText id="endTime" [(ngModel)]="appointmentForm.endTime" type="time"
+                           style="width: 100%"/>
+                    <label for="endTime">Giờ kết thúc *</label>
+                </p-floatlabel>
+            </div>
+
+            <div class="mt-4">
+                <p-floatlabel variant="on">
+                    <textarea pTextarea id="apptNote" [(ngModel)]="appointmentForm.note" rows="2"
+                              style="width: 100%"></textarea>
+                    <label for="apptNote">Lý do khám / Ghi chú</label>
+                </p-floatlabel>
+            </div>
+
+            <div class="flex justify-between mt-4">
+                <p-button label="Quay lại" icon="pi pi-arrow-left" severity="secondary" [text]="true"
+                          (onClick)="goToStep(0)"></p-button>
+                <p-button label="Đặt lịch" icon="pi pi-calendar-plus" severity="success"
+                          (onClick)="createAppointment()" [loading]="loading()"></p-button>
+            </div>
+        </div>
+    }
+
+    <!-- ─────────── STEP 2: TIẾP NHẬN (CHECK-IN) ─────────── -->
+    @case (2) {
+        <div class="step-panel">
+            <h3 class="step-title">Bước 3: Tiếp nhận bệnh nhân</h3>
+
+            @if (createdAppointment(); as appt) {
+                <div class="info-card mb-4">
+                    <div class="info-row">
+                        <span class="info-label">Mã lịch hẹn:</span>
+                        <span class="info-value">{{ appt.code }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Bệnh nhân:</span>
+                        <span class="info-value">{{ appt.patientName }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Nha sĩ:</span>
+                        <span class="info-value">{{ appt.dentistName }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ngày giờ:</span>
+                        <span class="info-value">{{ appt.appointmentDate }} | {{ appt.startTime }} - {{ appt.endTime }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Trạng thái:</span>
+                        <p-tag [value]="appt.statusLabel" [severity]="appt.status === 'CONFIRMED' ? 'success' : 'warn'"></p-tag>
+                    </div>
+                </div>
+
+                @if (!checkInResult()) {
+                    <p-floatlabel variant="on" class="mb-4">
+                        <textarea pTextarea id="checkInNote" [(ngModel)]="checkInNote" rows="2"
+                                  style="width: 100%"></textarea>
+                        <label for="checkInNote">Ghi chú tiếp nhận</label>
+                    </p-floatlabel>
+
+                    <div class="flex justify-between">
+                        <p-button label="Quay lại" icon="pi pi-arrow-left" severity="secondary" [text]="true"
+                                  (onClick)="goToStep(1)"></p-button>
+                        <p-button label="Xác nhận & Tiếp nhận" icon="pi pi-check-circle" severity="success"
+                                  (onClick)="performCheckIn()" [loading]="loading()"></p-button>
+                    </div>
+                }
+            }
+
+            @if (checkInResult(); as ci) {
+                <p-divider></p-divider>
+                <div class="result-box success-box">
+                    <div class="queue-number">{{ ci.queueNumber }}</div>
+                    <div class="queue-label">Số thứ tự</div>
+                    <div class="mt-2">
+                        <span>Mã phiếu: <strong>{{ ci.code }}</strong></span>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <p-button label="Tiếp tục → Khám bệnh" icon="pi pi-arrow-right" iconPos="right"
+                              (onClick)="goToStep(3)"></p-button>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- ─────────── STEP 3: KHÁM BỆNH ─────────── -->
+    @case (3) {
+        <div class="step-panel">
+            <h3 class="step-title">Bước 4: Khám bệnh — Tạo bệnh án</h3>
+
+            <div class="form-grid">
+                <p-floatlabel variant="on" class="col-span-full">
+                    <input pInputText id="chiefComplaint" [(ngModel)]="medicalRecordForm.chiefComplaint"
+                           style="width: 100%"/>
+                    <label for="chiefComplaint">Lý do đến khám</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on" class="col-span-full">
+                    <textarea pTextarea id="diagnosis" [(ngModel)]="medicalRecordForm.diagnosis" rows="2"
+                              style="width: 100%"></textarea>
+                    <label for="diagnosis">Chẩn đoán</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on" class="col-span-full">
+                    <textarea pTextarea id="treatmentPlan" [(ngModel)]="medicalRecordForm.treatmentPlan" rows="2"
+                              style="width: 100%"></textarea>
+                    <label for="treatmentPlan">Kế hoạch điều trị</label>
+                </p-floatlabel>
+            </div>
+
+            <div class="mt-4">
+                <label class="block mb-2 font-semibold text-sm text-gray-600">Dịch vụ thực hiện:</label>
+                @if (serviceOptions().length > 0) {
+                    <p-multiselect [(ngModel)]="medicalRecordForm.serviceIds" [options]="serviceOptions()"
+                                   optionLabel="label" optionValue="value" placeholder="Chọn dịch vụ..."
+                                   [filter]="true" filterPlaceholder="Tìm dịch vụ..." display="chip"
+                                   [style]="{width: '100%'}"></p-multiselect>
+                } @else {
+                    <small class="text-gray-400">Không có dịch vụ nào. Hãy nhập ID dịch vụ thủ công nếu cần.</small>
+                }
+            </div>
+
+            <div class="mt-4">
+                <p-floatlabel variant="on">
+                    <textarea pTextarea id="mrNotes" [(ngModel)]="medicalRecordForm.notes" rows="2"
+                              style="width: 100%"></textarea>
+                    <label for="mrNotes">Ghi chú thêm</label>
+                </p-floatlabel>
+            </div>
+
+            <div class="flex justify-between mt-4">
+                <p-button label="Quay lại" icon="pi pi-arrow-left" severity="secondary" [text]="true"
+                          (onClick)="goToStep(2)"></p-button>
+                <p-button label="Lưu bệnh án" icon="pi pi-save" severity="success"
+                          (onClick)="createMedicalRecord()" [loading]="loading()"></p-button>
+            </div>
+        </div>
+    }
+
+    <!-- ─────────── STEP 4: KÊ ĐƠN THUỐC ─────────── -->
+    @case (4) {
+        <div class="step-panel">
+            <h3 class="step-title">Bước 5: Kê đơn thuốc (tùy chọn)</h3>
+
+            @if (!prescriptionResult() && !prescriptionSkipped()) {
+                <div class="mb-4">
+                    <p-floatlabel variant="on">
+                        <textarea pTextarea id="presNote" [(ngModel)]="prescriptionNote" rows="2"
+                                  style="width: 100%"></textarea>
+                        <label for="presNote">Ghi chú đơn thuốc</label>
+                    </p-floatlabel>
+                </div>
+
+                <p-toolbar styleClass="mb-3">
+                    <ng-template #start>
+                        <p-button label="Thêm thuốc" icon="pi pi-plus" severity="success" [outlined]="true"
+                                  (onClick)="addPrescriptionItem()"></p-button>
+                    </ng-template>
+                </p-toolbar>
+
+                @if (prescriptionItems.length > 0) {
+                    <p-table [value]="prescriptionItems" styleClass="p-datatable-sm">
+                        <ng-template #header>
+                            <tr>
+                                <th style="width: 35%">Thuốc</th>
+                                <th style="width: 12%">Số lượng</th>
+                                <th style="width: 20%">Liều dùng</th>
+                                <th style="width: 25%">Hướng dẫn</th>
+                                <th style="width: 8%"></th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-item let-i="rowIndex">
+                            <tr>
+                                <td>
+                                    @if (medicineOptions().length > 0) {
+                                        <p-select [(ngModel)]="item.medicineId" [options]="medicineOptions()"
+                                                  optionLabel="label" optionValue="value" placeholder="Chọn thuốc"
+                                                  [filter]="true" [style]="{width: '100%'}"></p-select>
+                                    } @else {
+                                        <p-inputnumber [(ngModel)]="item.medicineId" [useGrouping]="false"
+                                                       placeholder="ID thuốc"
+                                                       [style]="{width: '100%'}"></p-inputnumber>
+                                    }
+                                </td>
+                                <td>
+                                    <p-inputnumber [(ngModel)]="item.quantity" [min]="1"
+                                                   [style]="{width: '100%'}"></p-inputnumber>
+                                </td>
+                                <td>
+                                    <input pInputText [(ngModel)]="item.dosage" placeholder="VD: 3 viên/ngày"
+                                           style="width: 100%"/>
+                                </td>
+                                <td>
+                                    <input pInputText [(ngModel)]="item.instruction" placeholder="VD: Uống sau ăn"
+                                           style="width: 100%"/>
+                                </td>
+                                <td>
+                                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                                              (onClick)="removePrescriptionItem(i)"></p-button>
+                                </td>
+                            </tr>
+                        </ng-template>
+                        <ng-template #emptymessage>
+                            <tr>
+                                <td colspan="5" class="text-center p-4 text-gray-400">Chưa có thuốc nào</td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                }
+
+                <div class="flex justify-between mt-4">
+                    <p-button label="Quay lại" icon="pi pi-arrow-left" severity="secondary" [text]="true"
+                              (onClick)="goToStep(3)"></p-button>
+                    <div class="flex gap-2">
+                        <p-button label="Bỏ qua" icon="pi pi-forward" severity="secondary" [outlined]="true"
+                                  (onClick)="skipPrescription()"></p-button>
+                        <p-button label="Kê đơn thuốc" icon="pi pi-check" severity="success"
+                                  (onClick)="createPrescription()" [loading]="loading()"
+                                  [disabled]="prescriptionItems.length === 0"></p-button>
+                    </div>
+                </div>
+            }
+
+            <!-- Prescription Result -->
+            @if (prescriptionResult(); as pres) {
+                <div class="result-box">
+                    <p-tag value="Đã kê đơn thuốc" severity="success"></p-tag>
+                    <div class="mt-2"><strong>{{ pres.code }}</strong></div>
+                    <p-table [value]="pres.items" styleClass="p-datatable-sm mt-3">
+                        <ng-template #header>
+                            <tr>
+                                <th>Thuốc</th>
+                                <th>Đơn vị</th>
+                                <th>SL</th>
+                                <th>Liều dùng</th>
+                                <th>Hướng dẫn</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-item>
+                            <tr>
+                                <td>{{ item.medicineName }}</td>
+                                <td>{{ item.medicineUnit }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.dosage }}</td>
+                                <td>{{ item.instruction }}</td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <p-button label="Tiếp tục → Hóa đơn" icon="pi pi-arrow-right" iconPos="right"
+                              (onClick)="goToStep(5)"></p-button>
+                </div>
+            }
+
+            @if (prescriptionSkipped()) {
+                <div class="result-box">
+                    <p-tag value="Đã bỏ qua kê đơn" severity="info"></p-tag>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <p-button label="Tiếp tục → Hóa đơn" icon="pi pi-arrow-right" iconPos="right"
+                              (onClick)="goToStep(5)"></p-button>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- ─────────── STEP 5: HÓA ĐƠN & THANH TOÁN ─────────── -->
+    @case (5) {
+        <div class="step-panel">
+            <h3 class="step-title">Bước 6: Hóa đơn & Thanh toán</h3>
+
+            <!-- Invoice Creation -->
+            @if (!invoiceResult()) {
+                <div class="form-grid">
+                    <p-floatlabel variant="on">
+                        <p-inputnumber id="discount" [(ngModel)]="discountAmount" mode="currency" currency="VND"
+                                       locale="vi-VN" [style]="{width: '100%'}"></p-inputnumber>
+                        <label for="discount">Giảm giá (VNĐ)</label>
+                    </p-floatlabel>
+                </div>
+                <div class="flex justify-between mt-4">
+                    <p-button label="Quay lại" icon="pi pi-arrow-left" severity="secondary" [text]="true"
+                              (onClick)="goToStep(4)"></p-button>
+                    <p-button label="Tạo hóa đơn" icon="pi pi-file-plus" severity="success"
+                              (onClick)="createInvoice()" [loading]="loading()"></p-button>
+                </div>
+            }
+
+            <!-- Invoice Result -->
+            @if (invoiceResult(); as inv) {
+                <div class="result-box mb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <p-tag [value]="inv.statusLabel"
+                                   [severity]="inv.status === 'PAID' ? 'success' : inv.status === 'PARTIALLY_PAID' ? 'warn' : 'danger'"></p-tag>
+                            <strong class="ml-2">{{ inv.code }}</strong>
+                        </div>
+                    </div>
+
+                    <p-table [value]="inv.items" styleClass="p-datatable-sm">
+                        <ng-template #header>
+                            <tr>
+                                <th>Loại</th>
+                                <th>Mô tả</th>
+                                <th class="text-right">SL</th>
+                                <th class="text-right">Đơn giá</th>
+                                <th class="text-right">Thành tiền</th>
+                            </tr>
+                        </ng-template>
+                        <ng-template #body let-item>
+                            <tr>
+                                <td>
+                                    <p-tag [value]="item.type === 'SERVICE' ? 'Dịch vụ' : 'Thuốc'"
+                                           [severity]="item.type === 'SERVICE' ? 'info' : 'warn'"
+                                           [style]="{fontSize: '0.7rem'}"></p-tag>
+                                </td>
+                                <td>{{ item.description }}</td>
+                                <td class="text-right">{{ item.quantity }}</td>
+                                <td class="text-right">{{ formatVND(item.unitPrice) }}</td>
+                                <td class="text-right">{{ formatVND(item.amount) }}</td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+
+                    <div class="invoice-summary">
+                        <div class="summary-row">
+                            <span>Tổng cộng:</span>
+                            <span>{{ formatVND(inv.totalAmount) }}</span>
+                        </div>
+                        @if (inv.discountAmount > 0) {
+                            <div class="summary-row discount">
+                                <span>Giảm giá:</span>
+                                <span>-{{ formatVND(inv.discountAmount) }}</span>
+                            </div>
+                        }
+                        <div class="summary-row total">
+                            <span>Thành tiền:</span>
+                            <span>{{ formatVND(inv.finalAmount) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Form -->
+                @if (!flowCompleted()) {
+                    <p-divider></p-divider>
+                    <h4 class="font-semibold mb-3">Thanh toán</h4>
+                    <div class="form-grid">
+                        <p-floatlabel variant="on">
+                            <p-select id="payMethod" [(ngModel)]="paymentForm.paymentMethod"
+                                      [options]="paymentMethods" optionLabel="label" optionValue="value"
+                                      [style]="{width: '100%'}"></p-select>
+                            <label for="payMethod">Phương thức *</label>
+                        </p-floatlabel>
+                        <p-floatlabel variant="on">
+                            <p-inputnumber id="payAmount" [(ngModel)]="paymentForm.amount" mode="currency"
+                                           currency="VND" locale="vi-VN"
+                                           [style]="{width: '100%'}"></p-inputnumber>
+                            <label for="payAmount">Số tiền *</label>
+                        </p-floatlabel>
+                    </div>
+                    <div class="mt-4">
+                        <p-floatlabel variant="on">
+                            <textarea pTextarea id="payNote" [(ngModel)]="paymentForm.note" rows="2"
+                                      style="width: 100%"></textarea>
+                            <label for="payNote">Ghi chú thanh toán</label>
+                        </p-floatlabel>
+                    </div>
+                    <div class="flex justify-end mt-4">
+                        <p-button label="Thanh toán" icon="pi pi-wallet" severity="success"
+                                  (onClick)="createPayment()" [loading]="loading()"></p-button>
+                    </div>
+                }
+
+                <!-- Payment Result -->
+                @if (paymentResult(); as pay) {
+                    <p-divider></p-divider>
+                    <div class="result-box">
+                        <p-tag [value]="pay.invoiceStatusLabel"
+                               [severity]="pay.invoiceStatus === 'PAID' ? 'success' : 'warn'"></p-tag>
+                        <div class="mt-2">
+                            <div><strong>Mã thanh toán:</strong> {{ pay.code }}</div>
+                            <div><strong>Số tiền:</strong> {{ formatVND(pay.amount) }}</div>
+                            <div><strong>Phương thức:</strong> {{ pay.paymentMethodLabel }}</div>
+                            @if (pay.invoiceRemaining > 0) {
+                                <div class="mt-1 text-orange-600"><strong>Còn lại:</strong> {{ formatVND(pay.invoiceRemaining) }}</div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Flow Completed -->
+                @if (flowCompleted()) {
+                    <div class="completion-banner">
+                        <i class="pi pi-check-circle"></i>
+                        <h3>HOÀN TẤT CA KHÁM 🎉</h3>
+                        <p>Bệnh nhân <strong>{{ selectedPatient()!.fullName }}</strong> đã được khám và thanh toán thành
+                            công.</p>
+                        <p-button label="Bắt đầu ca khám mới" icon="pi pi-plus" severity="success" class="mt-3"
+                                  (onClick)="resetFlow()"></p-button>
+                    </div>
+                }
+            }
+        </div>
+    }
+}
+

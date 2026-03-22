@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.springframework.boot") version "4.0.3"
+    id("org.springframework.boot") version "4.0.4"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -13,7 +13,11 @@ java {
         languageVersion = JavaLanguageVersion.of(25)
     }
 }
-
+tasks.bootJar {
+    layered {
+        isEnabled = true
+    }
+}
 configurations {
     compileOnly {
         extendsFrom(configurations.annotationProcessor.get())

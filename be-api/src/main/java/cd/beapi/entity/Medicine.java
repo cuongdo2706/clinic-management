@@ -42,7 +42,7 @@ public class Medicine extends BaseEntity {
 
     @CreatedDate
     @Column(updatable = false)
-    Instant createdDate;
+    Instant createdAt;
 
     @LastModifiedDate
     Instant modifiedAt;

@@ -14,18 +14,10 @@ import java.util.Set;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Role extends BaseEntity {
+    @Column(unique = true,nullable = false)
+    String code;
+
     String name;
 
     String description;
-
-    @ManyToMany(mappedBy = "roles")
-    Set<User> users;
-
-    @ManyToMany
-    @JoinTable(
-            name = "role_permissions",
-            joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "permission_id")
-    )
-    Set<Permission> permissions;
 }

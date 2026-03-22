@@ -23,8 +23,9 @@ export class Sidebar {
 
     menuItems: MenuItem[] = [
         {label: 'Thống kê', icon: 'pi pi-chart-bar', route: '/thong-ke'},
-        {label: 'Nha sĩ', icon: 'pi pi-users', route: '/nha-si'},
         {label: 'Lịch hẹn', icon: 'pi pi-calendar', route: '/lich-hen'},
+        {label: 'Khám bệnh', icon: 'pi pi-heart-fill', route: '/kham-benh'},
+        {label: 'Nha sĩ', icon: 'pi pi-users', route: '/nha-si'},
         {label: 'Bệnh nhân', icon: 'pi pi-user', route: '/benh-nhan'},
         {label: 'Dịch vụ', icon: 'pi pi-list', route: '/dich-vu'},
     ];

@@ -1,0 +1,280 @@
+/* ═══════════════════ PAGE HEADER ═══════════════════ */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.page-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #14532d;
+    margin: 0;
+}
+
+/* ═══════════════════ STEP INDICATOR ═══════════════════ */
+.step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 20px;
+    padding: 20px 16px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #dcfce7;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 80px;
+}
+
+.step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background-color: #e5e7eb;
+    color: #9ca3af;
+    transition: all 0.3s ease;
+}
+
+.step-item.active .step-circle {
+    background-color: #16a34a;
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2);
+}
+
+.step-item.completed .step-circle {
+    background-color: #16a34a;
+    color: #fff;
+}
+
+.step-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #9ca3af;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.step-item.active .step-label {
+    color: #14532d;
+    font-weight: 700;
+}
+
+.step-item.completed .step-label {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.step-connector {
+    flex: 1;
+    height: 2px;
+    background-color: #e5e7eb;
+    margin: 0 4px;
+    margin-bottom: 22px;
+    min-width: 30px;
+    max-width: 80px;
+    transition: background-color 0.3s ease;
+}
+
+.step-connector.completed {
+    background-color: #16a34a;
+}
+
+/* ═══════════════════ CONTEXT BAR ═══════════════════ */
+.context-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    color: #14532d;
+    flex-wrap: wrap;
+}
+
+.context-bar i {
+    margin-right: 4px;
+}
+
+.context-divider {
+    color: #86efac;
+}
+
+/* ═══════════════════ STEP PANEL ═══════════════════ */
+.step-panel {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #dcfce7;
+    padding: 24px;
+}
+
+.step-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #14532d;
+    margin: 0 0 20px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #dcfce7;
+}
+
+/* ═══════════════════ FORM GRID ═══════════════════ */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-grid .col-span-full {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ═══════════════════ INFO CARD ═══════════════════ */
+.info-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+}
+
+.info-row:not(:last-child) {
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.info-label {
+    font-size: 0.85rem;
+    color: #6b7280;
+    min-width: 120px;
+}
+
+.info-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* ═══════════════════ RESULT BOX ═══════════════════ */
+.result-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.result-detail {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.success-box {
+    text-align: center;
+}
+
+/* ═══════════════════ QUEUE NUMBER ═══════════════════ */
+.queue-number {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: #16a34a;
+    line-height: 1;
+}
+
+.queue-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* ═══════════════════ INVOICE SUMMARY ═══════════════════ */
+.invoice-summary {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid #e5e7eb;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 0.9rem;
+}
+
+.summary-row.discount {
+    color: #dc2626;
+}
+
+.summary-row.total {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #14532d;
+    padding-top: 8px;
+    margin-top: 4px;
+    border-top: 2px solid #14532d;
+}
+
+/* ═══════════════════ SELECTED ROW ═══════════════════ */
+.selected-row {
+    background-color: #f0fdf4 !important;
+}
+
+/* ═══════════════════ COMPLETION BANNER ═══════════════════ */
+.completion-banner {
+    text-align: center;
+    padding: 32px;
+    margin-top: 16px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-radius: 12px;
+    border: 2px solid #16a34a;
+}
+
+.completion-banner i {
+    font-size: 3rem;
+    color: #16a34a;
+}
+
+.completion-banner h3 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #14532d;
+    margin: 12px 0 8px;
+}
+
+.completion-banner p {
+    color: #4b5563;
+    margin: 4px 0;
+}
+
+/* ═══════════════════ UTILITY ═══════════════════ */
+.text-right {
+    text-align: right;
+}
+

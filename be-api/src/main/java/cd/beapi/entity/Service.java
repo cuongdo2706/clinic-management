@@ -38,11 +38,15 @@ public class Service extends BaseEntity {
 
     Boolean isActive;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    ServiceCategory category;
+
     Instant deletedAt;
 
     @CreatedDate
     @Column(updatable = false)
-    Instant createdDate;
+    Instant createdAt;
 
     @LastModifiedDate
     Instant modifiedAt;

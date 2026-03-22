@@ -45,11 +45,7 @@ public class User extends BaseEntity {
     @LastModifiedDate
     Instant modifiedAt;
 
-    @ManyToMany
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    Set<Role> roles;;
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    Role role;
 }

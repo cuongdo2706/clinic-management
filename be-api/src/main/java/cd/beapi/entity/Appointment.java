@@ -4,13 +4,14 @@ import cd.beapi.enumerate.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
@@ -23,15 +24,18 @@ import java.time.LocalTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SQLRestriction("deleted_at is null")
-public class Appointment extends BaseEntity{
-    @Column(unique = true,nullable = false)
+@SQLDelete(sql = "UPDATE appointments SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+public class Appointment extends BaseEntity {
+    @Column(unique = true, nullable = false)
     String code;
 
-    LocalDateTime appointmentDate;
+    LocalDate appointmentDate;
 
     LocalTime startTime;
 
     LocalTime endTime;
+
+    Instant deletedAt;
 
     @CreatedDate
     @Column(updatable = false)
@@ -58,9 +62,6 @@ public class Appointment extends BaseEntity{
 //    @JoinColumn(name = "room_id")
 //    Room room;
 
-    @ManyToOne
-    @JoinColumn(name = "service_id")
-    Service service;
 
     @OneToOne(mappedBy = "appointment")
     VisitRegistration visitRegistration;
