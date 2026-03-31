@@ -1,5 +1,6 @@
 package cd.beapi.service.impl;
 
+import cd.beapi.enumerate.SequenceName;
 import cd.beapi.repository.jpa.SequenceRepository;
 import cd.beapi.service.SequenceService;
 import lombok.RequiredArgsConstructor;
@@ -17,46 +18,36 @@ public class SequenceServiceImpl implements SequenceService {
 
     @Override
     public String generateDentistCode() {
-        return format("NS", "dentist");
+        return format("NV", SequenceName.DENTIST);
     }
 
     @Override
     public String generatePatientCode() {
-        return format("BN", "patient");
+        return format("BN", SequenceName.PATIENT);
     }
 
     @Override
     public String generateAppointmentCode() {
-        return format("APT", "appointment");
+        return format("LH", SequenceName.APPOINTMENT);
     }
 
     @Override
     public String generateVisitRegistrationCode() {
-        return format("VR", "visit_registration");
+        return format("KCB", SequenceName.VISIT_REGISTRATION);
     }
 
     @Override
     public String generateMedicalRecordCode() {
-        return format("MR", "medical_record");
+        return format("BA", SequenceName.MEDICAL_RECORD);
     }
 
     @Override
     public String generatePrescriptionCode() {
-        return format("PRE", "prescription");
+        return format("DT", SequenceName.PRESCRIPTION);
     }
 
-    @Override
-    public String generateInvoiceCode() {
-        return format("INV", "invoice");
-    }
-
-    @Override
-    public String generatePaymentCode() {
-        return format("PAY", "payment");
-    }
-
-    private String format(String prefix, String sequenceName) {
-        Long seq = getNextValue(sequenceName);
-        return String.format("%s%06d", prefix, seq);
+    private String format(String prefix, SequenceName sequenceName) {
+        Long seq = getNextValue(sequenceName.name());
+        return String.format("%s%08d", prefix, seq);
     }
 }

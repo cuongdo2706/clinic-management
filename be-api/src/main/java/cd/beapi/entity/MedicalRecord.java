@@ -23,8 +23,8 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SQLRestriction("deleted_at is null")
 @SQLDelete(sql = "UPDATE medical_records SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
-public class MedicalRecord extends BaseEntity{
-    @Column(nullable = false,unique = true)
+public class MedicalRecord extends BaseEntity {
+    @Column(nullable = false, unique = true)
     String code;
 
     @Column(columnDefinition = "TEXT")
@@ -57,8 +57,8 @@ public class MedicalRecord extends BaseEntity{
     Staff staff;
 
     @OneToOne
-    @JoinColumn(name = "appointment_id",unique = true)
-    Appointment appointment;
+    @JoinColumn(name = "visit_registration_id", unique = true)
+    VisitRegistration visitRegistration;
 
     @ManyToMany
     @JoinTable(

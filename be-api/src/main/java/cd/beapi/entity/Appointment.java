@@ -1,6 +1,7 @@
 package cd.beapi.entity;
 
 import cd.beapi.enumerate.AppointmentStatus;
+import cd.beapi.enumerate.BookingChannel;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -11,8 +12,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
@@ -29,13 +29,7 @@ public class Appointment extends BaseEntity {
     @Column(unique = true, nullable = false)
     String code;
 
-    LocalDate appointmentDate;
-
-    LocalTime startTime;
-
-    LocalTime endTime;
-
-    Instant deletedAt;
+    LocalDateTime appointmentDate;
 
     @CreatedDate
     @Column(updatable = false)
@@ -45,10 +39,19 @@ public class Appointment extends BaseEntity {
     Instant modifiedAt;
 
     @Column(columnDefinition = "TEXT")
+    String symptom;
+
+    @Column(columnDefinition = "TEXT")
     String note;
 
     @Enumerated(EnumType.STRING)
     AppointmentStatus status;
+
+    // Kênh đặt lịch: online có tài khoản, online khách vãng lai, walk-in, điện thoại
+    @Enumerated(EnumType.STRING)
+    BookingChannel bookingChannel;
+
+    Instant deletedAt;
 
     @ManyToOne
     @JoinColumn(name = "staff_id")

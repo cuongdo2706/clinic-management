@@ -35,6 +35,14 @@ public class VisitRegistration extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     String note;
 
+    // Snapshot thông tin bệnh nhân tại thời điểm tiếp nhận.
+    // Giữ lại dù patient sau này đổi SĐT, đổi tên, hoặc merge account.
+    @Column(nullable = false)
+    String snapshotPatientName;
+
+    @Column(nullable = false)
+    String snapshotPatientPhone;
+
     Instant deletedAt;
 
     @CreatedDate
@@ -44,9 +52,15 @@ public class VisitRegistration extends BaseEntity {
     @LastModifiedDate
     Instant modifiedAt;
 
+    // Nullable: walk-in không có appointment
     @OneToOne
     @JoinColumn(name = "appointment_id", unique = true)
     Appointment appointment;
+
+    // Direct link đến Patient — bắt buộc kể cả walk-in
+    @ManyToOne
+    @JoinColumn(name = "patient_id", nullable = false)
+    Patient patient;
 
     @ManyToOne
     @JoinColumn(name = "receptionist_id")

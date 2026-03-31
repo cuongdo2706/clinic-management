@@ -1,9 +1,7 @@
 package cd.beapi.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
@@ -21,20 +19,21 @@ import java.util.Set;
 @Getter
 @EntityListeners(AuditingEntityListener.class)
 @Setter
+@Builder
 @SQLRestriction("deleted_at is null")
 @SQLDelete(sql = "UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
+@AllArgsConstructor
 public class User extends BaseEntity {
     @Column(unique = true, nullable = false)
     String username;
 
-    @Column(unique = true)
-    String email;
-
     @Column(nullable = false)
     String password;
 
-    Boolean isActive;
+    @Builder.Default
+    Boolean isActive = true;
 
     Instant deletedAt;
 

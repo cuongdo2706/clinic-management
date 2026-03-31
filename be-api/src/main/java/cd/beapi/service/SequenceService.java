@@ -8,6 +8,4 @@ public interface SequenceService {
     String generateVisitRegistrationCode();
     String generateMedicalRecordCode();
     String generatePrescriptionCode();
-    String generateInvoiceCode();
-    String generatePaymentCode();
 }

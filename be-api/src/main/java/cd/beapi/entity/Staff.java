@@ -30,13 +30,22 @@ public class Staff extends BaseEntity{
 
     String fullName;
 
+    String phone;
+
+    String email;
+
     LocalDate dob;
 
     Boolean gender;
 
-    Instant deletedAt;
+    String address;
 
     String avatarUrl;
+
+    @Enumerated(EnumType.STRING)
+    StaffType staffType;
+
+    Instant deletedAt;
 
     @CreatedDate
     @Column(updatable = false)
@@ -44,9 +53,6 @@ public class Staff extends BaseEntity{
 
     @LastModifiedDate
     Instant modifiedAt;
-
-    @Enumerated(EnumType.STRING)
-    StaffType staffType;
 
     @OneToOne
     @JoinColumn(name = "user_id",unique = true)
