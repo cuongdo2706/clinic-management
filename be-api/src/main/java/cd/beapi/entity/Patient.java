@@ -3,6 +3,7 @@ package cd.beapi.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
@@ -33,17 +34,20 @@ public class Patient extends BaseEntity {
 
     Boolean gender;
 
+    @Column(unique = true)
     String phone;
-
-    String identityNumber;
-
-    String email;
 
     String address;
 
-    String medicalHistory;
+    String guardianName;
+
+    String guardianPhone;
 
     Instant deletedAt;
+
+    @Version
+    @ColumnDefault("0")
+    Long version;
 
     @CreatedDate
     @Column(updatable = false)
@@ -52,7 +56,7 @@ public class Patient extends BaseEntity {
     @LastModifiedDate
     Instant modifiedAt;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id", unique = true)
     User user;
 }

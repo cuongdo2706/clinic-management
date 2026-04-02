@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.springframework.boot") version "4.0.4"
+    id("org.springframework.boot") version "4.0.5"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -10,7 +10,7 @@ description = "be-api"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(26)
     }
 }
 tasks.bootJar {
@@ -40,7 +40,7 @@ dependencies {
     //Postgres
     runtimeOnly("org.postgresql:postgresql")
     //QueryDSL
-    implementation("com.querydsl:querydsl-jpa:5.1.0")
+    implementation("com.querydsl:querydsl-jpa:5.1.0:jakarta")
     annotationProcessor("com.querydsl:querydsl-apt:5.1.0:jakarta")
     annotationProcessor("jakarta.persistence:jakarta.persistence-api")
     annotationProcessor("jakarta.annotation:jakarta.annotation-api")

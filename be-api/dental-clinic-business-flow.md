@@ -17,15 +17,18 @@ Appointment   VisitReg.     MedicalRecord   Prescription     Invoice         Pay
 
 ## ① Đặt lịch hẹn (Appointment)
 
-**Ai thực hiện:** Bệnh nhân (đặt online) hoặc Lễ tân (đặt hộ qua điện thoại/trực tiếp)
+**Ai thực hiện:** Bệnh nhân (đặt online — bắt buộc có tài khoản) hoặc Lễ tân (đặt hộ qua điện thoại/trực tiếp)
 
-### Trường hợp A — Bệnh nhân đã đăng ký (Online)
+### Trường hợp A — Bệnh nhân đặt lịch online (bắt buộc đăng nhập)
 ```
-BN đăng nhập → Đặt lịch online
-  → Hệ thống đã có Patient (isWalkIn = false, user ≠ null)
+BN đăng nhập → Chọn hồ sơ bệnh nhân (bản thân hoặc người thân):
+  ├── patientId = null → Đặt cho bản thân (hồ sơ isPrimary = true)
+  └── patientId = X    → Đặt hộ người thân (kiểm tra quyền sở hữu: Patient.user_id = User.id)
   → Chọn ngày, giờ, nha sĩ, ghi chú lý do
-  → Tạo Appointment (status: PENDING)
+  → Tạo Appointment (status: PENDING, bookingChannel: ONLINE)
 ```
+
+> ⚠️ **Quy tắc:** Đặt lịch qua web **bắt buộc phải có tài khoản**. Không hỗ trợ đặt lịch vãng lai online.
 
 ### Trường hợp B — Bệnh nhân walk-in (Tại quầy)
 ```
@@ -34,13 +37,19 @@ BN đến trực tiếp → Lễ tân kiểm tra SĐT/Tên:
   └── Chưa có → Tạo nhanh Patient mới:
         • fullName + phone (bắt buộc)
         • dob, gender, address... (tùy chọn, điền sau)
-        • isWalkIn = true, user = null
-  → Tạo Appointment (status: CONFIRMED — không cần chờ xác nhận)
+        • user = null (chưa có tài khoản)
+  → Tạo Appointment (status: CONFIRMED, bookingChannel: WALK_IN)
+```
+
+### Trường hợp C — Đặt qua điện thoại
+```
+BN gọi điện → Lễ tân tiếp nhận, kiểm tra SĐT → resolve Patient
+  → Tạo Appointment (status: PENDING, bookingChannel: PHONE_CALL)
 ```
 
 > 💡 **Quy tắc:** Mọi lần khám đều phải có `Patient` record.
-> Walk-in chỉ khác ở chỗ: `isWalkIn = true` và `user = null` (không có tài khoản).
-> Sau này BN walk-in muốn đăng ký tài khoản → tạo `User` rồi gắn vào `Patient.user`.
+> Walk-in / phone call: BN chưa có tài khoản vẫn được tạo Patient (user = null).
+> Sau này BN muốn đăng ký tài khoản → tạo `User` rồi gắn vào `Patient.user` (claim).
 
 **Luồng:**
 ```

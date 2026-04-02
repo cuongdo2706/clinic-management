@@ -1,6 +1,5 @@
 package cd.beapi.entity;
 
-import cd.beapi.enumerate.VisitRegistrationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -26,9 +25,6 @@ import java.time.Instant;
 public class VisitRegistration extends BaseEntity {
     @Column(unique = true, nullable = false)
     String code;
-
-    @Enumerated(EnumType.STRING)
-    VisitRegistrationStatus status;
 
     Integer queueNumber;
 

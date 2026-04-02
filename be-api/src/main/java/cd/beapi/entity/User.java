@@ -12,7 +12,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -44,7 +44,7 @@ public class User extends BaseEntity {
     @LastModifiedDate
     Instant modifiedAt;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "role_id")
     Role role;
 }

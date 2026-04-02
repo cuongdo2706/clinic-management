@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface SequenceRepository extends JpaRepository<Sequence, String> {
     @Transactional
-    @Modifying
     @Query(value = "UPDATE sequences SET value = value + 1 WHERE name = :name RETURNING value", nativeQuery = true)
     Long incrementAndGet(@Param("name") String name);
 }

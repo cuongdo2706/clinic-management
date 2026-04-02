@@ -1,8 +1,6 @@
 package cd.beapi.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
@@ -11,14 +9,12 @@ import java.time.LocalDate;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreatePatientRequest {
+public class UpdatePatientRequest {
     String code;
 
     @NotBlank(message = "Name must have more than 1 digit")
     String fullName;
 
-    @NotNull(message = "Date of birth must not be null")
-    @PastOrPresent(message = "Date of birth must in the past")
     LocalDate dob;
 
     Boolean gender;

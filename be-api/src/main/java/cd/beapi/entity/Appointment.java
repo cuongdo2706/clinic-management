@@ -47,10 +47,6 @@ public class Appointment extends BaseEntity {
     @Enumerated(EnumType.STRING)
     AppointmentStatus status;
 
-    // Kênh đặt lịch: online có tài khoản, online khách vãng lai, walk-in, điện thoại
-    @Enumerated(EnumType.STRING)
-    BookingChannel bookingChannel;
-
     Instant deletedAt;
 
     @ManyToOne

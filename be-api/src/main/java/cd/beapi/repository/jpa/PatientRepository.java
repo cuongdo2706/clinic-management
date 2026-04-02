@@ -9,7 +9,6 @@ import java.util.Optional;
 public interface PatientRepository extends
         JpaRepository<Patient, Long>,
         QuerydslPredicateExecutor<Patient> {
-
-    Optional<Patient> findByPhone(String phone);
+    boolean existsByCode(String code);
 }
 
