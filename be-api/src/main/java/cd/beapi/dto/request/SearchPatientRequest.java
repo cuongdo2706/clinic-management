@@ -9,11 +9,7 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SearchPatientRequest {
-    @PositiveOrZero(message = "Page must be greater than or equal 0")
-    Integer page = 0;
-    @Positive(message = "Page must be greater than 0")
-    Integer size = 10;
+public class SearchPatientRequest extends PaginationFormat {
     PatientSortOption sortBy;
     String codeKeyword;
     String nameKeyword;

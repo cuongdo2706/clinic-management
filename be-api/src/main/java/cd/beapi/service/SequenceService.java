@@ -5,7 +5,6 @@ public interface SequenceService {
     String generateDentistCode();
     String generatePatientCode();
     String generateAppointmentCode();
-    String generateVisitRegistrationCode();
     String generateMedicalRecordCode();
     String generatePrescriptionCode();
 }

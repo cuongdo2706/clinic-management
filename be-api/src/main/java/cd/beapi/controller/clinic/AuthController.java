@@ -1,4 +1,4 @@
-package cd.beapi.controller.common;
+package cd.beapi.controller.clinic;
 
 import cd.beapi.dto.request.LoginRequest;
 import cd.beapi.dto.response.SuccessResponse;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/clinic/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
@@ -28,7 +28,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("Strict")
-                .path("/api/v1/auth")
+                .path("/api/v1/clinic/auth")
                 .maxAge(tokenResponse.refreshExpiresIn())
                 .build();
         ResponseCookie sessionFlag = ResponseCookie.from("hasSession", "true")

@@ -1,0 +1,112 @@
+.save-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ── Grid layout ─────────────────────────────────── */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 20px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field.span-full {
+    grid-column: 1 / -1;
+}
+
+/* ── Labels ──────────────────────────────────────── */
+.field-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #166534;
+    line-height: 1;
+}
+
+.req {
+    color: #dc2626;
+    margin-left: 2px;
+}
+
+/* ── Validation error ────────────────────────────── */
+.error-text {
+    font-size: 0.76rem;
+    color: #dc2626;
+    margin-top: -2px;
+}
+
+/* ── Date input – match p-inputtext look ─────────── */
+.date-input {
+    font-family: var(--p-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+    color-scheme: light;
+}
+
+.date-input.ng-invalid {
+    border-color: #dc2626 !important;
+    box-shadow: none !important;
+}
+
+/* ── Select – PrimeNG-like style ─────────────────── */
+.p-select-match {
+    font-family: var(--p-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+    font-size: 1rem;
+    color: var(--p-text-color, #334155);
+    background: var(--p-surface-0, #ffffff);
+    border: 1px solid var(--p-input-border-color, #cbd5e1);
+    border-radius: var(--p-border-radius, 6px);
+    padding: 0.5rem 0.75rem;
+    height: 42px;
+    appearance: auto;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.p-select-match:hover {
+    border-color: var(--p-input-hover-border-color, #94a3b8);
+}
+
+.p-select-match:focus {
+    border-color: var(--p-primary-color, #22c55e);
+    box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.2);
+}
+
+.p-select-match.ng-invalid {
+    border-color: #dc2626 !important;
+}
+
+/* ── Minor notice banner ─────────────────────────── */
+.minor-note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fefce8;
+    border: 1px solid #fde68a;
+    border-left: 4px solid #f59e0b;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    color: #92400e;
+}
+
+.minor-note .pi {
+    color: #d97706;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+/* ── Footer buttons ──────────────────────────────── */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #d1fae5;
+}
+

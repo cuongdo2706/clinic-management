@@ -12,21 +12,26 @@ import cd.beapi.mapper.PatientMapper;
 import cd.beapi.repository.jpa.PatientRepository;
 import cd.beapi.service.PatientService;
 import cd.beapi.service.SequenceService;
+import cd.beapi.utility.ExcelUtil;
 import cd.beapi.utility.StringUtil;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -101,18 +106,17 @@ public class PatientServiceImpl implements PatientService {
                 .gender(createPatientRequest.getGender())
                 .address(createPatientRequest.getAddress())
                 .build();
-        if (!StringUtils.hasText(createPatientRequest.getCode())) {
+        if (StringUtils.hasText(createPatientRequest.getCode())) {
             if (patientRepository.existsByCode(createPatientRequest.getCode())) {
                 throw new AppException("This patient code has been used, please try another one", HttpStatus.BAD_REQUEST);
-            } else {
-                newPatient.setCode(createPatientRequest.getCode());
             }
+            newPatient.setCode(createPatientRequest.getCode());
         } else {
             newPatient.setCode(sequenceService.generatePatientCode());
         }
         long age = ChronoUnit.YEARS.between(createPatientRequest.getDob(), LocalDate.now());
         if (age < MAX_AGE_UNDER_SUPERVISION) {
-            if (!StringUtils.hasText(createPatientRequest.getGuardianName()) || !StringUtils.hasText(createPatientRequest.getGuardianPhone())) {
+            if (StringUtils.hasText(createPatientRequest.getGuardianName()) && StringUtils.hasText(createPatientRequest.getGuardianPhone())) {
                 newPatient.setGuardianName(createPatientRequest.getGuardianName());
                 newPatient.setGuardianPhone(createPatientRequest.getGuardianPhone());
             } else {
@@ -148,6 +152,7 @@ public class PatientServiceImpl implements PatientService {
         existedPatient.setDob(updatePatientRequest.getDob());
         existedPatient.setGender(updatePatientRequest.getGender());
         existedPatient.setAddress(updatePatientRequest.getAddress());
+        existedPatient.setVersion(updatePatientRequest.getVersion());
 
         long age = ChronoUnit.YEARS.between(updatePatientRequest.getDob(), LocalDate.now());
         if (age < MAX_AGE_UNDER_SUPERVISION) {
@@ -176,5 +181,54 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public void delete(Long id) {
         patientRepository.deleteById(id);
+    }
+
+    @Override
+    public Resource exportExcel() {
+        List<Patient> patients = patientRepository.findAll(Sort.by("createdAt").descending());
+
+        try (XSSFWorkbook wb = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = wb.createSheet("Danh sách bệnh nhân");
+            CellStyle headerStyle = ExcelUtil.createHeaderStyle(wb);
+            CellStyle dataStyle = ExcelUtil.createDataStyle(wb);
+            CellStyle centerStyle = ExcelUtil.createDataCenterStyle(wb);
+
+            String[] headers = {"STT", "Mã BN", "Họ tên", "Ngày sinh", "Giới tính", "Số điện thoại",
+                    "Địa chỉ", "Người giám hộ", "SĐT người giám hộ", "Ngày tạo"};
+            ExcelUtil.writeHeader(sheet, headerStyle, headers);
+
+            for (int i = 0; i < patients.size(); i++) {
+                Patient patient = patients.get(i);
+                Row row = sheet.createRow(i + 1);
+                row.setHeightInPoints(18);
+
+                Object[] values = {
+                        i + 1,
+                        patient.getCode(),
+                        patient.getFullName(),
+                        patient.getDob(),
+                        patient.getGender() == null ? "" : (patient.getGender() ? "Nam" : "Nữ"),
+                        patient.getPhone(),
+                        patient.getAddress(),
+                        patient.getGuardianName(),
+                        patient.getGuardianPhone(),
+                        patient.getCreatedAt()
+                };
+
+                for (int j = 0; j < values.length; j++) {
+                    Cell cell = row.createCell(j);
+                    ExcelUtil.setCellValue(cell, values[j]);
+                    cell.setCellStyle((j == 0 || j == 4) ? centerStyle : dataStyle);
+                }
+            }
+
+            ExcelUtil.autoSizeColumns(sheet, headers.length);
+            wb.write(out);
+            return new ByteArrayResource(out.toByteArray());
+        } catch (IOException e) {
+            throw new AppException("Cannot export patient data to Excel", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

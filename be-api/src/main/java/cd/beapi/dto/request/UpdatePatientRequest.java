@@ -26,4 +26,6 @@ public class UpdatePatientRequest {
     String guardianName;
 
     String guardianPhone;
+
+    Long version;
 }

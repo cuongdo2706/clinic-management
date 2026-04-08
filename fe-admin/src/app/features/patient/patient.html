@@ -4,97 +4,255 @@
 <div class="page-header">
     <h2>Quản lý bệnh nhân</h2>
 </div>
+<form>
+    <p-toolbar>
+        <ng-template #start>
+            <div class="flex flex-col">
+                <div class="flex flex-row">
+                    <p-floatlabel variant="on">
+                        <input pInputText id="code" [formField]="searchForm.codeKeyword"/>
+                        <label for="code">Mã bệnh nhân</label>
+                    </p-floatlabel>
 
-<p-toolbar>
-    <ng-template #start>
-        <p-button label="Thêm mới" icon="pi pi-plus" severity="success" (onClick)="openNew()"></p-button>
-    </ng-template>
-    <ng-template #end>
-        <p-iconfield>
-            <p-inputicon class="pi pi-search"></p-inputicon>
-            <input pInputText placeholder="Tìm kiếm..." [(ngModel)]="searchKeyword" (keyup.enter)="onSearch()"/>
-        </p-iconfield>
-    </ng-template>
-</p-toolbar>
+                    <p-floatlabel class="ml-3" variant="on">
+                        <input pInputText id="name" [formField]="searchForm.nameKeyword"/>
+                        <label for="name">Tên bệnh nhân</label>
+                    </p-floatlabel>
 
-<p-table [value]="patients()" [loading]="loading()" [paginator]="true" [rows]="10"
-         [rowsPerPageOptions]="[5, 10, 20]" [showCurrentPageReport]="true"
-         currentPageReportTemplate="Hiển thị {first} - {last} / {totalRecords} bệnh nhân"
-         styleClass="mt-4">
-    <ng-template #header>
-        <tr>
-            <th>Họ tên</th>
-            <th>SĐT</th>
-            <th>Email</th>
-            <th>Ngày sinh</th>
-            <th>Giới tính</th>
-            <th>Địa chỉ</th>
-            <th style="width: 150px">Thao tác</th>
-        </tr>
-    </ng-template>
-    <ng-template #body let-patient>
-        <tr>
-            <td>{{ patient.fullName }}</td>
-            <td>{{ patient.phone }}</td>
-            <td>{{ patient.email }}</td>
-            <td>{{ patient.dateOfBirth }}</td>
-            <td>{{ getGenderLabel(patient.gender) }}</td>
-            <td>{{ patient.address }}</td>
-            <td>
-                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
-                          (onClick)="openEdit(patient)"></p-button>
-                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
-                          (onClick)="confirmDelete(patient)"></p-button>
-            </td>
-        </tr>
-    </ng-template>
-    <ng-template #emptymessage>
-        <tr>
-            <td colspan="7" class="text-center p-4">Không có dữ liệu</td>
-        </tr>
-    </ng-template>
-</p-table>
+                    <p-floatlabel class="ml-3 flex-1" variant="on">
+                        <input pInputText id="phone" [formField]="searchForm.phoneKeyword" class="w-full"/>
+                        <label for="phone">SĐT bệnh nhân</label>
+                    </p-floatlabel>
+                </div>
+                <div class="flex flex-row mt-2">
+                    <p-floatlabel variant="on">
+                        <input pInputText id="guardianName" [formField]="searchForm.guardianNameKeyword"/>
+                        <label for="guardianName">Tên người giám hộ</label>
+                    </p-floatlabel>
 
-<!-- Dialog thêm/sửa -->
-<p-dialog [header]="isEdit() ? 'Cập nhật bệnh nhân' : 'Thêm bệnh nhân mới'" [(visible)]="dialogVisible"
-          [style]="{width: '480px'}" [modal]="true">
-    <div class="flex flex-col gap-6 mt-4">
-        <p-floatlabel variant="on">
-            <input pInputText id="fullName" [(ngModel)]="formData.fullName" style="width: 100%"/>
-            <label for="fullName">Họ tên</label>
-        </p-floatlabel>
+                    <p-floatlabel class="ml-3" variant="on">
+                        <input pInputText id="guardianPhone" [formField]="searchForm.guardianPhoneKeyword"/>
+                        <label for="guardianPhone">SĐT người giám hộ</label>
+                    </p-floatlabel>
 
-        <p-floatlabel variant="on">
-            <input pInputText id="phone" [(ngModel)]="formData.phone" style="width: 100%"/>
-            <label for="phone">Số điện thoại</label>
-        </p-floatlabel>
+                    <select class="ml-3 p-select-match flex-1" [formField]="searchForm.sortBy">
+                        @for (opt of sortOptions(); track opt.value) {
+                            <option [value]="opt.value">{{ opt.name }}</option>
+                        }
+                    </select>
 
-        <p-floatlabel variant="on">
-            <input pInputText id="email" [(ngModel)]="formData.email" style="width: 100%"/>
-            <label for="email">Email</label>
-        </p-floatlabel>
+                    <p-button type="submit" (onClick)="onSearch()" icon="pi pi-search" [loading]="loading()" class="ml-3"></p-button>
+                    <p-button (onClick)="onResetFilter()" icon="pi pi-refresh" [loading]="loading()" severity="secondary" class="ml-3"></p-button>
+                </div>
+            </div>
 
-        <p-floatlabel variant="on">
-            <input pInputText id="dob" [(ngModel)]="formData.dateOfBirth" type="date" style="width: 100%"/>
-            <label for="dob">Ngày sinh</label>
-        </p-floatlabel>
 
-        <p-floatlabel variant="on">
-            <p-select id="gender" [(ngModel)]="formData.gender" [options]="genderOptions"
-                      optionLabel="label" optionValue="value" [style]="{width: '100%'}"></p-select>
-            <label for="gender">Giới tính</label>
-        </p-floatlabel>
+        </ng-template>
+        <ng-template #end>
+            <p-button label="Thêm mới" icon="pi pi-plus" severity="success"
+                      (onClick)="openAddDialog()"></p-button>
+            <p-button class="ml-3" label="Xuất Excel" icon="pi pi-file-export" severity="success"
+                      (onClick)="onExportExcel()" [loading]="exporting()"></p-button>
+        </ng-template>
+    </p-toolbar>
 
-        <p-floatlabel variant="on">
-            <input pInputText id="address" [(ngModel)]="formData.address" style="width: 100%"/>
-            <label for="address">Địa chỉ</label>
-        </p-floatlabel>
-    </div>
+    <p-table
+            [value]="patients()?.content!"
+            [loading]="loading()"
+            dataKey="id"
+            [expandedRowKeys]="expandedRows()"
+    >
+        <ng-template #loadingicon>
+            <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+        </ng-template>
+        <ng-template #header>
+            <tr>
+                <th>Mã</th>
+                <th>Họ tên</th>
+                <th>SĐT</th>
+                <th>Giới tính</th>
+                <th>Địa chỉ</th>
+                <th style="width: 7rem; text-align:center">Thao tác</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-patient let-expanded="expanded">
+            <tr (click)="toggleRow(patient)" class="patient-row" [class.row-expanded]="expanded">
+                <td>{{ patient.code }}</td>
+                <td>{{ patient.fullName }}</td>
+                <td>{{ patient.phone }}</td>
+                <td>{{ getGenderLabel(patient.gender) }}</td>
+                <td>{{ patient.address }}</td>
+                <td class="action-cell" (click)="$event.stopPropagation()">
+                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                              pTooltip="Chỉnh sửa" tooltipPosition="top"
+                              (onClick)="openEditDialog(patient)"></p-button>
+                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                              pTooltip="Xóa" tooltipPosition="top"
+                              (onClick)="confirmDelete(patient)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #expandedrow let-patient>
+            <tr>
+                <td colspan="6" class="expanded-row-cell">
+                    <div class="patient-detail-card">
+                        <p-tabs value="info">
+                            <p-tablist>
+                                <p-tab value="info">
+                                    <i class="pi pi-user mr-2"></i>Thông tin bệnh nhân
+                                </p-tab>
+                                <p-tab value="history">
+                                    <i class="pi pi-history mr-2"></i>Lịch sử khám
+                                </p-tab>
+                            </p-tablist>
 
-    <ng-template #footer>
-        <p-button label="Huỷ" icon="pi pi-times" [text]="true" severity="secondary"
-                  (onClick)="dialogVisible.set(false)"></p-button>
-        <p-button label="Lưu" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
-    </ng-template>
+                            <p-tabpanels>
+                                <!-- TAB 1: Thông tin -->
+                                <p-tabpanel value="info">
+                                    <div class="patient-detail-body">
+                                        <div class="detail-group">
+                                            <div class="detail-group-title">Thông tin cá nhân</div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="pi pi-id-card"></i> Mã bệnh nhân</span>
+                                                <span class="detail-value">{{ patient.code }}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="pi pi-user"></i> Họ và tên</span>
+                                                <span class="detail-value">{{ patient.fullName }}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="pi pi-phone"></i> Số điện thoại</span>
+                                                <span class="detail-value">{{ patient.phone }}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="pi pi-calendar"></i> Ngày sinh</span>
+                                                <span class="detail-value">{{ patient.dob | date: 'dd/MM/yyyy' }}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="pi pi-venus-mars"></i> Giới tính</span>
+                                                <span class="detail-value">
+                                                    <span class="badge" [class.badge-male]="patient.gender" [class.badge-female]="!patient.gender">
+                                                        {{ getGenderLabel(patient.gender) }}
+                                                    </span>
+                                                </span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="pi pi-map-marker"></i> Địa chỉ</span>
+                                                <span class="detail-value">{{ patient.address || '—' }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="detail-divider"></div>
+                                        <div class="detail-group">
+                                            <div class="detail-group-title">Người giám hộ</div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="pi pi-users"></i> Họ và tên</span>
+                                                <span class="detail-value">{{ patient.guardianName || '—' }}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="pi pi-phone"></i> Số điện thoại</span>
+                                                <span class="detail-value">{{ patient.guardianPhone || '—' }}</span>
+                                            </div>
+                                            <div class="detail-divider-h"></div>
+                                            <div class="detail-group-title">Lịch sử hệ thống</div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="pi pi-clock"></i> Ngày tạo</span>
+                                                <span class="detail-value">{{ patient.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                                            </div>
+                                            <div class="detail-item">
+                                                <span class="detail-label"><i class="pi pi-refresh"></i> Cập nhật lần cuối</span>
+                                                <span class="detail-value">{{ patient.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </p-tabpanel>
+
+                                <!-- TAB 2: Lịch sử khám -->
+                                <p-tabpanel value="history">
+                                    <div class="history-panel">
+                                        <table class="history-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Ngày khám</th>
+                                                    <th>Nha sĩ</th>
+                                                    <th>Dịch vụ</th>
+                                                    <th>Chẩn đoán</th>
+                                                    <th>Trạng thái</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr class="history-empty">
+                                                    <td colspan="6">
+                                                        <div class="history-empty-content">
+                                                            <i class="pi pi-calendar-times"></i>
+                                                            <span>Chưa có lịch sử khám</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </p-tabpanel>
+                            </p-tabpanels>
+                        </p-tabs>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="6" class="text-center p-4">Không có dữ liệu</td>
+            </tr>
+        </ng-template>
+        <ng-template #footer class="flex justify-center">
+            <tr>
+                <td colspan="100%" style="background-color: #ffffff">
+                    <p-paginator #paginator
+                                 (onPageChange)="onPageChange($event)"
+                                 [first]="paginatorFirst()"
+                                 [rows]="patients()?.size ?? 10"
+                                 [totalRecords]="patients()?.totalElements ?? 0"
+                                 [rowsPerPageOptions]="[10, 20, 30]"
+                                 appendTo="body"/>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</form>
+
+<!-- Dialog thêm bệnh nhân -->
+<p-dialog
+        header="Thêm bệnh nhân mới"
+        [visible]="showAddDialog()"
+        (visibleChange)="showAddDialog.set($event)"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{width: '660px'}"
+        class="patient-add-dialog">
+    @if (showAddDialog()) {
+        <app-patient-save-form
+                (saved)="onPatientSaved()"
+                (cancelled)="showAddDialog.set(false)"/>
+    }
 </p-dialog>
+
+<!-- Dialog chỉnh sửa bệnh nhân -->
+<p-dialog
+        header="Chỉnh sửa bệnh nhân"
+        [visible]="showEditDialog()"
+        (visibleChange)="showEditDialog.set($event)"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{width: '660px'}"
+        class="patient-edit-dialog">
+    @if (showEditDialog() && editingPatient()) {
+        <app-patient-update-form
+                [patient]="editingPatient()!.id"
+                (saved)="onPatientSaved()"
+                (cancelled)="showEditDialog.set(false)"/>
+    }
+</p-dialog>
+
 

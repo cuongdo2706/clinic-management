@@ -64,7 +64,6 @@ export class ClinicService implements OnInit {
         this.loading.set(true);
         this.clinicServiceService.getAll(0, 100, this.searchKeyword()).subscribe({
             next: (res) => {
-                this.services.set(res.data?.content ?? res.data ?? []);
                 this.loading.set(false);
             },
             error: () => this.loading.set(false),

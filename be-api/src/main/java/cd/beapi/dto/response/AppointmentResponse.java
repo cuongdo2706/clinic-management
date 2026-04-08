@@ -1,20 +1,19 @@
 package cd.beapi.dto.response;
 
+import cd.beapi.enumerate.AppointmentStatus;
+
 import java.time.Instant;
 
 public record AppointmentResponse(
         Long id,
         String code,
         String appointmentDate,
-        String startTime,
-        String endTime,
-        String status,
-        String statusLabel,
+        Instant createdAt,
+        Instant modifiedAt,
+        String symptom,
         String note,
-        String patientName,
-        String patientCode,
-        String dentistName,
-        String dentistCode,
-        Instant createdAt
+        AppointmentStatus status,
+        Long version,
+        PatientResponse patient
 ) {}
 

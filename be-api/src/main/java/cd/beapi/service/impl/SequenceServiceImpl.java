@@ -31,10 +31,6 @@ public class SequenceServiceImpl implements SequenceService {
         return format("LH", SequenceName.APPOINTMENT);
     }
 
-    @Override
-    public String generateVisitRegistrationCode() {
-        return format("KCB", SequenceName.VISIT_REGISTRATION);
-    }
 
     @Override
     public String generateMedicalRecordCode() {

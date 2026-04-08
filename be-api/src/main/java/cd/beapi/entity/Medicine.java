@@ -36,7 +36,8 @@ public class Medicine extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     String description;
 
-    Boolean isActive;
+    @Builder.Default
+    Boolean isActive = true;
 
     Instant deletedAt;
 

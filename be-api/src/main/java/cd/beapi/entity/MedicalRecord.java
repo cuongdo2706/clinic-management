@@ -48,17 +48,19 @@ public class MedicalRecord extends BaseEntity {
     @LastModifiedDate
     Instant modifiedAt;
 
+    Integer queueNumber;
+
     @ManyToOne
     @JoinColumn(name = "patient_id")
     Patient patient;
 
     @ManyToOne
     @JoinColumn(name = "dentist_id")
-    Staff staff;
+    Staff dentist;
 
     @OneToOne
-    @JoinColumn(name = "visit_registration_id", unique = true)
-    VisitRegistration visitRegistration;
+    @JoinColumn(name = "appointment_id", unique = true)
+    Appointment appointment;
 
     @ManyToMany
     @JoinTable(

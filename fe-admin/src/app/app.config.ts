@@ -1,10 +1,9 @@
-import {APP_INITIALIZER, ApplicationConfig, importProvidersFrom, inject, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection} from '@angular/core';
+import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners} from '@angular/core';
 import {provideRouter, withComponentInputBinding} from '@angular/router';
 import {routes} from './app.routes';
 import {providePrimeNG} from "primeng/config";
 import Aura from '@primeuix/themes/aura';
 import {definePreset} from '@primeuix/themes';
-import {JwtModule} from "@auth0/angular-jwt";
 import {provideHttpClient, withInterceptors} from "@angular/common/http";
 import {authInterceptor} from "./core/interceptor/auth.interceptor";
 import {AuthService} from "./core/service/auth.service";

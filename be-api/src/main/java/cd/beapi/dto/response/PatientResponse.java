@@ -13,6 +13,7 @@ public record PatientResponse(
         String address,
         String guardianName,
         String guardianPhone,
+        Long version,
         Instant createdAt,
         Instant modifiedAt
 ) {}
