@@ -12,11 +12,14 @@ import cd.beapi.mapper.MedicineMapper;
 import cd.beapi.repository.jpa.MedicineRepository;
 import cd.beapi.service.MedicineService;
 import cd.beapi.service.SequenceService;
+import cd.beapi.utility.ExcelUtil;
 import cd.beapi.utility.StringUtil;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +29,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -80,25 +87,97 @@ public class MedicineServiceImpl implements MedicineService {
     @Transactional
     @Override
     public MedicineResponse save(CreateMedicineRequest createMedicineRequest) {
-        Medicine medicine = Medicine.builder()
-                .name(createMedicineRequest.get)
+        Medicine newMedicine = Medicine.builder()
+                .name(createMedicineRequest.getName())
+                .unit(createMedicineRequest.getUnit())
+                .description(createMedicineRequest.getDescription())
                 .build();
-        return null;
+        if (StringUtils.hasText(createMedicineRequest.getCode())){
+            if (medicineRepository.existsByCode(createMedicineRequest.getCode())){
+                throw new AppException("This code has been used, please try another one", HttpStatus.BAD_REQUEST);
+            }
+            newMedicine.setCode(createMedicineRequest.getCode());
+        }
+        else {
+            newMedicine.setCode(sequenceService.generateMedicineCode());
+        }
+        Medicine saveMedicine = medicineRepository.save(newMedicine);
+        return medicineMapper.toMedicineResponse(saveMedicine);
     }
 
     @Transactional
     @Override
-    public MedicineResponse update(Long id, UpdateMedicineRequest updateMedicineRequest) {
-        return null;
+    public MedicineResponse update(Long id, UpdateMedicineRequest req) {
+        Medicine existed = medicineRepository.findById(id).orElseThrow(
+                () -> new AppException("Cannot find medicine with id: " + id, HttpStatus.BAD_REQUEST));
+
+        if (StringUtils.hasText(req.getCode())
+                && !req.getCode().equals(existed.getCode())) {
+            if (medicineRepository.existsByCode(req.getCode())) {
+                throw new AppException("This code has been used, please try another one", HttpStatus.BAD_REQUEST);
+            }
+            existed.setCode(req.getCode());
+        }
+
+        existed.setName(req.getName());
+        existed.setUnit(req.getUnit());
+        existed.setDescription(req.getDescription());
+
+        existed.setVersion(req.getVersion());
+
+        return medicineMapper.toMedicineResponse(medicineRepository.save(existed));
     }
 
     @Override
     public void delete(Long id) {
-
+        if (!medicineRepository.existsById(id)) {
+            throw new AppException("Cannot find medicine with id: " + id, HttpStatus.BAD_REQUEST);
+        }
+        medicineRepository.deleteById(id);
     }
 
     @Override
     public Resource exportExcel() {
-        return null;
+        List<Medicine> medicines = medicineRepository.findAll(Sort.by("createdAt").descending());
+
+        try (XSSFWorkbook wb = new XSSFWorkbook();
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
+            Sheet sheet = wb.createSheet("Danh sách thuốc");
+            CellStyle headerStyle = ExcelUtil.createHeaderStyle(wb);
+            CellStyle dataStyle   = ExcelUtil.createDataStyle(wb);
+            CellStyle centerStyle = ExcelUtil.createDataCenterStyle(wb);
+
+            String[] headers = {"STT", "Mã thuốc", "Tên thuốc", "Đơn vị", "Mô tả", "Trạng thái", "Ngày tạo"};
+            ExcelUtil.writeHeader(sheet, headerStyle, headers);
+
+            for (int i = 0; i < medicines.size(); i++) {
+                Medicine m = medicines.get(i);
+                Row row = sheet.createRow(i + 1);
+                row.setHeightInPoints(18);
+
+                Object[] values = {
+                        i + 1,
+                        m.getCode(),
+                        m.getName(),
+                        m.getUnit(),
+                        m.getDescription(),
+                        Boolean.TRUE.equals(m.getIsActive()) ? "Đang dùng" : "Ngừng dùng",
+                        m.getCreatedAt()
+                };
+
+                for (int j = 0; j < values.length; j++) {
+                    Cell cell = row.createCell(j);
+                    ExcelUtil.setCellValue(cell, values[j]);
+                    cell.setCellStyle((j == 0 || j == 5) ? centerStyle : dataStyle);
+                }
+            }
+
+            ExcelUtil.autoSizeColumns(sheet, headers.length);
+            wb.write(out);
+            return new ByteArrayResource(out.toByteArray());
+        } catch (IOException e) {
+            throw new AppException("Cannot export medicine data to Excel", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

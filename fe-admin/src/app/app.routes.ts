@@ -5,14 +5,15 @@ import {MainLayout} from "./core/component/main-layout/main-layout";
 import {authGuard} from "./core/guard/auth-guard";
 import {Dashboard} from "./features/dashboard/dashboard";
 import {PageNotFound} from "./features/page-not-found/page-not-found";
-import {Dentist} from "./features/dentist/dentist";
 import {Appointment} from "./features/appointment/appointment";
 import {Patient} from "./features/patient/patient";
-import {ClinicService} from "./features/service/clinic-service";
+import {Medicine} from "./features/medicine/medicine";
+import {Staff} from "./features/staff/staff";
+import {Permission} from "./features/permission/permission";
 
 export const routes: Routes = [
     {
-        path: "dang-nhap",
+        path: "login",
         component: Login,
         canActivate: [loginGuard]
     },
@@ -23,40 +24,45 @@ export const routes: Routes = [
         children: [
             {
                 path: "",
-                redirectTo: "thong-ke",
+                redirectTo: "dashboard",
                 pathMatch: "full",
             },
             {
-                path: "thong-ke",
+                path: "dashboard",
                 title: "Thống kê",
                 component: Dashboard,
                 canActivate: []
             },
             {
-                path: "nha-si",
-                title: "Nha sĩ",
-                component: Dentist,
+                path: "staffs",
+                title: "Nhân Viên",
+                component: Staff,
             },
             {
-                path: "lich-hen",
+                path: "appointments",
                 title: "Lịch hẹn",
                 component: Appointment,
             },
             {
-                path: "benh-nhan",
+                path: "patients",
                 title: "Bệnh nhân",
                 component: Patient,
             },
+            // {
+            //     path: "services",
+            //     title: "Dịch vụ",
+            //     component: Service,
+            // },
             {
-                path: "dich-vu",
-                title: "Dịch vụ",
-                component: ClinicService,
+                path: "medicines",
+                title: "Thuốc",
+                component: Medicine,
             },
             {
-                path: "kham-benh",
-                title: "Luồng khám bệnh",
-                loadComponent: () => import("./features/examination/examination").then(m => m.Examination),
-            },
+                path: "permissions",
+                title: "Phân quyền",
+                component: Permission,
+            }
         ]
     },
     {

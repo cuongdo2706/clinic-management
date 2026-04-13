@@ -1,0 +1,68 @@
+<p-card class="update-card">
+    @if (fetching()) {
+        <div class="fetch-loading">
+            <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+            <span>Đang tải thông tin...</span>
+        </div>
+    } @else {
+        <form class="update-form" novalidate>
+
+            <div class="form-grid">
+
+                <!-- Mã thuốc -->
+                <div class="field">
+                    <label class="field-label" for="uf-code">Mã thuốc</label>
+                    <input pInputText id="uf-code" [formField]="updateForm.code"
+                           class="w-full"/>
+                </div>
+
+                <!-- Tên thuốc -->
+                <div class="field">
+                    <label class="field-label" for="uf-name">
+                        Tên thuốc <span class="req">*</span>
+                    </label>
+                    <input pInputText id="uf-name" [formField]="updateForm.name"
+                           class="w-full" placeholder="Nhập tên thuốc"
+                           (input)="clearError('name')"
+                           [class.ng-invalid]="errors()['name']"/>
+                    @if (errors()['name']) {
+                        <small class="error-text">{{ errors()['name'] }}</small>
+                    }
+                </div>
+
+                <!-- Đơn vị -->
+                <div class="field">
+                    <label class="field-label" for="uf-unit">
+                        Đơn vị <span class="req">*</span>
+                    </label>
+                    <input pInputText id="uf-unit" [formField]="updateForm.unit"
+                           class="w-full" placeholder="VD: Viên, Hộp, Chai..."
+                           (input)="clearError('unit')"
+                           [class.ng-invalid]="errors()['unit']"/>
+                    @if (errors()['unit']) {
+                        <small class="error-text">{{ errors()['unit'] }}</small>
+                    }
+                </div>
+
+                <!-- Mô tả -->
+                <div class="field span-full">
+                    <label class="field-label" for="uf-desc">Mô tả</label>
+                    <textarea id="uf-desc" [formField]="updateForm.description"
+                              class="p-textarea-match w-full" placeholder="Nhập mô tả thuốc"
+                              rows="3"></textarea>
+                </div>
+
+            </div>
+
+            <div class="form-actions">
+                <p-button type="button" label="Hủy" severity="secondary" icon="pi pi-times"
+                          (onClick)="cancelled.emit()" [disabled]="loading()"/>
+                <p-button type="button" label="Cập nhật"
+                          severity="success" icon="pi pi-check"
+                          (onClick)="onSubmit()"
+                          [loading]="loading()"/>
+            </div>
+
+        </form>
+    }
+</p-card>

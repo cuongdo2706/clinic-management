@@ -10,6 +10,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -62,11 +63,6 @@ public class MedicalRecord extends BaseEntity {
     @JoinColumn(name = "appointment_id", unique = true)
     Appointment appointment;
 
-    @ManyToMany
-    @JoinTable(
-            name = "medical_record_services",
-            joinColumns = @JoinColumn(name = "medical_record_id"),
-            inverseJoinColumns = @JoinColumn(name = "service_id")
-    )
-    Set<Service> services;
+    @OneToMany(mappedBy = "medicalRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<TreatmentItem> treatmentItems;
 }

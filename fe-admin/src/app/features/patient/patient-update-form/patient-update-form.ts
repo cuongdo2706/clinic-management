@@ -1,5 +1,5 @@
 import {Component, computed, inject, input, OnInit, output, signal} from '@angular/core';
-import {PatientService} from "../service/patient.service";
+import {PatientService} from "../../../core/service/patient.service";
 import {form, FormField} from "@angular/forms/signals";
 import {UpdatePatientRequest} from "../../../core/model/request/update-patient-request";
 import {MessageService} from "primeng/api";

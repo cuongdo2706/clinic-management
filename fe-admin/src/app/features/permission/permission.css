@@ -1,0 +1,192 @@
+.page-header {
+    margin-bottom: 16px;
+}
+
+.page-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #14532d;
+    margin: 0;
+}
+
+/* Clickable row */
+.role-row {
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.role-row:hover {
+    background-color: #f0fdf4 !important;
+}
+
+.role-row.row-expanded {
+    background-color: #dcfce7 !important;
+    border-left: 3px solid #16a34a;
+}
+
+/* Expanded row */
+.expanded-row-cell {
+    padding: 0 !important;
+    background: #f0fdf4 !important;
+}
+
+.permission-detail-card {
+    margin: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #bbf7d0;
+    background: #ffffff;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(20, 83, 45, 0.07);
+}
+
+.detail-header {
+    background: linear-gradient(90deg, #166534 0%, #15803d 100%);
+    color: #ffffff;
+    padding: 12px 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.detail-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.role-name-highlight {
+    color: #bbf7d0;
+    font-weight: 700;
+}
+
+.mr-2 {
+    margin-right: 8px;
+}
+
+/* Matrix table */
+.matrix-table-wrapper {
+    padding: 16px 20px;
+    overflow-x: auto;
+}
+
+.matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--p-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+    font-size: 0.9rem;
+}
+
+.matrix-table thead tr {
+    background: #f0fdf4;
+}
+
+.matrix-table th {
+    padding: 10px 14px;
+    text-align: center;
+    font-weight: 600;
+    color: #166534;
+    border-bottom: 2px solid #bbf7d0;
+    white-space: nowrap;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.matrix-table th.page-col {
+    text-align: left;
+    min-width: 160px;
+}
+
+.matrix-table th.action-col {
+    min-width: 70px;
+}
+
+.matrix-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #ecfdf5;
+}
+
+.matrix-table tbody tr:hover {
+    background-color: #f0fdf4;
+}
+
+.matrix-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.page-cell {
+    font-weight: 500;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.page-cell i {
+    color: #22c55e;
+    font-size: 0.85rem;
+}
+
+.check-cell {
+    text-align: center;
+}
+
+/* No action indicator */
+.no-action {
+    color: #cbd5e1;
+    font-size: 1rem;
+    user-select: none;
+}
+
+/* Select all checkboxes */
+.select-all-check,
+.select-col-check {
+    display: block;
+    margin-top: 4px;
+}
+
+.select-row-check {
+    margin-left: auto;
+}
+
+/* Loading & empty states */
+.matrix-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+}
+
+.matrix-empty {
+    padding: 24px !important;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.matrix-empty i {
+    color: #fbbf24;
+    margin-right: 6px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .permission-layout {
+        flex-direction: column;
+    }
+
+    .role-list-panel {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+}

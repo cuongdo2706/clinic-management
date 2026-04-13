@@ -1,6 +1,6 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
 import {DatePipe} from "@angular/common";
-import {PatientService} from "./service/patient.service";
+import {PatientService} from "../../core/service/patient.service";
 import {MessageService, ConfirmationService} from "primeng/api";
 import {Toast} from "primeng/toast";
 import {ConfirmDialog} from "primeng/confirmdialog";
@@ -45,7 +45,6 @@ import {PatientUpdateForm} from "./patient-update-form/patient-update-form";
         Tab,
         TabPanels,
         TabPanel,
-        Tag,
         Dialog,
         PatientSaveForm,
         PatientUpdateForm,

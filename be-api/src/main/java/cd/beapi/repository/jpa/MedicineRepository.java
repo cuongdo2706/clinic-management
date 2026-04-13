@@ -12,6 +12,7 @@ import java.util.Set;
 public interface MedicineRepository extends
         JpaRepository<Medicine, Long>,
         QuerydslPredicateExecutor<Medicine> {
+    boolean existsByCode(String code);
 }
 
 

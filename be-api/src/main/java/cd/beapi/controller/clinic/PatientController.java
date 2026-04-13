@@ -7,6 +7,7 @@ import cd.beapi.dto.response.PageData;
 import cd.beapi.dto.response.PatientResponse;
 import cd.beapi.dto.response.SuccessResponse;
 import cd.beapi.service.PatientService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -32,18 +33,18 @@ public class PatientController {
     }
 
     @PostMapping("/search")
-    public SuccessResponse<PageData<PatientResponse>> search(@RequestBody SearchPatientRequest searchPatientRequest) {
+    public SuccessResponse<PageData<PatientResponse>> search(@Valid @RequestBody SearchPatientRequest searchPatientRequest) {
         return new SuccessResponse<>(HttpStatus.OK.value(), "Get data successfully", Instant.now(), patientService.search(searchPatientRequest));
     }
 
     @PostMapping
-    public SuccessResponse<PatientResponse> save(@RequestBody CreatePatientRequest createPatientRequest) {
+    public SuccessResponse<PatientResponse> save(@Valid @RequestBody CreatePatientRequest createPatientRequest) {
         return new SuccessResponse<>(HttpStatus.CREATED.value(), "Save data successfully", Instant.now(), patientService.save(createPatientRequest));
     }
 
     @PutMapping("/{id}")
     public SuccessResponse<PatientResponse> update(@PathVariable Long id,
-                                                   @RequestBody UpdatePatientRequest updatePatientRequest) {
+                                                   @Valid @RequestBody UpdatePatientRequest updatePatientRequest) {
         return new SuccessResponse<>(HttpStatus.ACCEPTED.value(), "Update data successfully", Instant.now(), patientService.update(id, updatePatientRequest));
     }
 

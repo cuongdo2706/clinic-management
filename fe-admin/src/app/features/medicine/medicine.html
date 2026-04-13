@@ -1,1 +1,185 @@
-<p>medicine works!</p>
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+    <h2>Quản lý thuốc</h2>
+</div>
+<form>
+    <p-toolbar>
+        <ng-template #start>
+            <div class="flex flex-row">
+                <p-floatlabel variant="on">
+                    <input pInputText id="code" [formField]="searchForm.codeKeyword"/>
+                    <label for="code">Mã thuốc</label>
+                </p-floatlabel>
+
+                <p-floatlabel class="ml-3" variant="on">
+                    <input pInputText id="name" [formField]="searchForm.nameKeyword"/>
+                    <label for="name">Tên thuốc</label>
+                </p-floatlabel>
+
+                <select class="ml-3 p-select-match" [formField]="searchForm.sortBy">
+                    @for (opt of sortOptions(); track opt.value) {
+                        <option [value]="opt.value">{{ opt.name }}</option>
+                    }
+                </select>
+
+                <p-button type="submit" (onClick)="onSearch()" icon="pi pi-search" [loading]="loading()" class="ml-3"></p-button>
+                <p-button (onClick)="onResetFilter()" icon="pi pi-refresh" [loading]="loading()" severity="secondary" class="ml-3"></p-button>
+            </div>
+        </ng-template>
+        <ng-template #end>
+            <p-button label="Thêm mới" icon="pi pi-plus" severity="success"
+                      (onClick)="openAddDialog()"></p-button>
+            <p-button class="ml-3" label="Xuất Excel" icon="pi pi-file-export" severity="success"
+                      (onClick)="onExportExcel()" [loading]="exporting()"></p-button>
+        </ng-template>
+    </p-toolbar>
+
+    <p-table
+            [value]="medicines()?.content!"
+            [loading]="loading()"
+            dataKey="id"
+            [expandedRowKeys]="expandedRows()"
+    >
+        <ng-template #loadingicon>
+            <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+        </ng-template>
+        <ng-template #header>
+            <tr>
+                <th>Mã</th>
+                <th>Tên thuốc</th>
+                <th>Đơn vị</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th style="width: 7rem; text-align:center">Thao tác</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-medicine let-expanded="expanded">
+            <tr (click)="toggleRow(medicine)" class="medicine-row" [class.row-expanded]="expanded">
+                <td>{{ medicine.code }}</td>
+                <td>{{ medicine.name }}</td>
+                <td>{{ medicine.unit }}</td>
+                <td>
+                    <p-tag [value]="medicine.isActive ? 'Hoạt động' : 'Ngừng'"
+                           [severity]="medicine.isActive ? 'success' : 'danger'"/>
+                </td>
+                <td>{{ medicine.createdAt | date: 'dd/MM/yyyy' }}</td>
+                <td class="action-cell" (click)="$event.stopPropagation()">
+                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                              pTooltip="Chỉnh sửa" tooltipPosition="top"
+                              (onClick)="openEditDialog(medicine)"></p-button>
+                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                              pTooltip="Xóa" tooltipPosition="top"
+                              (onClick)="confirmDelete(medicine)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #expandedrow let-medicine>
+            <tr>
+                <td colspan="6" class="expanded-row-cell">
+                    <div class="medicine-detail-card">
+                        <div class="detail-header">
+                            <i class="pi pi-box"></i> Chi tiết thuốc
+                        </div>
+                        <div class="medicine-detail-body">
+                            <div class="detail-group">
+                                <div class="detail-group-title">Thông tin cơ bản</div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-id-card"></i> Mã thuốc</span>
+                                    <span class="detail-value">{{ medicine.code }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-box"></i> Tên thuốc</span>
+                                    <span class="detail-value">{{ medicine.name }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-tag"></i> Đơn vị</span>
+                                    <span class="detail-value">{{ medicine.unit }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-check-circle"></i> Trạng thái</span>
+                                    <span class="detail-value">
+                                        <span class="badge" [class.badge-active]="medicine.isActive" [class.badge-inactive]="!medicine.isActive">
+                                            {{ medicine.isActive ? 'Hoạt động' : 'Ngừng hoạt động' }}
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="detail-divider"></div>
+                            <div class="detail-group">
+                                <div class="detail-group-title">Mô tả</div>
+                                <div class="detail-item">
+                                    <span class="detail-value description-text">{{ medicine.description || '—' }}</span>
+                                </div>
+                                <div class="detail-divider-h"></div>
+                                <div class="detail-group-title">Lịch sử hệ thống</div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-clock"></i> Ngày tạo</span>
+                                    <span class="detail-value">{{ medicine.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-refresh"></i> Cập nhật lần cuối</span>
+                                    <span class="detail-value">{{ medicine.modifiedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="6" class="text-center p-4">Không có dữ liệu</td>
+            </tr>
+        </ng-template>
+        <ng-template #footer class="flex justify-center">
+            <tr>
+                <td colspan="100%" style="background-color: #ffffff">
+                    <p-paginator #paginator
+                                 (onPageChange)="onPageChange($event)"
+                                 [first]="paginatorFirst()"
+                                 [rows]="medicines()?.size ?? 10"
+                                 [totalRecords]="medicines()?.totalElements ?? 0"
+                                 [rowsPerPageOptions]="[10, 20, 30]"
+                                 appendTo="body"/>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</form>
+
+<!-- Dialog thêm thuốc -->
+<p-dialog
+        header="Thêm thuốc mới"
+        [visible]="showAddDialog()"
+        (visibleChange)="showAddDialog.set($event)"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{width: '660px'}"
+        class="medicine-add-dialog">
+    @if (showAddDialog()) {
+        <app-medicine-save-form
+                (saved)="onMedicineSaved()"
+                (cancelled)="showAddDialog.set(false)"/>
+    }
+</p-dialog>
+
+<!-- Dialog chỉnh sửa thuốc -->
+<p-dialog
+        header="Chỉnh sửa thuốc"
+        [visible]="showEditDialog()"
+        (visibleChange)="showEditDialog.set($event)"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{width: '660px'}"
+        class="medicine-edit-dialog">
+    @if (showEditDialog() && editingMedicine()) {
+        <app-medicine-update-form
+                [medicine]="editingMedicine()!.id"
+                (saved)="onMedicineSaved()"
+                (cancelled)="showEditDialog.set(false)"/>
+    }
+</p-dialog>

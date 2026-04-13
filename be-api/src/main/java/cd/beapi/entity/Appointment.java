@@ -42,8 +42,13 @@ public class Appointment extends BaseEntity {
 
     // Bác sĩ được chọn khi đặt lịch (nullable — walk-in có thể không chọn trước)
     @ManyToOne
-    @JoinColumn(name = "staff_id")
-    Staff staff;
+    @JoinColumn(name = "dentist_id")
+    Staff dentist;
+
+    // Lễ tân tiếp nhận (set khi check-in)
+    @ManyToOne
+    @JoinColumn(name = "receptionist_id")
+    Staff receptionist;
 
     @ManyToOne
     @JoinColumn(name = "patient_id", nullable = false)
@@ -56,10 +61,6 @@ public class Appointment extends BaseEntity {
     String snapshotPatientName;
     String snapshotPatientPhone;
 
-    // Lễ tân tiếp nhận (set khi check-in)
-    @ManyToOne
-    @JoinColumn(name = "receptionist_id")
-    Staff receptionist;
 
     // === META ===
     @CreatedDate

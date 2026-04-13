@@ -69,11 +69,11 @@ export class AuthService {
         ).subscribe({
             complete: () => {
                 this.clearMemory();
-                this.router.navigate(['/dang-nhap']);
+                this.router.navigate(['/login']);
             },
             error: () => {
                 this.clearMemory();
-                this.router.navigate(['/dang-nhap']);
+                this.router.navigate(['/login']);
             }
         });
     }
@@ -87,7 +87,7 @@ export class AuthService {
                 tap(res => this.storeAccessToken(res.data)),
                 catchError((err: HttpErrorResponse) => {
                     this.clearMemory();
-                    this.router.navigate(['/dang-nhap']);
+                    this.router.navigate(['/login']);
                     return throwError(() => err);
                 })
         );

@@ -5,5 +5,6 @@ public enum SequenceName {
     PATIENT,
     APPOINTMENT,
     MEDICAL_RECORD,
-    PRESCRIPTION
+    PRESCRIPTION,
+    MEDICINE
 }

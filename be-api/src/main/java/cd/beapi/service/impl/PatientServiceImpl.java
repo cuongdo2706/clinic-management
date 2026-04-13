@@ -108,7 +108,7 @@ public class PatientServiceImpl implements PatientService {
                 .build();
         if (StringUtils.hasText(createPatientRequest.getCode())) {
             if (patientRepository.existsByCode(createPatientRequest.getCode())) {
-                throw new AppException("This patient code has been used, please try another one", HttpStatus.BAD_REQUEST);
+                throw new AppException("This code has been used, please try another one", HttpStatus.BAD_REQUEST);
             }
             newPatient.setCode(createPatientRequest.getCode());
         } else {

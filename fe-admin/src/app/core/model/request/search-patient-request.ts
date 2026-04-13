@@ -1,6 +1,6 @@
-export interface SearchPatientRequest{
-    page:number;
-    size:number;
+import {PaginationFormat} from "./pagination-format";
+
+export interface SearchPatientRequest extends PaginationFormat{
     sortBy:string;
     codeKeyword:string;
     nameKeyword:string;

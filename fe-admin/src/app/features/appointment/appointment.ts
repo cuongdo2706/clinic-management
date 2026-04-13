@@ -1,5 +1,5 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
-import {AppointmentService} from "./service/appointment.service";
+import {AppointmentService} from "../../core/service/appointment.service";
 import {AppointmentRequest, AppointmentResponse} from "./model/appointment.model";
 import {MessageService, ConfirmationService} from "primeng/api";
 import {Toast} from "primeng/toast";

@@ -3,33 +3,47 @@ package cd.beapi.service.impl;
 import cd.beapi.service.QueueService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-
+import java.time.ZoneOffset;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class QueueServiceImpl implements QueueService {
 
-    private static final String QUEUE_KEY = "queue";
+    private static final String QUEUE_KEY_PREFIX = "queue:";
+
+    /**
+     * Lua script: INCR + EXPIREAT chạy atomic trong Redis.
+     * ARGV[1] = unix timestamp lúc hết hạn (00:00 ngày hôm sau)
+     * Trả về số thứ tự mới sau khi tăng.
+     */
+    private static final DefaultRedisScript<Long> INCR_EXPIRE_AT_SCRIPT = new DefaultRedisScript<>(
+            """
+            local num = redis.call('INCR', KEYS[1])
+            if num == 1 then
+                redis.call('EXPIREAT', KEYS[1], ARGV[1])
+            end
+            return num
+            """,
+            Long.class
+    );
 
     private final StringRedisTemplate redisTemplate;
 
     @Override
-    public int nextQueueNumber() {
-        Long number = redisTemplate.opsForValue().increment(QUEUE_KEY);
+    public int nextQueueNumberForDate(LocalDate date) {
+        String key = QUEUE_KEY_PREFIX + date; // vd: "queue:2026-04-15"
 
-        // Lần đầu trong ngày → set TTL hết hạn lúc 00:00 ngày mai → tự reset
-        if (Long.valueOf(1L).equals(number)) {
-            LocalDateTime midnight = LocalDate.now().plusDays(1).atTime(LocalTime.MIDNIGHT);
-            Duration ttl = Duration.between(LocalDateTime.now(), midnight);
-            redisTemplate.expire(QUEUE_KEY, ttl);
-        }
+        // Unix timestamp lúc 00:00 ngày kế tiếp → Redis dùng EXPIREAT
+        long expireAtUnix = date.plusDays(1)
+                .atStartOfDay()
+                .toEpochSecond(ZoneOffset.of("+07:00")); // đổi theo timezone thực tế
 
+        Long number = redisTemplate.execute(INCR_EXPIRE_AT_SCRIPT, List.of(key), String.valueOf(expireAtUnix));
         return number.intValue();
     }
 }

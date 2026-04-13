@@ -27,6 +27,11 @@ public class SequenceServiceImpl implements SequenceService {
     }
 
     @Override
+    public String generateMedicineCode() {
+        return format("TH", SequenceName.MEDICINE);
+    }
+
+    @Override
     public String generateAppointmentCode() {
         return format("LH", SequenceName.APPOINTMENT);
     }

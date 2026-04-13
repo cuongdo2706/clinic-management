@@ -1,0 +1,61 @@
+<p-card class="save-card">
+    <form class="save-form" novalidate>
+
+        <div class="form-grid">
+
+            <!-- Mã thuốc -->
+            <div class="field">
+                <label class="field-label" for="sf-code">Mã thuốc</label>
+                <input pInputText id="sf-code" [formField]="saveForm.code"
+                       class="w-full" placeholder="Tự động sinh nếu để trống"/>
+            </div>
+
+            <!-- Tên thuốc -->
+            <div class="field">
+                <label class="field-label" for="sf-name">
+                    Tên thuốc <span class="req">*</span>
+                </label>
+                <input pInputText id="sf-name" [formField]="saveForm.name"
+                       class="w-full" placeholder="Nhập tên thuốc"
+                       (input)="clearError('name')"
+                       [class.ng-invalid]="errors()['name']"/>
+                @if (errors()['name']) {
+                    <small class="error-text">{{ errors()['name'] }}</small>
+                }
+            </div>
+
+            <!-- Đơn vị -->
+            <div class="field">
+                <label class="field-label" for="sf-unit">
+                    Đơn vị <span class="req">*</span>
+                </label>
+                <input pInputText id="sf-unit" [formField]="saveForm.unit"
+                       class="w-full" placeholder="VD: Viên, Hộp, Chai..."
+                       (input)="clearError('unit')"
+                       [class.ng-invalid]="errors()['unit']"/>
+                @if (errors()['unit']) {
+                    <small class="error-text">{{ errors()['unit'] }}</small>
+                }
+            </div>
+
+            <!-- Mô tả -->
+            <div class="field span-full">
+                <label class="field-label" for="sf-desc">Mô tả</label>
+                <textarea id="sf-desc" [formField]="saveForm.description"
+                          class="p-textarea-match w-full" placeholder="Nhập mô tả thuốc"
+                          rows="3"></textarea>
+            </div>
+
+        </div>
+
+        <div class="form-actions">
+            <p-button type="button" label="Hủy" severity="secondary" icon="pi pi-times"
+                      (onClick)="cancelled.emit()" [disabled]="loading()"/>
+            <p-button type="button" label="Lưu thuốc"
+                      severity="success" icon="pi pi-check"
+                      (onClick)="onSubmit()"
+                      [loading]="loading()"/>
+        </div>
+
+    </form>
+</p-card>

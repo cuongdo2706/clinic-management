@@ -1,10 +1,14 @@
 package cd.beapi.service;
 
+import java.time.LocalDate;
+
 public interface QueueService {
     /**
-     * Trả về số thứ tự tiếp theo trong ngày hôm nay.
-     * Key Redis tự hết hạn lúc 00:00 ngày hôm sau → tự động reset.
+     * Trả về số thứ tự tiếp theo cho một ngày cụ thể.
+     * Walk-in → truyền LocalDate.now()
+     * Đặt lịch trước → truyền ngày hẹn
+     * Key Redis: queue:{date}, tự hết hạn sau ngày đó 1 ngày.
      */
-    int nextQueueNumber();
+    int nextQueueNumberForDate(LocalDate date);
 }
 

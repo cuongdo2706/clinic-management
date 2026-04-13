@@ -10,4 +10,5 @@ public class CreateMedicineRequest {
     String code;
     String name;
     String unit;
+    String description;
 }

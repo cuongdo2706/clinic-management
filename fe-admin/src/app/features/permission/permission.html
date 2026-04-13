@@ -1,0 +1,141 @@
+<p-toast></p-toast>
+
+<div class="page-header">
+    <h2>Phân quyền</h2>
+</div>
+
+<p-table
+        [value]="roles()"
+        [loading]="loading()"
+        dataKey="id"
+        [expandedRowKeys]="expandedRows()"
+>
+    <ng-template #loadingicon>
+        <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th style="width: 4rem">#</th>
+            <th>Mã vai trò</th>
+            <th>Tên vai trò</th>
+            <th>Mô tả</th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-item let-rowIndex="rowIndex" let-expanded="expanded">
+        <tr (click)="toggleRow(item)" class="role-row" [class.row-expanded]="expanded">
+            <td>{{ rowIndex + 1 }}</td>
+            <td>
+                <p-tag [value]="item.code" severity="info"/>
+            </td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.description }}</td>
+        </tr>
+    </ng-template>
+    <ng-template #expandedrow let-item>
+        <tr>
+            <td colspan="4" class="expanded-row-cell">
+                <div class="permission-detail-card">
+                    <div class="detail-header">
+                        <div class="detail-header-left">
+                            <i class="pi pi-shield"></i> Bảng phân quyền —
+                            <span class="role-name-highlight">{{ item.name }}</span>
+                        </div>
+                        <div class="detail-header-right">
+                            @if (editingRoleId() !== item.id) {
+                                <p-button label="Chỉnh sửa" icon="pi pi-pencil" severity="warn" size="small"
+                                          (onClick)="enterEditMode(item); $event.stopPropagation()"></p-button>
+                            } @else {
+                                <p-button label="Lưu" icon="pi pi-check" severity="success" size="small"
+                                          (onClick)="savePermissions(item); $event.stopPropagation()"
+                                          [loading]="saving()" class="mr-2"></p-button>
+                                <p-button label="Hủy" icon="pi pi-times" severity="secondary" size="small"
+                                          (onClick)="cancelEdit(); $event.stopPropagation()"
+                                          [disabled]="saving()"></p-button>
+                            }
+                        </div>
+                    </div>
+
+                    @if (matrixLoading()) {
+                        <div class="matrix-loading">
+                            <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+                        </div>
+                    } @else {
+                        <div class="matrix-table-wrapper">
+                            <table class="matrix-table">
+                                <thead>
+                                <tr>
+                                    <th class="page-col">
+                                        Trang
+                                        @if (editingRoleId() === item.id) {
+                                            <p-checkbox
+                                                    [ngModel]="isAllChecked()"
+                                                    (ngModelChange)="toggleAll($event)"
+                                                    [binary]="true"
+                                                    class="select-all-check"/>
+                                        }
+                                    </th>
+                                    @for (action of matrixActions(); track action) {
+                                        <th class="action-col">
+                                            {{ getActionLabel(action) }}
+                                            @if (editingRoleId() === item.id) {
+                                                <p-checkbox
+                                                        [ngModel]="isColumnAllChecked(action)"
+                                                        (ngModelChange)="toggleColumn(action, $event)"
+                                                        [binary]="true"
+                                                        class="select-col-check"/>
+                                            }
+                                        </th>
+                                    }
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @for (row of matrixRows(); track row.pageCode) {
+                                    <tr>
+                                        <td class="page-cell">
+                                            <i class="pi pi-file"></i>
+                                            {{ row.pageName }}
+                                            @if (editingRoleId() === item.id) {
+                                                <p-checkbox
+                                                        [ngModel]="isRowAllChecked(row.pageCode)"
+                                                        (ngModelChange)="toggleRowAll(row.pageCode, $event)"
+                                                        [binary]="true"
+                                                        class="select-row-check"/>
+                                            }
+                                        </td>
+                                        @for (action of matrixActions(); track action) {
+                                            <td class="check-cell">
+                                                @if (row.granted[action] !== null) {
+                                                    <p-checkbox
+                                                            [ngModel]="row.granted[action]"
+                                                            (ngModelChange)="onCheckboxChange(row.pageCode, action, $event)"
+                                                            [binary]="true"
+                                                            [disabled]="editingRoleId() !== item.id"/>
+                                                } @else {
+                                                    <span class="no-action">—</span>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                                @if (matrixRows().length === 0) {
+                                    <tr>
+                                        <td [attr.colspan]="matrixActions().length + 1" class="matrix-empty">
+                                            <i class="pi pi-info-circle"></i> Chưa có dữ liệu
+                                        </td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+        <tr>
+            <td colspan="4" class="text-center p-4">Không có dữ liệu</td>
+        </tr>
+    </ng-template>
+</p-table>
+

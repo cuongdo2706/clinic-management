@@ -1,5 +1,5 @@
 import {afterNextRender, Component, ElementRef, inject, OnDestroy, signal, viewChild} from '@angular/core';
-import {DashboardService, RecentAppointment} from "./service/dashboard.service";
+import {DashboardService, RecentAppointment} from "../../core/service/dashboard.service";
 import {Tag} from "primeng/tag";
 import {TableModule} from "primeng/table";
 import {Chart, registerables} from 'chart.js';
