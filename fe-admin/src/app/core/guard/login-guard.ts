@@ -8,5 +8,5 @@ export const loginGuard: CanActivateFn = () => {
     if (!authService.isLoggedIn()) {
         return true;
     }
-    return router.createUrlTree(["/thong-ke"]);
+    return router.createUrlTree(["/dashboard"]);
 };

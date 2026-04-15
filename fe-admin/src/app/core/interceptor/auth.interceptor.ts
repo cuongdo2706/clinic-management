@@ -14,7 +14,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             : req.clone({ withCredentials: true });
     return next(authReq).pipe(
             catchError((err: HttpErrorResponse) => {
-                // accessToken hết hạn → tự refresh rồi retry
                 if (err.status === 401 && !isAuthEndpoint) {
                     return authService.refreshToken().pipe(
                             switchMap(res =>

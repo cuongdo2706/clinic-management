@@ -1,4 +1,5 @@
 package cd.beapi.service.impl;
+
 import cd.beapi.dto.request.UpdatePermissionRequest;
 import cd.beapi.dto.response.PermissionResponse;
 import cd.beapi.dto.response.PermissionResponse.PagePermission;
@@ -18,8 +19,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.*;
 import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class PermissionServiceImpl implements PermissionService {
@@ -28,6 +31,7 @@ public class PermissionServiceImpl implements PermissionService {
     private final ActionRepository actionRepository;
     private final PermissionRepository permissionRepository;
     private final RoleMapper roleMapper;
+
     @Transactional(readOnly = true)
     @Override
     public PermissionResponse getPermissionMatrix(Long roleId) {
@@ -37,8 +41,9 @@ public class PermissionServiceImpl implements PermissionService {
         Set<String> grantedSet = role.getPermissions().stream()
                 .map(p -> p.getPage().getCode().name() + ":" + p.getAction().getCode().name())
                 .collect(Collectors.toSet());
-        // Collect all unique action codes in order
-        List<String> allActions = Arrays.stream(ActionType.values())
+
+        List<String> allActions = Arrays
+                .stream(ActionType.values())
                 .map(ActionType::name)
                 .toList();
 
@@ -60,6 +65,7 @@ public class PermissionServiceImpl implements PermissionService {
                 pagePermissions
         );
     }
+
     @Transactional
     @Override
     public PermissionResponse updatePermissions(UpdatePermissionRequest request) {

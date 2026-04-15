@@ -16,7 +16,7 @@ import {PagePermission} from "../../core/model/response/permission-response";
 interface MatrixRow {
     pageCode: string;
     pageName: string;
-    granted: { [actionCode: string]: boolean | null }; // null = action không áp dụng cho page này
+    granted: { [actionCode: string]: boolean | null };
 }
 
 @Component({

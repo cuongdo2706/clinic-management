@@ -42,6 +42,7 @@ logging:
         security: TRACE
       hibernate:
         orm:
+          core: ERROR
           connections:
             pooling: WARN
         type:

@@ -10,6 +10,7 @@ import {Patient} from "./features/patient/patient";
 import {Medicine} from "./features/medicine/medicine";
 import {Staff} from "./features/staff/staff";
 import {Permission} from "./features/permission/permission";
+import {Treatment} from "./features/treatment/treatment";
 
 export const routes: Routes = [
     {
@@ -48,11 +49,11 @@ export const routes: Routes = [
                 title: "Bệnh nhân",
                 component: Patient,
             },
-            // {
-            //     path: "services",
-            //     title: "Dịch vụ",
-            //     component: Service,
-            // },
+            {
+                path: "treatments",
+                title: "Dịch vụ",
+                component: Treatment,
+            },
             {
                 path: "medicines",
                 title: "Thuốc",

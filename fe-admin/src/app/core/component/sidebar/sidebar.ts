@@ -28,7 +28,7 @@ export class Sidebar {
         {label: 'Lịch hẹn', icon: 'pi pi-calendar', route: '/appointments'},
         {label: 'Nhân viên', icon: 'pi pi-users', route: '/staffs'},
         {label: 'Bệnh nhân', icon: 'pi pi-user', route: '/patients'},
-        {label: 'Dịch vụ', icon: 'pi pi-list', route: '/services'},
+        {label: 'Dịch vụ', icon: 'pi pi-list', route: '/treatments'},
         {label: 'Thuốc', icon: 'pi pi-box', route: '/medicines'},
         {label: 'Phân quyền', icon: 'pi pi-shield', route: '/permissions'},
     ];
