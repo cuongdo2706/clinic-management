@@ -11,6 +11,7 @@ import {Medicine} from "./features/medicine/medicine";
 import {Staff} from "./features/staff/staff";
 import {Permission} from "./features/permission/permission";
 import {Treatment} from "./features/treatment/treatment";
+import {Invoice} from "./features/invoice/invoice";
 
 export const routes: Routes = [
     {
@@ -63,6 +64,11 @@ export const routes: Routes = [
                 path: "permissions",
                 title: "Phân quyền",
                 component: Permission,
+            },
+            {
+                path: "invoices",
+                title: "Hoá đơn",
+                component: Invoice
             }
         ]
     },
