@@ -15,7 +15,6 @@ export interface MenuItem {
         RouterLink,
         RouterLinkActive,
         Tooltip,
-        NgOptimizedImage,
     ],
     templateUrl: './sidebar.html',
     styleUrl: './sidebar.css',
@@ -26,6 +25,7 @@ export class Sidebar {
     menuItems: MenuItem[] = [
         {label: 'Thống kê', icon: 'pi pi-chart-bar', route: '/dashboard'},
         {label: 'Lịch hẹn', icon: 'pi pi-calendar', route: '/appointments'},
+        {label: 'Hóa đơn', icon: 'pi pi-receipt', route: '/invoices'},
         {label: 'Nhân viên', icon: 'pi pi-users', route: '/staffs'},
         {label: 'Bệnh nhân', icon: 'pi pi-user', route: '/patients'},
         {label: 'Dịch vụ', icon: 'pi pi-list', route: '/treatments'},

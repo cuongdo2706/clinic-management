@@ -27,11 +27,13 @@ public class Treatment extends BaseEntity {
     @Column(unique = true, nullable = false)
     String code;
 
+    @Column(nullable = false)
     String name;
 
     @Column(columnDefinition = "TEXT")
     String description;
 
+    @Column(nullable = false)
     BigDecimal price;
 
     String unit;

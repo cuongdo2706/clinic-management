@@ -37,10 +37,8 @@ public class AuthServiceImpl implements AuthService {
                             loginRequest.getPassword()
                     )
             );
-            //Gen token
             String accessToken = jwtTokenProvider.generateAccessToken(authentication);
             String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
-            //Save token into redis
             refreshTokenService.saveRefreshToken(authentication.getName(), jwtTokenProvider.getClaims(refreshToken).getId());
             return new TokenResponse(
                     accessToken,

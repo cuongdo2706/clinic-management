@@ -10,5 +10,5 @@ export interface PatientResponse{
     guardianName:string;
     guardianPhone:string;
     createdAt:Date;
-    updatedAt:Date;
+    modifiedAt:Date;
 }

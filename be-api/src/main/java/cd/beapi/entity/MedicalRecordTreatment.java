@@ -9,14 +9,14 @@ import java.math.BigDecimal;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "treatment_items")
+@Table(name = "medical_record_treatments")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TreatmentItem extends BaseEntity {
+public class MedicalRecordTreatment extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "medical_record_id")
@@ -29,10 +29,6 @@ public class TreatmentItem extends BaseEntity {
     @Column(nullable = false)
     Integer quantity;
 
-    /**
-     * Snapshot giá dịch vụ tại thời điểm khám.
-     * Tránh bị ảnh hưởng khi giá dịch vụ thay đổi về sau.
-     */
     @Column(nullable = false)
     BigDecimal unitPrice;
 

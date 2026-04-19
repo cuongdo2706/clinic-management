@@ -11,12 +11,15 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenProvider {
+    private static final String PERMISSION_SEPARATOR = ":";
+
     @Value("${jwt.secret}")
     private String secret;
 
@@ -35,7 +38,17 @@ public class JwtTokenProvider {
     }
 
     public Set<String> extractRole(Authentication authentication) {
-        return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority).filter(Objects::nonNull)
+                .filter(authority -> !authority.contains(PERMISSION_SEPARATOR))
+                .collect(Collectors.toSet());
+    }
+
+    public Set<String> extractPerm(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority).filter(Objects::nonNull)
+                .filter(authority -> authority.contains(PERMISSION_SEPARATOR))
+                .collect(Collectors.toSet());
     }
 
     public String generateAccessToken(Authentication authentication) {
@@ -43,6 +56,7 @@ public class JwtTokenProvider {
                 .id(UUID.randomUUID().toString())
                 .subject(authentication.getName())
                 .claim("role", extractRole(authentication))
+                .claim("permission", extractPerm(authentication))
                 .claim("type", "access").issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessExpiration))
                 .signWith(key())

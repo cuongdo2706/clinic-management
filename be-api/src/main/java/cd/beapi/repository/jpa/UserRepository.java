@@ -9,12 +9,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    //    @Query(nativeQuery = true, value = """
-//                    SELECT * FROM users
-//                    WHERE (email = :username OR phone = :username)
-//                    AND is_active = TRUE
-//            """)
-//    Optional<User> findByEmailOrPhone(@Param("username") String username);
     @EntityGraph(attributePaths = {"role"})
     @Query(value = """
                     SELECT u FROM User u
@@ -22,4 +16,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
                     AND u.isActive = TRUE
             """)
     Optional<User> findByUsername(@Param("username") String username);
+
+    @EntityGraph(attributePaths = {"role", "role.permissions", "role.permissions.page", "role.permissions.action"})
+    @Query(value = """
+                    SELECT u FROM User u
+                    WHERE u.username = :username
+                    AND u.isActive = TRUE
+            """)
+    Optional<User> findByUsernameWithRolePermissions(@Param("username") String username);
 }

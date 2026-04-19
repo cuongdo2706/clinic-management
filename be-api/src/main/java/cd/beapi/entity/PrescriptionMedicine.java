@@ -7,14 +7,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "prescription_items")
+@Table(name = "prescription_medicines")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PrescriptionItem extends BaseEntity {
+public class PrescriptionMedicine extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "prescription_id")
     Prescription prescription;

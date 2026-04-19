@@ -2,6 +2,7 @@ package cd.beapi.repository.jpa;
 
 import cd.beapi.entity.Staff;
 import cd.beapi.enumerate.StaffType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,7 +15,8 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     @Query("SELECT s FROM Staff s WHERE s.staffType = :type ORDER BY s.fullName")
     List<Staff> findByStaffType(@Param("type") StaffType staffType);
 
-    @Query("SELECT s FROM Staff s LEFT JOIN FETCH s.user WHERE s.id = :id")
+    @EntityGraph(attributePaths = {"user"})
+    @Query("SELECT s FROM Staff s WHERE s.id = :id")
     Optional<Staff> findByIdWithUser(@Param("id") Long id);
 
     @Query("SELECT s FROM Staff s " +
