@@ -1,0 +1,89 @@
+<p-card class="update-card">
+    @if (fetching()) {
+        <div class="fetch-loading">
+            <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+            <span>Đang tải thông tin...</span>
+        </div>
+    } @else {
+        <form class="update-form" novalidate>
+            <div class="form-grid">
+
+                <!-- Mã dịch vụ -->
+                <div class="field">
+                    <label class="field-label" for="uf-code">Mã dịch vụ</label>
+                    <input pInputText id="uf-code" [formField]="updateForm.code" class="w-full"/>
+                </div>
+
+                <!-- Tên dịch vụ -->
+                <div class="field">
+                    <label class="field-label" for="uf-name">Tên dịch vụ <span class="req">*</span></label>
+                    <input pInputText id="uf-name" [formField]="updateForm.name"
+                           class="w-full" placeholder="Nhập tên dịch vụ"
+                           (input)="clearError('name')"
+                           [class.ng-invalid]="errors()['name']"/>
+                    @if (errors()['name']) {
+                        <small class="error-text">{{ errors()['name'] }}</small>
+                    }
+                </div>
+
+                <!-- Giá -->
+                <div class="field">
+                    <label class="field-label" for="uf-price">Giá (VNĐ) <span class="req">*</span></label>
+                    <input pInputText id="uf-price" [formField]="updateForm.price" type="number"
+                           class="w-full" placeholder="Nhập giá dịch vụ"
+                           (input)="clearError('price')"
+                           [class.ng-invalid]="errors()['price']"/>
+                    @if (errors()['price']) {
+                        <small class="error-text">{{ errors()['price'] }}</small>
+                    }
+                </div>
+
+                <!-- Đơn vị -->
+                <div class="field">
+                    <label class="field-label" for="uf-unit">Đơn vị</label>
+                    <input pInputText id="uf-unit" [formField]="updateForm.unit"
+                           class="w-full" placeholder="VD: Lần, Buổi..."/>
+                </div>
+
+                <!-- Danh mục -->
+                <div class="field">
+                    <label class="field-label" for="uf-category">Danh mục</label>
+                    <select id="uf-category" [formField]="updateForm.treatmentCategoryId" class="p-select-match w-full">
+                        <option value="">-- Chọn danh mục --</option>
+                        @for (cat of categories(); track cat.id) {
+                            <option [value]="cat.id">{{ cat.name }}</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Trạng thái -->
+                <div class="field">
+                    <label class="field-label" for="uf-active">Trạng thái</label>
+                    <select id="uf-active" [formField]="updateForm.isActive" class="p-select-match w-full">
+                        <option value="true">Hoạt động</option>
+                        <option value="false">Ngừng hoạt động</option>
+                    </select>
+                </div>
+
+                <!-- Mô tả -->
+                <div class="field span-full">
+                    <label class="field-label" for="uf-desc">Mô tả</label>
+                    <textarea id="uf-desc" [formField]="updateForm.description"
+                              class="p-textarea-match w-full" placeholder="Nhập mô tả dịch vụ"
+                              rows="3"></textarea>
+                </div>
+
+            </div>
+
+            <div class="form-actions">
+                <p-button type="button" label="Hủy" severity="secondary" icon="pi pi-times"
+                          (onClick)="cancelled.emit()" [disabled]="loading()"/>
+                <p-button type="button" label="Cập nhật"
+                          severity="success" icon="pi pi-check"
+                          (onClick)="onSubmit()"
+                          [loading]="loading()"/>
+            </div>
+        </form>
+    }
+</p-card>
+

@@ -4,5 +4,7 @@ public enum MedicineSortOption {
     CREATED_AT,
     CREATED_AT_DESC,
     NAME,
-    NAME_DESC
+    NAME_DESC,
+    PRICE,
+    PRICE_DESC
 }

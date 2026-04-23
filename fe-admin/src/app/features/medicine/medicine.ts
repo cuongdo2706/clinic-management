@@ -1,5 +1,5 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
-import {DatePipe} from "@angular/common";
+import {CurrencyPipe, DatePipe} from "@angular/common";
 import {MedicineService} from "../../core/service/medicine.service";
 import {MessageService, ConfirmationService} from "primeng/api";
 import {Toast} from "primeng/toast";
@@ -37,6 +37,7 @@ import {MedicineUpdateForm} from "./medicine-update-form/medicine-update-form";
         Paginator,
         ProgressSpinner,
         DatePipe,
+        CurrencyPipe,
         Tooltip,
         Tag,
         Dialog,

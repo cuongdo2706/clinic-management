@@ -38,6 +38,48 @@
                 }
             </div>
 
+            <!-- Giá -->
+            <div class="field">
+                <label class="field-label" for="sf-price">
+                    Giá (VNĐ) <span class="req">*</span>
+                </label>
+                <input pInputText type="number" id="sf-price" [formField]="saveForm.price"
+                       class="w-full" placeholder="Nhập giá"
+                       (input)="clearError('price')"
+                       [class.ng-invalid]="errors()['price']"/>
+                @if (errors()['price']) {
+                    <small class="error-text">{{ errors()['price'] }}</small>
+                }
+            </div>
+
+            <!-- Số lượng -->
+            <div class="field">
+                <label class="field-label" for="sf-quantity">
+                    Số lượng <span class="req">*</span>
+                </label>
+                <input pInputText type="number" id="sf-quantity" [formField]="saveForm.quantity"
+                       class="w-full" placeholder="Nhập số lượng"
+                       (input)="clearError('quantity')"
+                       [class.ng-invalid]="errors()['quantity']"/>
+                @if (errors()['quantity']) {
+                    <small class="error-text">{{ errors()['quantity'] }}</small>
+                }
+            </div>
+
+            <!-- Nhà sản xuất -->
+            <div class="field">
+                <label class="field-label" for="sf-manufacturer">Nhà sản xuất</label>
+                <input pInputText id="sf-manufacturer" [formField]="saveForm.manufacturer"
+                       class="w-full" placeholder="Nhập nhà sản xuất"/>
+            </div>
+
+            <!-- Xuất xứ -->
+            <div class="field">
+                <label class="field-label" for="sf-origin">Xuất xứ</label>
+                <input pInputText id="sf-origin" [formField]="saveForm.origin"
+                       class="w-full" placeholder="VD: Việt Nam, Hàn Quốc..."/>
+            </div>
+
             <!-- Mô tả -->
             <div class="field span-full">
                 <label class="field-label" for="sf-desc">Mô tả</label>

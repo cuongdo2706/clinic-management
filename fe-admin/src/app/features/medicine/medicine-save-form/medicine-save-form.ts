@@ -11,6 +11,10 @@ interface MedicineFormData {
     code: string;
     name: string;
     unit: string;
+    price: string;
+    quantity: string;
+    manufacturer: string;
+    origin: string;
     description: string;
 }
 
@@ -18,6 +22,10 @@ const EMPTY_FORM: MedicineFormData = {
     code: '',
     name: '',
     unit: '',
+    price: '',
+    quantity: '',
+    manufacturer: '',
+    origin: '',
     description: '',
 };
 
@@ -43,6 +51,8 @@ export class MedicineSaveForm {
         const errs: Record<string, string> = {};
         if (!val.name?.trim()) errs['name'] = 'Vui lòng nhập tên thuốc';
         if (!val.unit?.trim()) errs['unit'] = 'Vui lòng nhập đơn vị';
+        if (!val.price || isNaN(Number(val.price)) || Number(val.price) < 0) errs['price'] = 'Vui lòng nhập giá hợp lệ';
+        if (!val.quantity || isNaN(Number(val.quantity)) || Number(val.quantity) < 0) errs['quantity'] = 'Vui lòng nhập số lượng hợp lệ';
         this.errors.set(errs);
         return Object.keys(errs).length === 0;
     }
@@ -60,6 +70,10 @@ export class MedicineSaveForm {
             code: val.code,
             name: val.name,
             unit: val.unit,
+            price: Number(val.price),
+            quantity: Number(val.quantity),
+            manufacturer: val.manufacturer,
+            origin: val.origin,
             description: val.description,
         };
         this.loading.set(true);

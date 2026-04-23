@@ -3,6 +3,7 @@ export interface TreatmentCategoryResponse{
     code:string;
     name:string;
     description:string;
+    version:number;
     createdAt:Date;
     modifiedAt:Date;
 }

@@ -8,6 +8,7 @@ export interface TreatmentResponse{
     price:number;
     unit:string;
     isActive:boolean;
+    version:number;
     treatmentCategory:TreatmentCategoryResponse;
     createdAt:Date;
     modifiedAt:Date;

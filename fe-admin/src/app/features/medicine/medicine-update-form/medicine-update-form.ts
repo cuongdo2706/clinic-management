@@ -12,6 +12,10 @@ interface MedicineFormData {
     code: string;
     name: string;
     unit: string;
+    price: string;
+    quantity: string;
+    manufacturer: string;
+    origin: string;
     description: string;
 }
 
@@ -39,6 +43,10 @@ export class MedicineUpdateForm implements OnInit {
         code: '',
         name: '',
         unit: '',
+        price: '',
+        quantity: '',
+        manufacturer: '',
+        origin: '',
         description: '',
     }));
 
@@ -51,6 +59,10 @@ export class MedicineUpdateForm implements OnInit {
                     code: m.code,
                     name: m.name,
                     unit: m.unit,
+                    price: m.price?.toString() ?? '',
+                    quantity: m.quantity?.toString() ?? '',
+                    manufacturer: m.manufacturer || '',
+                    origin: m.origin || '',
                     description: m.description || '',
                 });
                 this.fetching.set(false);
@@ -78,6 +90,8 @@ export class MedicineUpdateForm implements OnInit {
         const errs: Record<string, string> = {};
         if (!val.name?.trim()) errs['name'] = 'Vui lòng nhập tên thuốc';
         if (!val.unit?.trim()) errs['unit'] = 'Vui lòng nhập đơn vị';
+        if (!val.price || isNaN(Number(val.price)) || Number(val.price) < 0) errs['price'] = 'Vui lòng nhập giá hợp lệ';
+        if (!val.quantity || isNaN(Number(val.quantity)) || Number(val.quantity) < 0) errs['quantity'] = 'Vui lòng nhập số lượng hợp lệ';
         this.errors.set(errs);
         return Object.keys(errs).length === 0;
     }
@@ -90,7 +104,12 @@ export class MedicineUpdateForm implements OnInit {
             code: val.code,
             name: val.name,
             unit: val.unit,
+            price: Number(val.price),
+            quantity: Number(val.quantity),
+            manufacturer: val.manufacturer,
+            origin: val.origin,
             description: val.description,
+            version: this.medicineVersion,
         };
         this.loading.set(true);
         this.medicineService.update(this.medicine().toString(), request).subscribe({

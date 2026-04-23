@@ -10,6 +10,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
@@ -36,6 +37,15 @@ public class Medicine extends BaseEntity {
 
     @Builder.Default
     Boolean isActive = true;
+
+    BigDecimal price;
+
+    @Builder.Default
+    Integer quantity = 0;
+
+    String manufacturer;
+
+    String origin;
 
     @ManyToOne
     @JoinColumn(name = "medicine_category_id")

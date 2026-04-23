@@ -17,7 +17,10 @@ import cd.beapi.utility.StringUtil;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -66,15 +69,23 @@ public class MedicineServiceImpl implements MedicineService {
                             .like("%" + StringUtil.normalizeKeyword(searchMedicineRequest.getNameKeyword()) + "%")
             );
         }
+        if (searchMedicineRequest.getPriceFrom() != null) {
+            whereClause.and(m.price.goe(searchMedicineRequest.getPriceFrom()));
+        }
+        if (searchMedicineRequest.getPriceTo() != null) {
+            whereClause.and(m.price.loe(searchMedicineRequest.getPriceTo()));
+        }
         Sort sort = switch (searchMedicineRequest.getSortBy()) {
             case null -> Sort.by("createdAt").descending();
             case NAME -> Sort.by("name");
             case NAME_DESC -> Sort.by("name").descending();
             case CREATED_AT -> Sort.by("createdAt");
             case CREATED_AT_DESC -> Sort.by("createdAt").descending();
+            case PRICE -> Sort.by("price");
+            case PRICE_DESC -> Sort.by("price").descending();
         };
         Pageable pageable = PageRequest.of(searchMedicineRequest.getPage(), searchMedicineRequest.getSize(), sort);
-        Page<Medicine>pages=medicineRepository.findAll(whereClause,pageable);
+        Page<Medicine> pages = medicineRepository.findAll(whereClause, pageable);
         return new PageData<>(
                 medicineMapper.toMedicineResponses(pages.getContent()),
                 pages.getNumber(),
@@ -91,14 +102,18 @@ public class MedicineServiceImpl implements MedicineService {
                 .name(createMedicineRequest.getName())
                 .unit(createMedicineRequest.getUnit())
                 .description(createMedicineRequest.getDescription())
+                .isActive(true)
+                .price(createMedicineRequest.getPrice())
+                .quantity(createMedicineRequest.getQuantity() != null ? createMedicineRequest.getQuantity() : 0)
+                .manufacturer(createMedicineRequest.getManufacturer())
+                .origin(createMedicineRequest.getOrigin())
                 .build();
-        if (StringUtils.hasText(createMedicineRequest.getCode())){
-            if (medicineRepository.existsByCode(createMedicineRequest.getCode())){
+        if (StringUtils.hasText(createMedicineRequest.getCode())) {
+            if (medicineRepository.existsByCode(createMedicineRequest.getCode())) {
                 throw new AppException("This code has been used, please try another one", HttpStatus.BAD_REQUEST);
             }
             newMedicine.setCode(createMedicineRequest.getCode());
-        }
-        else {
+        } else {
             newMedicine.setCode(sequenceService.generateMedicineCode());
         }
         Medicine saveMedicine = medicineRepository.save(newMedicine);
@@ -111,8 +126,7 @@ public class MedicineServiceImpl implements MedicineService {
         Medicine existed = medicineRepository.findById(id).orElseThrow(
                 () -> new AppException("Cannot find medicine with id: " + id, HttpStatus.BAD_REQUEST));
 
-        if (StringUtils.hasText(req.getCode())
-                && !req.getCode().equals(existed.getCode())) {
+        if (StringUtils.hasText(req.getCode()) && !req.getCode().equals(existed.getCode())) {
             if (medicineRepository.existsByCode(req.getCode())) {
                 throw new AppException("This code has been used, please try another one", HttpStatus.BAD_REQUEST);
             }
@@ -122,7 +136,12 @@ public class MedicineServiceImpl implements MedicineService {
         existed.setName(req.getName());
         existed.setUnit(req.getUnit());
         existed.setDescription(req.getDescription());
-
+        existed.setPrice(req.getPrice());
+        if (req.getQuantity() != null) {
+            existed.setQuantity(req.getQuantity());
+        }
+        existed.setManufacturer(req.getManufacturer());
+        existed.setOrigin(req.getOrigin());
         existed.setVersion(req.getVersion());
 
         return medicineMapper.toMedicineResponse(medicineRepository.save(existed));
@@ -145,10 +164,10 @@ public class MedicineServiceImpl implements MedicineService {
 
             Sheet sheet = wb.createSheet("Danh sách thuốc");
             CellStyle headerStyle = ExcelUtil.createHeaderStyle(wb);
-            CellStyle dataStyle   = ExcelUtil.createDataStyle(wb);
+            CellStyle dataStyle = ExcelUtil.createDataStyle(wb);
             CellStyle centerStyle = ExcelUtil.createDataCenterStyle(wb);
 
-            String[] headers = {"STT", "Mã thuốc", "Tên thuốc", "Đơn vị", "Mô tả", "Trạng thái", "Ngày tạo"};
+            String[] headers = {"STT", "Mã thuốc", "Tên thuốc", "Đơn vị", "Giá bán", "Tồn kho", "Nhà sản xuất", "Xuất xứ", "Mô tả", "Trạng thái", "Ngày tạo"};
             ExcelUtil.writeHeader(sheet, headerStyle, headers);
 
             for (int i = 0; i < medicines.size(); i++) {
@@ -161,6 +180,10 @@ public class MedicineServiceImpl implements MedicineService {
                         m.getCode(),
                         m.getName(),
                         m.getUnit(),
+                        m.getPrice(),
+                        m.getQuantity(),
+                        m.getManufacturer(),
+                        m.getOrigin(),
                         m.getDescription(),
                         Boolean.TRUE.equals(m.getIsActive()) ? "Đang dùng" : "Ngừng dùng",
                         m.getCreatedAt()
@@ -169,7 +192,7 @@ public class MedicineServiceImpl implements MedicineService {
                 for (int j = 0; j < values.length; j++) {
                     Cell cell = row.createCell(j);
                     ExcelUtil.setCellValue(cell, values[j]);
-                    cell.setCellStyle((j == 0 || j == 5) ? centerStyle : dataStyle);
+                    cell.setCellStyle((j == 0 || j == 9) ? centerStyle : dataStyle);
                 }
             }
 

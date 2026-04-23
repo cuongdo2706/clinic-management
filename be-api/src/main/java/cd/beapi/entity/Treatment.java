@@ -3,6 +3,7 @@ package cd.beapi.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
@@ -39,6 +40,10 @@ public class Treatment extends BaseEntity {
     String unit;
 
     Boolean isActive;
+
+    @Version
+    @ColumnDefault("0")
+    Long version;
 
     @ManyToOne
     @JoinColumn(name = "treatment_category_id")

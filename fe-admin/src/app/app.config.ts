@@ -1,4 +1,6 @@
-import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners} from '@angular/core';
+import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners, LOCALE_ID} from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localeVi from '@angular/common/locales/vi';
 import {provideRouter, withComponentInputBinding} from '@angular/router';
 import {routes} from './app.routes';
 import {providePrimeNG} from "primeng/config";
@@ -8,6 +10,8 @@ import {provideHttpClient, withInterceptors} from "@angular/common/http";
 import {authInterceptor} from "./core/interceptor/auth.interceptor";
 import {AuthService} from "./core/service/auth.service";
 import {catchError, of} from "rxjs";
+
+registerLocaleData(localeVi);
 
 const GreenPreset = definePreset(Aura, {
     semantic: {
@@ -29,6 +33,7 @@ const GreenPreset = definePreset(Aura, {
 
 export const appConfig: ApplicationConfig = {
     providers: [
+        { provide: LOCALE_ID, useValue: 'vi' },
         provideBrowserGlobalErrorListeners(),
         provideRouter(routes, withComponentInputBinding()),
         providePrimeNG({

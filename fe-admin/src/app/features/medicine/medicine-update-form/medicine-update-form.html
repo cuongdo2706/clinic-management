@@ -44,6 +44,48 @@
                     }
                 </div>
 
+                <!-- Giá -->
+                <div class="field">
+                    <label class="field-label" for="uf-price">
+                        Giá (VNĐ) <span class="req">*</span>
+                    </label>
+                    <input pInputText type="number" id="uf-price" [formField]="updateForm.price"
+                           class="w-full" placeholder="Nhập giá"
+                           (input)="clearError('price')"
+                           [class.ng-invalid]="errors()['price']"/>
+                    @if (errors()['price']) {
+                        <small class="error-text">{{ errors()['price'] }}</small>
+                    }
+                </div>
+
+                <!-- Số lượng -->
+                <div class="field">
+                    <label class="field-label" for="uf-quantity">
+                        Số lượng <span class="req">*</span>
+                    </label>
+                    <input pInputText type="number" id="uf-quantity" [formField]="updateForm.quantity"
+                           class="w-full" placeholder="Nhập số lượng"
+                           (input)="clearError('quantity')"
+                           [class.ng-invalid]="errors()['quantity']"/>
+                    @if (errors()['quantity']) {
+                        <small class="error-text">{{ errors()['quantity'] }}</small>
+                    }
+                </div>
+
+                <!-- Nhà sản xuất -->
+                <div class="field">
+                    <label class="field-label" for="uf-manufacturer">Nhà sản xuất</label>
+                    <input pInputText id="uf-manufacturer" [formField]="updateForm.manufacturer"
+                           class="w-full" placeholder="Nhập nhà sản xuất"/>
+                </div>
+
+                <!-- Xuất xứ -->
+                <div class="field">
+                    <label class="field-label" for="uf-origin">Xuất xứ</label>
+                    <input pInputText id="uf-origin" [formField]="updateForm.origin"
+                           class="w-full" placeholder="VD: Việt Nam, Hàn Quốc..."/>
+                </div>
+
                 <!-- Mô tả -->
                 <div class="field span-full">
                     <label class="field-label" for="uf-desc">Mô tả</label>

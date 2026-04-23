@@ -1,0 +1,87 @@
+.save-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 20px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field.span-full {
+    grid-column: 1 / -1;
+}
+
+.field-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #166534;
+    line-height: 1;
+}
+
+.req {
+    color: #dc2626;
+    margin-left: 2px;
+}
+
+.error-text {
+    font-size: 0.76rem;
+    color: #dc2626;
+    margin-top: -2px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #d1fae5;
+}
+
+.p-textarea-match {
+    font-family: var(--p-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
+    font-size: 1rem;
+    color: var(--p-text-color, #334155);
+    background: var(--p-surface-0, #ffffff);
+    border: 1px solid var(--p-input-border-color, #cbd5e1);
+    border-radius: var(--p-border-radius, 6px);
+    padding: 0.5rem 0.75rem;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.p-textarea-match:hover { border-color: var(--p-input-hover-border-color, #94a3b8); }
+.p-textarea-match:focus {
+    border-color: var(--p-primary-color, #22c55e);
+    box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.2);
+}
+
+.p-select-match {
+    font-family: var(--p-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+    font-size: 1rem;
+    color: var(--p-text-color, #334155);
+    background: var(--p-surface-0, #ffffff);
+    border: 1px solid var(--p-input-border-color, #cbd5e1);
+    border-radius: var(--p-border-radius, 6px);
+    padding: 0.5rem 0.75rem;
+    appearance: auto;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.p-select-match:hover { border-color: var(--p-input-hover-border-color, #94a3b8); }
+.p-select-match:focus {
+    border-color: var(--p-primary-color, #22c55e);
+    box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.2);
+}
+

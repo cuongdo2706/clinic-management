@@ -11,6 +11,7 @@ public record TreatmentResponse(
         BigDecimal price,
         String unit,
         Boolean isActive,
+        Long version,
         TreatmentCategoryResponse treatmentCategory,
         Instant createdAt,
         Instant modifiedAt) {

@@ -1,1 +1,192 @@
-<p>treatment works!</p>
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+    <h2>Quản lý dịch vụ khám</h2>
+</div>
+
+<form>
+    <p-toolbar>
+        <ng-template #start>
+            <div class="flex flex-row flex-wrap" style="gap: 0.75rem; align-items: center;">
+                <p-floatlabel variant="on">
+                    <input pInputText id="code" [formField]="searchForm.codeKeyword"/>
+                    <label for="code">Mã dịch vụ</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on">
+                    <input pInputText id="name" [formField]="searchForm.nameKeyword"/>
+                    <label for="name">Tên dịch vụ</label>
+                </p-floatlabel>
+
+                <select class="p-select-match" [formField]="searchForm.sortBy">
+                    @for (opt of sortOptions(); track opt.value) {
+                        <option [value]="opt.value">{{ opt.name }}</option>
+                    }
+                </select>
+
+                <p-button type="submit" (onClick)="onSearch()" icon="pi pi-search" [loading]="loading()"></p-button>
+                <p-button (onClick)="onResetFilter()" icon="pi pi-refresh" [loading]="loading()" severity="secondary"></p-button>
+            </div>
+        </ng-template>
+        <ng-template #end>
+            <p-button label="Thêm mới" icon="pi pi-plus" severity="success" (onClick)="openAddDialog()"></p-button>
+        </ng-template>
+    </p-toolbar>
+
+    <p-table
+            [value]="treatments()?.content!"
+            [loading]="loading()"
+            dataKey="id"
+            [expandedRowKeys]="expandedRows()">
+        <ng-template #loadingicon>
+            <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+        </ng-template>
+        <ng-template #header>
+            <tr>
+                <th>Mã</th>
+                <th>Tên dịch vụ</th>
+                <th>Danh mục</th>
+                <th>Giá</th>
+                <th>Đơn vị</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th style="width: 7rem; text-align:center">Thao tác</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-treatment let-expanded="expanded">
+            <tr (click)="toggleRow(treatment)" class="treatment-row" [class.row-expanded]="expanded">
+                <td>{{ treatment.code }}</td>
+                <td>{{ treatment.name }}</td>
+                <td>{{ treatment.treatmentCategory?.name || '—' }}</td>
+                <td>{{ treatment.price | currency:'VND':'symbol':'1.0-0':'vi' }}</td>
+                <td>{{ treatment.unit || '—' }}</td>
+                <td>
+                    <p-tag [value]="treatment.isActive ? 'Hoạt động' : 'Ngừng'"
+                           [severity]="treatment.isActive ? 'success' : 'danger'"/>
+                </td>
+                <td>{{ treatment.createdAt | date: 'dd/MM/yyyy' }}</td>
+                <td class="action-cell" (click)="$event.stopPropagation()">
+                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                              pTooltip="Chỉnh sửa" tooltipPosition="top"
+                              (onClick)="openEditDialog(treatment)"></p-button>
+                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                              pTooltip="Xóa" tooltipPosition="top"
+                              (onClick)="confirmDelete(treatment)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #expandedrow let-treatment>
+            <tr>
+                <td colspan="8" class="expanded-row-cell">
+                    <div class="treatment-detail-card">
+                        <div class="detail-header">
+                            <i class="pi pi-heart"></i> Chi tiết dịch vụ
+                        </div>
+                        <div class="treatment-detail-body">
+                            <div class="detail-group">
+                                <div class="detail-group-title">Thông tin cơ bản</div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-id-card"></i> Mã dịch vụ</span>
+                                    <span class="detail-value">{{ treatment.code || '—' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-heart"></i> Tên dịch vụ</span>
+                                    <span class="detail-value">{{ treatment.name }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-folder"></i> Danh mục</span>
+                                    <span class="detail-value">{{ treatment.treatmentCategory?.name || '—' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-dollar"></i> Giá</span>
+                                    <span class="detail-value">{{ treatment.price | currency:'VND':'symbol':'1.0-0':'vi' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-tag"></i> Đơn vị</span>
+                                    <span class="detail-value">{{ treatment.unit || '—' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-check-circle"></i> Trạng thái</span>
+                                    <span class="detail-value">
+                                        <span class="badge" [class.badge-active]="treatment.isActive" [class.badge-inactive]="!treatment.isActive">
+                                            {{ treatment.isActive ? 'Hoạt động' : 'Ngừng hoạt động' }}
+                                        </span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="detail-divider"></div>
+                            <div class="detail-group">
+                                <div class="detail-group-title">Mô tả</div>
+                                <div class="detail-item">
+                                    <span class="detail-value description-text">{{ treatment.description || '—' }}</span>
+                                </div>
+                                <div class="detail-divider-h"></div>
+                                <div class="detail-group-title">Lịch sử hệ thống</div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-clock"></i> Ngày tạo</span>
+                                    <span class="detail-value">{{ treatment.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-refresh"></i> Cập nhật lần cuối</span>
+                                    <span class="detail-value">{{ treatment.modifiedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="8" class="text-center p-4">Không có dữ liệu</td>
+            </tr>
+        </ng-template>
+        <ng-template #footer>
+            <tr>
+                <td colspan="100%" style="background-color: #ffffff">
+                    <p-paginator
+                            (onPageChange)="onPageChange($event)"
+                            [first]="paginatorFirst()"
+                            [rows]="treatments()?.size ?? 10"
+                            [totalRecords]="treatments()?.totalElements ?? 0"
+                            [rowsPerPageOptions]="[10, 20, 30]"
+                            appendTo="body"/>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</form>
+
+<!-- Dialog thêm dịch vụ -->
+<p-dialog
+        header="Thêm dịch vụ mới"
+        [visible]="showAddDialog()"
+        (visibleChange)="showAddDialog.set($event)"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{width: '720px'}">
+    @if (showAddDialog()) {
+        <app-treatment-save-form
+                (saved)="onTreatmentSaved()"
+                (cancelled)="showAddDialog.set(false)"/>
+    }
+</p-dialog>
+
+<!-- Dialog chỉnh sửa dịch vụ -->
+<p-dialog
+        header="Chỉnh sửa dịch vụ"
+        [visible]="showEditDialog()"
+        (visibleChange)="showEditDialog.set($event)"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{width: '720px'}">
+    @if (showEditDialog() && editingTreatment()) {
+        <app-treatment-update-form
+                [treatment]="editingTreatment()!.id"
+                (saved)="onTreatmentSaved()"
+                (cancelled)="showEditDialog.set(false)"/>
+    }
+</p-dialog>
