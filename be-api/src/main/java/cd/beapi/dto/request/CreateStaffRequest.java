@@ -1,8 +1,15 @@
 package cd.beapi.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 public class CreateStaffRequest {
     String code;
@@ -21,4 +28,15 @@ public class CreateStaffRequest {
     String address;
 
     CreateUserRequest user;
+
+    List<WorkingScheduleRequest> workingSchedules;
+
+    @Getter
+    @Setter
+    @FieldDefaults(level = AccessLevel.PRIVATE)
+    public static class WorkingScheduleRequest{
+        DayOfWeek dayOfWeek;
+        LocalTime startTime;
+        LocalTime endTime;
+    }
 }

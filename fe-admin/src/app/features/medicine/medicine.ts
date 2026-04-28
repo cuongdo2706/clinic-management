@@ -68,6 +68,8 @@ export class Medicine implements OnInit {
         sortBy: "CREATED_AT_DESC",
         codeKeyword: "",
         nameKeyword: "",
+        priceFrom: null,
+        priceTo: null,
     }));
 
     sortOptions = signal([
@@ -200,6 +202,8 @@ export class Medicine implements OnInit {
             sortBy: "CREATED_AT_DESC",
             codeKeyword: "",
             nameKeyword: "",
+            priceFrom: null,
+            priceTo: null,
         });
         this.paginatorFirst.set(0);
         this.onSearch();

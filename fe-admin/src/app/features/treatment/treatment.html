@@ -19,6 +19,16 @@
                     <label for="name">Tên dịch vụ</label>
                 </p-floatlabel>
 
+                <p-floatlabel variant="on">
+                    <input pInputText id="priceFrom" type="number" [formField]="searchForm.priceFrom"/>
+                    <label for="priceFrom">Giá từ</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on">
+                    <input pInputText id="priceTo" type="number" [formField]="searchForm.priceTo"/>
+                    <label for="priceTo">Giá đến</label>
+                </p-floatlabel>
+
                 <select class="p-select-match" [formField]="searchForm.sortBy">
                     @for (opt of sortOptions(); track opt.value) {
                         <option [value]="opt.value">{{ opt.name }}</option>

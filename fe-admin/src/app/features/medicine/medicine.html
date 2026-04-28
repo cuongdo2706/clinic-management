@@ -7,25 +7,35 @@
 <form>
     <p-toolbar>
         <ng-template #start>
-            <div class="flex flex-row">
+            <div class="flex flex-row flex-wrap" style="gap: 0.75rem; align-items: center;">
                 <p-floatlabel variant="on">
                     <input pInputText id="code" [formField]="searchForm.codeKeyword"/>
                     <label for="code">Mã thuốc</label>
                 </p-floatlabel>
 
-                <p-floatlabel class="ml-3" variant="on">
+                <p-floatlabel variant="on">
                     <input pInputText id="name" [formField]="searchForm.nameKeyword"/>
                     <label for="name">Tên thuốc</label>
                 </p-floatlabel>
 
-                <select class="ml-3 p-select-match" [formField]="searchForm.sortBy">
+                <p-floatlabel variant="on">
+                    <input pInputText id="priceFrom" type="number" [formField]="searchForm.priceFrom"/>
+                    <label for="priceFrom">Giá từ</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on">
+                    <input pInputText id="priceTo" type="number" [formField]="searchForm.priceTo"/>
+                    <label for="priceTo">Giá đến</label>
+                </p-floatlabel>
+
+                <select class="p-select-match" [formField]="searchForm.sortBy">
                     @for (opt of sortOptions(); track opt.value) {
                         <option [value]="opt.value">{{ opt.name }}</option>
                     }
                 </select>
 
-                <p-button type="submit" (onClick)="onSearch()" icon="pi pi-search" [loading]="loading()" class="ml-3"></p-button>
-                <p-button (onClick)="onResetFilter()" icon="pi pi-refresh" [loading]="loading()" severity="secondary" class="ml-3"></p-button>
+                <p-button type="submit" (onClick)="onSearch()" icon="pi pi-search" [loading]="loading()"></p-button>
+                <p-button (onClick)="onResetFilter()" icon="pi pi-refresh" [loading]="loading()" severity="secondary"></p-button>
             </div>
         </ng-template>
         <ng-template #end>
