@@ -1,4 +1,6 @@
-export interface CreateStaffRequest {
+import {WorkingScheduleRequest} from "./create-staff-request";
+
+export interface UpdateStaffRequest {
     code: string;
     fullName: string;
     dob: string | null;
@@ -8,10 +10,5 @@ export interface CreateStaffRequest {
     address: string;
     staffType: string;
     workingSchedules: WorkingScheduleRequest[];
-}
-
-export interface WorkingScheduleRequest {
-    dayOfWeek: string;
-    startTime: string;
-    endTime: string;
+    version: number;
 }

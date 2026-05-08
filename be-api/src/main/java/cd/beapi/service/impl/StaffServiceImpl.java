@@ -10,9 +10,7 @@ import cd.beapi.entity.Staff;
 import cd.beapi.entity.WorkingSchedule;
 import cd.beapi.exception.AppException;
 import cd.beapi.mapper.StaffMapper;
-import cd.beapi.repository.jpa.RoleRepository;
 import cd.beapi.repository.jpa.StaffRepository;
-import cd.beapi.repository.jpa.UserRepository;
 import cd.beapi.repository.jpa.WorkingScheduleRepository;
 import cd.beapi.service.ImageService;
 import cd.beapi.service.StaffService;
@@ -26,13 +24,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.DayOfWeek;
 import java.util.HashSet;
 import java.util.List;
@@ -129,7 +125,7 @@ public class StaffServiceImpl implements StaffService {
             newStaff.setCode(sequenceService.generateDentistCode());
         }
         if (file != null && !file.isEmpty()) {
-            newStaff.setAvatarUrl(uploadImage(file));
+            newStaff.setAvatarUrl(imageService.upload(file, STAFF_FOLDER_NAME));
         }
         Staff savedStaff = staffRepository.save(newStaff);
         savedStaff.setWorkingSchedules(saveCreateWorkingSchedules(savedStaff, createStaffRequest.getWorkingSchedules()));
@@ -159,7 +155,7 @@ public class StaffServiceImpl implements StaffService {
         existedStaff.setStaffType(updateStaffRequest.getStaffType());
         existedStaff.setVersion(updateStaffRequest.getVersion());
         if (file != null && !file.isEmpty()) {
-            existedStaff.setAvatarUrl(updateImage(file, oldAvatarUrl));
+            existedStaff.setAvatarUrl(imageService.update(file, oldAvatarUrl, STAFF_FOLDER_NAME));
         }
         Staff savedStaff = staffRepository.save(existedStaff);
         if (updateStaffRequest.getWorkingSchedules() != null) {
@@ -178,35 +174,8 @@ public class StaffServiceImpl implements StaffService {
         }
         Staff staff = staffRepository.findById(id).orElseThrow(
                 () -> new AppException("Cannot find staff with id: " + id, HttpStatus.BAD_REQUEST));
-        deleteImage(staff.getAvatarUrl());
+        imageService.delete(staff.getAvatarUrl());
         staffRepository.deleteById(id);
-    }
-
-    private String uploadImage(MultipartFile file) {
-        try {
-            return imageService.upload(file, STAFF_FOLDER_NAME);
-        } catch (IOException e) {
-            throw new AppException("Cannot upload staff image", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private String updateImage(MultipartFile file, String oldAvatarUrl) {
-        try {
-            if (StringUtils.hasText(oldAvatarUrl)) {
-                return imageService.update(file, oldAvatarUrl, STAFF_FOLDER_NAME);
-            }
-            return imageService.upload(file, STAFF_FOLDER_NAME);
-        } catch (IOException e) {
-            throw new AppException("Cannot update staff image", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private void deleteImage(String avatarUrl) {
-        try {
-            imageService.delete(avatarUrl);
-        } catch (IOException e) {
-            throw new AppException("Cannot delete staff image", HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     private List<WorkingSchedule> saveCreateWorkingSchedules(Staff staff, List<CreateStaffRequest.WorkingScheduleRequest> requests) {

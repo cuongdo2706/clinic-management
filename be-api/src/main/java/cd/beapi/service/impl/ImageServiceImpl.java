@@ -32,48 +32,54 @@ public class ImageServiceImpl implements ImageService {
     private final FileUploadConfig fileUploadConfig;
 
     @Override
-    public String upload(MultipartFile file, String path) throws IOException {
-        validateFile(file);
-        //Lấy file extension
-        String extension = getFileExtension(file.getOriginalFilename());
-        //Tạo đường dẫn tương đối ("path-prefix"/"gen UUID file name")
-        String relativePath = normalizePath(path) + "/" + generateFileName(extension);
-        //Build full path : D:/.../image/staff/jdkf7823r-1dsqaqw.jpg
-        Path fullPath = buildFullPathFromRelativePath(relativePath);
-
+    public String upload(MultipartFile file, String path) {
+        Path fullPath = null;
         try {
+            validateFile(file);
+            //Lấy file extension
+            String extension = getFileExtension(file.getOriginalFilename());
+            //Tạo đường dẫn tương đối ("path-prefix"/"gen UUID file name")
+            String relativePath = normalizePath(path) + "/" + generateFileName(extension);
+            //Build full path : D:/.../image/staff/jdkf7823r-1dsqaqw.jpg
+            fullPath = buildFullPathFromRelativePath(relativePath);
             //Tạo folder nếu chưa có
             Files.createDirectories(fullPath.getParent());
             //Copy file vào ổ
             Files.copy(file.getInputStream(), fullPath, StandardCopyOption.REPLACE_EXISTING);
             return relativePath;
-        } catch (Exception e) {
+        } catch (AppException e) {
+            throw e;
+        } catch (IOException e) {
             //Xoá nếu đã tồn tại
-            Files.deleteIfExists(fullPath);
-            throw new IOException("Cannot save image file: " + e.getMessage(), e);
+            deleteQuietly(fullPath);
+            throw new AppException("Cannot save image file", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Override
-    public String update(MultipartFile file, String oldAvatarUrl, String path) throws IOException {
+    public String update(MultipartFile file, String oldAvatarUrl, String path) {
         String newAvatarUrl = upload(file, path);
         try {
             delete(oldAvatarUrl);
             return newAvatarUrl;
-        } catch (Exception e) {
-            delete(newAvatarUrl);
-            throw new IOException("Cannot update image file: " + e.getMessage(), e);
+        } catch (AppException e) {
+            deleteQuietly(buildFullPath(newAvatarUrl));
+            throw new AppException("Cannot update image file", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Override
-    public void delete(String avatarUrl) throws IOException {
+    public void delete(String avatarUrl) {
         if (!StringUtils.hasText(avatarUrl)) {
             return;
         }
         Path fullPath = buildFullPath(avatarUrl);
-        if (Files.exists(fullPath) && Files.isRegularFile(fullPath)) {
-            Files.delete(fullPath);
+        try {
+            if (Files.exists(fullPath) && Files.isRegularFile(fullPath)) {
+                Files.delete(fullPath);
+            }
+        } catch (IOException e) {
+            throw new AppException("Cannot delete image file", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -90,7 +96,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public ImageResourceResponse loadAsResource(String imagePath) throws IOException {
+    public ImageResourceResponse loadAsResource(String imagePath) {
         String normalizedImagePath = normalizePath(imagePath);
         Path fullPath = buildFullPathFromRelativePath(normalizedImagePath);
 
@@ -98,10 +104,14 @@ public class ImageServiceImpl implements ImageService {
             throw new AppException("Image not found", HttpStatus.NOT_FOUND);
         }
 
-        Resource resource = toResource(fullPath);
-        MediaType mediaType = resolveMediaType(fullPath);
+        try {
+            Resource resource = toResource(fullPath);
+            MediaType mediaType = resolveMediaType(fullPath);
 
-        return new ImageResourceResponse(resource, mediaType, fullPath.getFileName().toString());
+            return new ImageResourceResponse(resource, mediaType, fullPath.getFileName().toString());
+        } catch (IOException e) {
+            throw new AppException("Cannot load image file", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private Resource toResource(Path fullPath) throws MalformedURLException {
@@ -214,5 +224,15 @@ public class ImageServiceImpl implements ImageService {
 
     private Path getBaseDir() {
         return Paths.get(fileUploadConfig.getBaseDir()).toAbsolutePath().normalize();
+    }
+
+    private void deleteQuietly(Path fullPath) {
+        if (fullPath == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(fullPath);
+        } catch (IOException ignored) {
+        }
     }
 }

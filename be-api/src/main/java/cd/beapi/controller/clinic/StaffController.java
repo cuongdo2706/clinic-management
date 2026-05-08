@@ -9,12 +9,8 @@ import cd.beapi.dto.response.SuccessResponse;
 import cd.beapi.service.StaffService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
-import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -68,15 +63,5 @@ public class StaffController {
     public SuccessResponse<?> delete(@PathVariable Long id) {
         staffService.delete(id);
         return new SuccessResponse<>(HttpStatus.NO_CONTENT.value(), "Delete data successfully", Instant.now(), null);
-    }
-
-    @PreAuthorize("hasAnyAuthority('STAFF:EXPORT')")
-    @GetMapping("/export")
-    public ResponseEntity<Resource> exportExcel() {
-        String filename = "Danh_Sach_Nhan_Vien_" + LocalDate.now() + ".xlsx";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        headers.setContentDisposition(ContentDisposition.attachment().filename(filename).build());
-        return ResponseEntity.ok().headers(headers).body(staffService.exportExcel());
     }
 }

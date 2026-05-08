@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.time.Duration;
 
 @RestController
@@ -22,7 +21,7 @@ public class ImageController {
     private final ImageService imageService;
 
     @GetMapping("/{*imagePath}")
-    public ResponseEntity<Resource> serveImage(@PathVariable String imagePath) throws IOException {
+    public ResponseEntity<Resource> serveImage(@PathVariable String imagePath) {
         ImageResourceResponse image = imageService.loadAsResource(imagePath);
         return ResponseEntity.ok()
                 .contentType(image.mediaType())

@@ -1,1 +1,211 @@
-<p>staff works!</p>
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+    <h2>Quản lý nhân viên</h2>
+</div>
+
+<form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+    <p-toolbar>
+        <ng-template #start>
+            <div class="filter-grid">
+                <p-floatlabel variant="on">
+                    <input pInputText id="staff-code" formControlName="codeKeyword"/>
+                    <label for="staff-code">Mã nhân viên</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on">
+                    <input pInputText id="staff-name" formControlName="nameKeyword"/>
+                    <label for="staff-name">Tên nhân viên</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on">
+                    <input pInputText id="staff-phone" formControlName="phoneKeyword"/>
+                    <label for="staff-phone">Số điện thoại</label>
+                </p-floatlabel>
+
+                <p-floatlabel variant="on">
+                    <input pInputText id="staff-email" formControlName="emailKeyword"/>
+                    <label for="staff-email">Email</label>
+                </p-floatlabel>
+
+                <p-select styleClass="filter-select" formControlName="staffType" [options]="staffTypeOptions"
+                          optionLabel="label" optionValue="value" placeholder="Tất cả chức vụ" [showClear]="true"/>
+
+                <p-select styleClass="filter-select" formControlName="sortBy" [options]="sortOptions"
+                          optionLabel="name" optionValue="value"/>
+
+                <p-button type="submit" icon="pi pi-search" [loading]="loading()"/>
+                <p-button type="button" icon="pi pi-refresh" severity="secondary" [loading]="loading()"
+                          (onClick)="onResetFilter()"/>
+            </div>
+        </ng-template>
+        <ng-template #end>
+            <p-button label="Thêm mới" icon="pi pi-plus" severity="success" (onClick)="openAddDialog()"/>
+        </ng-template>
+    </p-toolbar>
+
+    <p-table [value]="staffs()?.content ?? []"
+             [loading]="loading()"
+             dataKey="id"
+             [expandedRowKeys]="expandedRows()">
+        <ng-template #loadingicon>
+            <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+        </ng-template>
+        <ng-template #header>
+            <tr>
+                <th style="width: 4.5rem">Ảnh</th>
+                <th>Mã</th>
+                <th>Họ tên</th>
+                <th>Chức vụ</th>
+                <th>Số điện thoại</th>
+                <th>Email</th>
+                <th>Ngày tạo</th>
+                <th style="width: 7rem; text-align:center">Thao tác</th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-staff let-expanded="expanded">
+            <tr (click)="toggleRow(staff)" class="staff-row" [class.row-expanded]="expanded">
+                <td>
+                    <img class="staff-avatar" [src]="getAvatarUrl(staff.avatarUrl)" alt="Ảnh nhân viên"
+                         (error)="onImageError($event)"/>
+                </td>
+                <td>{{ staff.code }}</td>
+                <td>{{ staff.fullName }}</td>
+                <td>
+                    <p-tag [value]="getStaffTypeLabel(staff.staffType)"
+                           [severity]="getStaffTypeSeverity(staff.staffType)"/>
+                </td>
+                <td>{{ staff.phone || '—' }}</td>
+                <td>{{ staff.email || '—' }}</td>
+                <td>{{ staff.createdAt | date: 'dd/MM/yyyy' }}</td>
+                <td class="action-cell" (click)="$event.stopPropagation()">
+                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                              pTooltip="Chỉnh sửa" tooltipPosition="top"
+                              (onClick)="openEditDialog(staff)"/>
+                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                              pTooltip="Xóa" tooltipPosition="top"
+                              (onClick)="confirmDelete(staff)"/>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #expandedrow let-staff>
+            <tr>
+                <td colspan="8" class="expanded-row-cell">
+                    <div class="staff-detail-card">
+                        <div class="detail-header">
+                            <i class="pi pi-users"></i>
+                            Chi tiết nhân viên
+                        </div>
+                        <div class="staff-detail-body">
+                            <div class="detail-avatar">
+                                <img [src]="getAvatarUrl(staff.avatarUrl)" alt="Ảnh nhân viên" (error)="onImageError($event)"/>
+                                <span>{{ getStaffTypeLabel(staff.staffType) }}</span>
+                            </div>
+                            <div class="detail-group">
+                                <div class="detail-group-title">Thông tin cá nhân</div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-id-card"></i> Mã nhân viên</span>
+                                    <span class="detail-value">{{ staff.code }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-user"></i> Họ và tên</span>
+                                    <span class="detail-value">{{ staff.fullName }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-calendar"></i> Ngày sinh</span>
+                                    <span class="detail-value">{{ staff.dob | date: 'dd/MM/yyyy' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-venus-mars"></i> Giới tính</span>
+                                    <span class="detail-value">{{ getGenderLabel(staff.gender) }}</span>
+                                </div>
+                            </div>
+                            <div class="detail-divider"></div>
+                            <div class="detail-group">
+                                <div class="detail-group-title">Liên hệ</div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-phone"></i> Số điện thoại</span>
+                                    <span class="detail-value">{{ staff.phone || '—' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-envelope"></i> Email</span>
+                                    <span class="detail-value">{{ staff.email || '—' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-map-marker"></i> Địa chỉ</span>
+                                    <span class="detail-value">{{ staff.address || '—' }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-clock"></i> Ngày tạo</span>
+                                    <span class="detail-value">{{ staff.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                                </div>
+                            </div>
+                            <div class="detail-divider"></div>
+                            <div class="detail-group schedule-group">
+                                <div class="detail-group-title">Lịch làm việc</div>
+                                @if (staff.workingSchedules?.length) {
+                                    @for (schedule of staff.workingSchedules; track schedule.id) {
+                                        <div class="schedule-chip">
+                                            <span>{{ getDayLabel(schedule.dayOfWeek) }}</span>
+                                            <strong>{{ formatTime(schedule.startTime) }} - {{ formatTime(schedule.endTime) }}</strong>
+                                        </div>
+                                    }
+                                } @else {
+                                    <div class="empty-detail">Chưa có lịch làm việc</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+            <tr>
+                <td colspan="8" class="text-center p-4">Không có dữ liệu</td>
+            </tr>
+        </ng-template>
+        <ng-template #footer>
+            <tr>
+                <td colspan="100%" style="background-color: #ffffff">
+                    <p-paginator
+                            (onPageChange)="onPageChange($event)"
+                            [first]="paginatorFirst()"
+                            [rows]="staffs()?.size ?? 10"
+                            [totalRecords]="staffs()?.totalElements ?? 0"
+                            [rowsPerPageOptions]="[10, 20, 30]"
+                            appendTo="body"/>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</form>
+
+<p-dialog header="Thêm nhân viên mới"
+          [visible]="showAddDialog()"
+          (visibleChange)="showAddDialog.set($event)"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [style]="{width: '820px'}">
+    @if (showAddDialog()) {
+        <app-staff-save-form
+                (saved)="onStaffSaved()"
+                (cancelled)="showAddDialog.set(false)"/>
+    }
+</p-dialog>
+
+<p-dialog header="Chỉnh sửa nhân viên"
+          [visible]="showEditDialog()"
+          (visibleChange)="showEditDialog.set($event)"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [style]="{width: '820px'}">
+    @if (showEditDialog() && editingStaff()) {
+        <app-staff-update-form
+                [staff]="editingStaff()!.id"
+                (saved)="onStaffSaved()"
+                (cancelled)="showEditDialog.set(false)"/>
+    }
+</p-dialog>

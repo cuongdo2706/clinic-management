@@ -1,0 +1,138 @@
+.staff-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr 1fr;
+    gap: 16px 20px;
+}
+
+.avatar-field {
+    grid-row: span 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar-preview {
+    width: 128px;
+    height: 128px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #bbf7d0;
+    background: #f8fafc;
+}
+
+.avatar-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-field input[type="file"] {
+    display: none;
+}
+
+.file-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #16a34a;
+    color: #166534;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field.span-full {
+    grid-column: 2 / -1;
+}
+
+.field-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #166534;
+    line-height: 1;
+}
+
+.req,
+.error-text {
+    color: #dc2626;
+}
+
+.error-text {
+    font-size: 0.76rem;
+}
+
+.schedule-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 4px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 700;
+    color: #166534;
+}
+
+.empty-schedule {
+    border: 1px dashed #bbf7d0;
+    border-radius: 6px;
+    padding: 14px;
+    color: #64748b;
+    text-align: center;
+    background: #f8fafc;
+}
+
+.schedule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.schedule-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #d1fae5;
+}
+
+@media (max-width: 720px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .avatar-field,
+    .field.span-full {
+        grid-column: auto;
+        grid-row: auto;
+    }
+
+    .schedule-row {
+        grid-template-columns: 1fr;
+    }
+}

@@ -34,8 +34,6 @@ public class UpdateStaffRequest {
     @NotNull(message = "Staff type is required")
     StaffType staffType;
 
-    CreateUserRequest user;
-
     List<WorkingScheduleRequest> workingSchedules;
 
     Long version;

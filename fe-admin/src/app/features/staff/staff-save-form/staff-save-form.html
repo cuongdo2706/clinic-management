@@ -1,0 +1,121 @@
+<p-card>
+    <form [formGroup]="saveForm" class="staff-form" novalidate>
+        <div class="form-grid">
+            <div class="avatar-field">
+                <div class="avatar-preview">
+                    <img [src]="previewUrl() || '/no-image-available-picture-coming-600nw-2057829641.jpg'" alt="Ảnh nhân viên"/>
+                </div>
+                <label class="file-button" for="sf-avatar">
+                    <i class="pi pi-camera"></i>
+                    Chọn ảnh
+                </label>
+                <input id="sf-avatar" type="file" accept="image/*" (change)="onFileSelected($event)"/>
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="sf-code">Mã nhân viên</label>
+                <input pInputText id="sf-code" formControlName="code" class="w-full" placeholder="Tự động sinh nếu để trống"/>
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="sf-name">Họ và tên <span class="req">*</span></label>
+                <input pInputText id="sf-name" formControlName="fullName" class="w-full"
+                       (input)="clearError('fullName')" [class.ng-invalid]="errors()['fullName']"/>
+                @if (errors()['fullName']) {
+                    <small class="error-text">{{ errors()['fullName'] }}</small>
+                }
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="sf-dob">Ngày sinh <span class="req">*</span></label>
+                <p-datepicker id="sf-dob" formControlName="dob" dateFormat="dd/mm/yy" styleClass="w-full"
+                              [inputStyleClass]="errors()['dob'] ? 'w-full ng-invalid' : 'w-full'"
+                              (onSelect)="clearError('dob')"/>
+                @if (errors()['dob']) {
+                    <small class="error-text">{{ errors()['dob'] }}</small>
+                }
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="sf-gender">Giới tính <span class="req">*</span></label>
+                <p-select id="sf-gender" formControlName="gender" styleClass="w-full" [options]="genderOptions"
+                          optionLabel="label" optionValue="value" placeholder="-- Chọn giới tính --"
+                          (onChange)="clearError('gender')"/>
+                @if (errors()['gender']) {
+                    <small class="error-text">{{ errors()['gender'] }}</small>
+                }
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="sf-phone">Số điện thoại <span class="req">*</span></label>
+                <input pInputText id="sf-phone" formControlName="phone" class="w-full"
+                       (input)="clearError('phone')" [class.ng-invalid]="errors()['phone']"/>
+                @if (errors()['phone']) {
+                    <small class="error-text">{{ errors()['phone'] }}</small>
+                }
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="sf-email">Email</label>
+                <input pInputText id="sf-email" formControlName="email" class="w-full"
+                       (input)="clearError('email')" [class.ng-invalid]="errors()['email']"/>
+                @if (errors()['email']) {
+                    <small class="error-text">{{ errors()['email'] }}</small>
+                }
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="sf-type">Chức vụ <span class="req">*</span></label>
+                <p-select id="sf-type" formControlName="staffType" styleClass="w-full" [options]="staffTypeOptions"
+                          optionLabel="label" optionValue="value" placeholder="-- Chọn chức vụ --"
+                          (onChange)="clearError('staffType')"/>
+                @if (errors()['staffType']) {
+                    <small class="error-text">{{ errors()['staffType'] }}</small>
+                }
+            </div>
+
+            <div class="field span-full">
+                <label class="field-label" for="sf-address">Địa chỉ</label>
+                <input pInputText id="sf-address" formControlName="address" class="w-full"/>
+            </div>
+        </div>
+
+        <div class="schedule-section">
+            <div class="section-title">
+                <span>Lịch làm việc</span>
+                <p-button type="button" label="Thêm lịch" icon="pi pi-plus" size="small" severity="secondary"
+                          (onClick)="addSchedule()"/>
+            </div>
+            @if (schedules().length === 0) {
+                <div class="empty-schedule">Chưa có lịch làm việc</div>
+            } @else {
+                <div class="schedule-list">
+                    @for (schedule of schedules(); track schedule.uid) {
+                        <div class="schedule-row">
+                            <p-select [options]="dayOptions" optionLabel="label" optionValue="value"
+                                      [ngModel]="schedule.dayOfWeek" [ngModelOptions]="{standalone: true}"
+                                      placeholder="Chọn ngày"
+                                      (onChange)="updateSchedule(schedule.uid, 'dayOfWeek', $event.value)"/>
+                            <input pInputText type="time" [value]="schedule.startTime"
+                                   (input)="updateSchedule(schedule.uid, 'startTime', $any($event.target).value)"/>
+                            <input pInputText type="time" [value]="schedule.endTime"
+                                   (input)="updateSchedule(schedule.uid, 'endTime', $any($event.target).value)"/>
+                            <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true"
+                                      (onClick)="removeSchedule(schedule.uid)"/>
+                        </div>
+                    }
+                </div>
+            }
+            @if (errors()['workingSchedules']) {
+                <small class="error-text">{{ errors()['workingSchedules'] }}</small>
+            }
+        </div>
+
+        <div class="form-actions">
+            <p-button type="button" label="Hủy" severity="secondary" icon="pi pi-times"
+                      (onClick)="cancelled.emit()" [disabled]="loading()"/>
+            <p-button type="button" label="Lưu nhân viên" severity="success" icon="pi pi-check"
+                      (onClick)="onSubmit()" [loading]="loading()"/>
+        </div>
+    </form>
+</p-card>

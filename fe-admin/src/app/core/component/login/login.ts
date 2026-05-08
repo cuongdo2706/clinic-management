@@ -58,7 +58,6 @@ export class Login {
             next: res => {
                 const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
                 this.router.navigateByUrl(returnUrl);
-                console.log(res);
             },
             error: (err: HttpErrorResponse) => {
                 console.log(err.error);
