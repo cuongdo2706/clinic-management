@@ -1,6 +1,5 @@
 import {Component, inject, signal} from '@angular/core';
 import {AuthService} from "../../service/auth.service";
-import {form, FormField, required} from "@angular/forms/signals";
 import {Toast} from "primeng/toast";
 import {Card} from "primeng/card";
 import {FloatLabel} from "primeng/floatlabel";
@@ -12,12 +11,7 @@ import {LoginRequest} from "../../model/request/login-request";
 import {MessageService} from "primeng/api";
 import {HttpErrorResponse} from "@angular/common/http";
 import {ActivatedRoute, Router} from "@angular/router";
-import {FormsModule} from "@angular/forms";
-
-interface LoginData {
-    username: string;
-    password: string;
-}
+import {FormBuilder, ReactiveFormsModule, Validators} from "@angular/forms";
 
 @Component({
     selector: 'app-login',
@@ -27,10 +21,9 @@ interface LoginData {
         FloatLabel,
         InputText,
         Button,
-        FormField,
         IconField,
         InputIcon,
-        FormsModule,
+        ReactiveFormsModule,
     ],
     templateUrl: './login.html',
     providers: [MessageService],
@@ -43,27 +36,22 @@ export class Login {
     private readonly messageService = inject(MessageService);
     private readonly router = inject(Router);
     private readonly route = inject(ActivatedRoute);
+    private readonly fb = inject(FormBuilder);
     
     showPassword = signal<boolean>(false);
     
-    loginForm = form(
-            signal<LoginData>({
-                username: '',
-                password: ''
-            }),
-            (f) => {
-                required(f.username);
-                required(f.password);
-            }
-    );
+    loginForm = this.fb.nonNullable.group({
+        username: ['', Validators.required],
+        password: ['', Validators.required],
+    });
     
     onLogin() {
-        if (this.loginForm().invalid()) return;
+        if (this.loginForm.invalid) return;
         
-        const value = this.loginForm().value();
+        const value = this.loginForm.getRawValue();
         const payload: LoginRequest = {
-            username: value.username as string,
-            password: value.password as string,
+            username: value.username,
+            password: value.password,
         };
         
         this.authService.login(payload).subscribe({

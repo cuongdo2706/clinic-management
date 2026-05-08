@@ -1,12 +1,13 @@
 import {Component, inject, input, OnInit, output, signal} from '@angular/core';
 import {MedicineService} from "../../../core/service/medicine.service";
-import {form, FormField} from "@angular/forms/signals";
 import {UpdateMedicineRequest} from "../../../core/model/request/update-medicine-request";
 import {MessageService} from "primeng/api";
 import {Button} from "primeng/button";
 import {InputText} from "primeng/inputtext";
 import {Card} from "primeng/card";
 import {ProgressSpinner} from "primeng/progressspinner";
+import {FormBuilder, ReactiveFormsModule} from "@angular/forms";
+import {Textarea} from "primeng/textarea";
 
 interface MedicineFormData {
     code: string;
@@ -21,13 +22,14 @@ interface MedicineFormData {
 
 @Component({
     selector: 'app-medicine-update-form',
-    imports: [Button, InputText, FormField, Card, ProgressSpinner],
+    imports: [Button, InputText, Card, ProgressSpinner, ReactiveFormsModule, Textarea],
     templateUrl: './medicine-update-form.html',
     styleUrl: './medicine-update-form.css',
 })
 export class MedicineUpdateForm implements OnInit {
     private readonly medicineService = inject(MedicineService);
     private readonly messageService = inject(MessageService);
+    private readonly fb = inject(FormBuilder);
 
     medicine = input.required<number>();
 
@@ -39,7 +41,7 @@ export class MedicineUpdateForm implements OnInit {
     errors = signal<Record<string, string>>({});
     private medicineVersion = 0;
 
-    updateForm = form(signal<MedicineFormData>({
+    updateForm = this.fb.nonNullable.group({
         code: '',
         name: '',
         unit: '',
@@ -48,14 +50,14 @@ export class MedicineUpdateForm implements OnInit {
         manufacturer: '',
         origin: '',
         description: '',
-    }));
+    });
 
     ngOnInit(): void {
         this.medicineService.findById(this.medicine().toString()).subscribe({
             next: res => {
                 const m = res.data;
                 this.medicineVersion = m.version;
-                this.updateForm().reset({
+                this.updateForm.reset({
                     code: m.code,
                     name: m.name,
                     unit: m.unit,
@@ -86,7 +88,7 @@ export class MedicineUpdateForm implements OnInit {
     }
 
     private validate(): boolean {
-        const val = this.updateForm().value();
+        const val = this.updateForm.getRawValue();
         const errs: Record<string, string> = {};
         if (!val.name?.trim()) errs['name'] = 'Vui lòng nhập tên thuốc';
         if (!val.unit?.trim()) errs['unit'] = 'Vui lòng nhập đơn vị';
@@ -99,7 +101,7 @@ export class MedicineUpdateForm implements OnInit {
     onSubmit(): void {
         if (!this.validate()) return;
 
-        const val = this.updateForm().value();
+        const val = this.updateForm.getRawValue();
         const request: UpdateMedicineRequest = {
             code: val.code,
             name: val.name,

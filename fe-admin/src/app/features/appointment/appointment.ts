@@ -33,6 +33,7 @@ import {HttpErrorResponse} from "@angular/common/http";
         IconField,
         InputIcon,
         Toolbar,
+        DatePicker,
         Textarea,
     ],
     providers: [MessageService, ConfirmationService],
@@ -49,6 +50,7 @@ export class Appointment implements OnInit {
     dialogVisible = signal(false);
     isEdit = signal(false);
     searchKeyword = signal('');
+    appointmentDate: Date | null = null;
 
     selectedId = '';
     formData: AppointmentRequest = {
@@ -76,6 +78,7 @@ export class Appointment implements OnInit {
 
     openNew() {
         this.formData = {patientId: '', dentistId: '', appointmentDate: '', timeSlot: '', notes: ''};
+        this.appointmentDate = null;
         this.isEdit.set(false);
         this.dialogVisible.set(true);
     }
@@ -89,6 +92,7 @@ export class Appointment implements OnInit {
             timeSlot: appointment.timeSlot,
             notes: appointment.notes,
         };
+        this.appointmentDate = this.parseDateString(appointment.appointmentDate);
         this.isEdit.set(true);
         this.dialogVisible.set(true);
     }
@@ -104,6 +108,7 @@ export class Appointment implements OnInit {
     }
 
     save() {
+        this.formData.appointmentDate = this.toDateString(this.appointmentDate);
         if (this.isEdit()) {
             this.appointmentService.update(this.selectedId, this.formData).subscribe({
                 next: () => {
@@ -127,6 +132,25 @@ export class Appointment implements OnInit {
                 },
             });
         }
+    }
+
+    private toDateString(date: Date | null): string {
+        if (!date || isNaN(date.getTime())) return '';
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    private parseDateString(dateStr: string): Date | null {
+        if (!dateStr) return null;
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return null;
+        const year = Number(parts[0]);
+        const month = Number(parts[1]);
+        const day = Number(parts[2]);
+        if (!year || !month || !day) return null;
+        return new Date(year, month - 1, day);
     }
 
     confirmDelete(appointment: AppointmentResponse) {

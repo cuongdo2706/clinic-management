@@ -64,42 +64,54 @@
                             <table class="matrix-table">
                                 <thead>
                                 <tr>
-                                    <th class="page-col">
-                                        Trang
-                                        @if (editingRoleId() === item.id) {
+                                    <th class="stt-col">STT</th>
+                                    <th class="page-col">Tên trang</th>
+                                    <th class="all-col">Tất cả</th>
+                                    @for (action of matrixActions(); track action) {
+                                        <th class="action-col">
+                                            {{ getActionLabel(action) }}
+                                        </th>
+                                    }
+                                </tr>
+                                @if (editingRoleId() === item.id) {
+                                    <tr class="select-all-row">
+                                        <th></th>
+                                        <th class="page-col">Chọn tất cả</th>
+                                        <th class="all-col">
                                             <p-checkbox
                                                     [ngModel]="isAllChecked()"
                                                     (ngModelChange)="toggleAll($event)"
                                                     [binary]="true"
                                                     class="select-all-check"/>
-                                        }
-                                    </th>
-                                    @for (action of matrixActions(); track action) {
-                                        <th class="action-col">
-                                            {{ getActionLabel(action) }}
-                                            @if (editingRoleId() === item.id) {
+                                        </th>
+                                        @for (action of matrixActions(); track action) {
+                                            <th class="action-col">
                                                 <p-checkbox
                                                         [ngModel]="isColumnAllChecked(action)"
                                                         (ngModelChange)="toggleColumn(action, $event)"
                                                         [binary]="true"
                                                         class="select-col-check"/>
-                                            }
-                                        </th>
-                                    }
-                                </tr>
+                                            </th>
+                                        }
+                                    </tr>
+                                }
                                 </thead>
                                 <tbody>
-                                @for (row of matrixRows(); track row.pageCode) {
+                                @for (row of matrixRows(); track row.pageCode; let i = $index) {
                                     <tr>
+                                        <td class="stt-cell">{{ i + 1 }}</td>
                                         <td class="page-cell">
-                                            <i class="pi pi-file"></i>
                                             {{ row.pageName }}
+                                        </td>
+                                        <td class="check-cell">
                                             @if (editingRoleId() === item.id) {
                                                 <p-checkbox
                                                         [ngModel]="isRowAllChecked(row.pageCode)"
                                                         (ngModelChange)="toggleRowAll(row.pageCode, $event)"
                                                         [binary]="true"
                                                         class="select-row-check"/>
+                                            } @else {
+                                                <span class="no-action">—</span>
                                             }
                                         </td>
                                         @for (action of matrixActions(); track action) {
@@ -119,7 +131,7 @@
                                 }
                                 @if (matrixRows().length === 0) {
                                     <tr>
-                                        <td [attr.colspan]="matrixActions().length + 1" class="matrix-empty">
+                                        <td [attr.colspan]="matrixActions().length + 3" class="matrix-empty">
                                             <i class="pi pi-info-circle"></i> Chưa có dữ liệu
                                         </td>
                                     </tr>

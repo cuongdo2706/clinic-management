@@ -1,12 +1,12 @@
 <p-card class="save-card">
-<form class="save-form" novalidate>
+<form [formGroup]="saveForm" class="save-form" novalidate>
 
     <div class="form-grid">
 
         <!-- Mã bệnh nhân -->
         <div class="field">
             <label class="field-label" for="sf-code">Mã bệnh nhân</label>
-            <input pInputText id="sf-code" [formField]="saveForm.code"
+            <input pInputText id="sf-code" formControlName="code"
                    class="w-full" placeholder="Tự động sinh nếu để trống"/>
         </div>
 
@@ -15,8 +15,9 @@
             <label class="field-label" for="sf-name">
                 Họ và tên <span class="req">*</span>
             </label>
-            <input pInputText id="sf-name" [formField]="saveForm.fullName"
+            <input pInputText id="sf-name" formControlName="fullName"
                    class="w-full" placeholder="Nhập họ và tên"
+                   (input)="clearError('fullName')"
                    [class.ng-invalid]="errors()['fullName']"/>
             @if (errors()['fullName']) {
                 <small class="error-text">{{ errors()['fullName'] }}</small>
@@ -28,11 +29,12 @@
             <label class="field-label" for="sf-dob">
                 Ngày sinh <span class="req">*</span>
             </label>
-            <input type="date" id="sf-dob"
-                   class="p-inputtext date-input w-full"
-                   [class.ng-invalid]="errors()['dob']"
-                   [value]="dobRaw()"
-                   (change)="onDobChange($event)"/>
+            <p-datepicker id="sf-dob"
+                          formControlName="dob"
+                          dateFormat="dd/mm/yy"
+                          styleClass="w-full"
+                          [inputStyleClass]="errors()['dob'] ? 'w-full ng-invalid' : 'w-full'"
+                          (onSelect)="clearError('dob')"></p-datepicker>
             @if (errors()['dob']) {
                 <small class="error-text">{{ errors()['dob'] }}</small>
             }
@@ -43,14 +45,15 @@
             <label class="field-label" for="sf-gender">
                 Giới tính <span class="req">*</span>
             </label>
-            <select id="sf-gender"
-                    class="p-select-match w-full"
-                    [class.ng-invalid]="errors()['gender']"
-                    (change)="onGenderChange($event)">
-                <option value="">-- Chọn giới tính --</option>
-                <option value="true">Nam</option>
-                <option value="false">Nữ</option>
-            </select>
+            <p-select id="sf-gender"
+                      formControlName="gender"
+                      styleClass="w-full"
+                      [options]="genderOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      [placeholder]="'-- Chọn giới tính --'"
+                      [class.ng-invalid]="errors()['gender']"
+                      (onChange)="clearError('gender')"></p-select>
             @if (errors()['gender']) {
                 <small class="error-text">{{ errors()['gender'] }}</small>
             }
@@ -62,8 +65,9 @@
                 <label class="field-label" for="sf-phone">
                     Số điện thoại <span class="req">*</span>
                 </label>
-                <input pInputText id="sf-phone" [formField]="saveForm.phone"
+                <input pInputText id="sf-phone" formControlName="phone"
                        class="w-full" placeholder="Nhập số điện thoại"
+                       (input)="clearError('phone')"
                        [class.ng-invalid]="errors()['phone']"/>
                 @if (errors()['phone']) {
                     <small class="error-text">{{ errors()['phone'] }}</small>
@@ -83,8 +87,9 @@
                 <label class="field-label" for="sf-guardian-name">
                     Tên người giám hộ <span class="req">*</span>
                 </label>
-                <input pInputText id="sf-guardian-name" [formField]="saveForm.guardianName"
+                <input pInputText id="sf-guardian-name" formControlName="guardianName"
                        class="w-full" placeholder="Nhập tên người giám hộ"
+                       (input)="clearError('guardianName')"
                        [class.ng-invalid]="errors()['guardianName']"/>
                 @if (errors()['guardianName']) {
                     <small class="error-text">{{ errors()['guardianName'] }}</small>
@@ -94,8 +99,9 @@
                 <label class="field-label" for="sf-guardian-phone">
                     SĐT người giám hộ <span class="req">*</span>
                 </label>
-                <input pInputText id="sf-guardian-phone" [formField]="saveForm.guardianPhone"
+                <input pInputText id="sf-guardian-phone" formControlName="guardianPhone"
                        class="w-full" placeholder="Nhập SĐT người giám hộ"
+                       (input)="clearError('guardianPhone')"
                        [class.ng-invalid]="errors()['guardianPhone']"/>
                 @if (errors()['guardianPhone']) {
                     <small class="error-text">{{ errors()['guardianPhone'] }}</small>
@@ -106,7 +112,7 @@
         <!-- Địa chỉ -->
         <div class="field span-full">
             <label class="field-label" for="sf-address">Địa chỉ</label>
-            <input pInputText id="sf-address" [formField]="saveForm.address"
+            <input pInputText id="sf-address" formControlName="address"
                    class="w-full" placeholder="Nhập địa chỉ"/>
         </div>
 

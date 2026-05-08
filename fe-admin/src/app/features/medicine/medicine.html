@@ -4,38 +4,35 @@
 <div class="page-header">
     <h2>Quản lý thuốc</h2>
 </div>
-<form>
+<form [formGroup]="searchForm" (ngSubmit)="onSearch()">
     <p-toolbar>
         <ng-template #start>
             <div class="flex flex-row flex-wrap" style="gap: 0.75rem; align-items: center;">
                 <p-floatlabel variant="on">
-                    <input pInputText id="code" [formField]="searchForm.codeKeyword"/>
+                    <input pInputText id="code" formControlName="codeKeyword"/>
                     <label for="code">Mã thuốc</label>
                 </p-floatlabel>
 
                 <p-floatlabel variant="on">
-                    <input pInputText id="name" [formField]="searchForm.nameKeyword"/>
+                    <input pInputText id="name" formControlName="nameKeyword"/>
                     <label for="name">Tên thuốc</label>
                 </p-floatlabel>
 
                 <p-floatlabel variant="on">
-                    <input pInputText id="priceFrom" type="number" [formField]="searchForm.priceFrom"/>
+                    <input pInputText id="priceFrom" type="number" formControlName="priceFrom"/>
                     <label for="priceFrom">Giá từ</label>
                 </p-floatlabel>
 
                 <p-floatlabel variant="on">
-                    <input pInputText id="priceTo" type="number" [formField]="searchForm.priceTo"/>
+                    <input pInputText id="priceTo" type="number" formControlName="priceTo"/>
                     <label for="priceTo">Giá đến</label>
                 </p-floatlabel>
 
-                <select class="p-select-match" [formField]="searchForm.sortBy">
-                    @for (opt of sortOptions(); track opt.value) {
-                        <option [value]="opt.value">{{ opt.name }}</option>
-                    }
-                </select>
+                <p-select styleClass="p-select-match" formControlName="sortBy" [options]="sortOptions()"
+                          optionLabel="name" optionValue="value"></p-select>
 
-                <p-button type="submit" (onClick)="onSearch()" icon="pi pi-search" [loading]="loading()"></p-button>
-                <p-button (onClick)="onResetFilter()" icon="pi pi-refresh" [loading]="loading()" severity="secondary"></p-button>
+                <p-button type="submit" icon="pi pi-search" [loading]="loading()"></p-button>
+                <p-button type="button" (onClick)="onResetFilter()" icon="pi pi-refresh" [loading]="loading()" severity="secondary"></p-button>
             </div>
         </ng-template>
         <ng-template #end>

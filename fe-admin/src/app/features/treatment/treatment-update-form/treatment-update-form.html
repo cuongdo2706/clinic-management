@@ -5,19 +5,19 @@
             <span>Đang tải thông tin...</span>
         </div>
     } @else {
-        <form class="update-form" novalidate>
+        <form [formGroup]="updateForm" class="update-form" novalidate>
             <div class="form-grid">
 
                 <!-- Mã dịch vụ -->
                 <div class="field">
                     <label class="field-label" for="uf-code">Mã dịch vụ</label>
-                    <input pInputText id="uf-code" [formField]="updateForm.code" class="w-full"/>
+                    <input pInputText id="uf-code" formControlName="code" class="w-full"/>
                 </div>
 
                 <!-- Tên dịch vụ -->
                 <div class="field">
                     <label class="field-label" for="uf-name">Tên dịch vụ <span class="req">*</span></label>
-                    <input pInputText id="uf-name" [formField]="updateForm.name"
+                    <input pInputText id="uf-name" formControlName="name"
                            class="w-full" placeholder="Nhập tên dịch vụ"
                            (input)="clearError('name')"
                            [class.ng-invalid]="errors()['name']"/>
@@ -29,7 +29,7 @@
                 <!-- Giá -->
                 <div class="field">
                     <label class="field-label" for="uf-price">Giá (VNĐ) <span class="req">*</span></label>
-                    <input pInputText id="uf-price" [formField]="updateForm.price" type="number"
+                    <input pInputText id="uf-price" formControlName="price" type="number"
                            class="w-full" placeholder="Nhập giá dịch vụ"
                            (input)="clearError('price')"
                            [class.ng-invalid]="errors()['price']"/>
@@ -41,35 +41,36 @@
                 <!-- Đơn vị -->
                 <div class="field">
                     <label class="field-label" for="uf-unit">Đơn vị</label>
-                    <input pInputText id="uf-unit" [formField]="updateForm.unit"
+                    <input pInputText id="uf-unit" formControlName="unit"
                            class="w-full" placeholder="VD: Lần, Buổi..."/>
                 </div>
 
                 <!-- Danh mục -->
                 <div class="field">
                     <label class="field-label" for="uf-category">Danh mục</label>
-                    <select id="uf-category" [formField]="updateForm.treatmentCategoryId" class="p-select-match w-full">
-                        <option value="">-- Chọn danh mục --</option>
-                        @for (cat of categories(); track cat.id) {
-                            <option [value]="cat.id">{{ cat.name }}</option>
-                        }
-                    </select>
+                    <p-select id="uf-category" formControlName="treatmentCategoryId"
+                              styleClass="w-full"
+                              [options]="categories()"
+                              optionLabel="name"
+                              optionValue="id"
+                              [placeholder]="'-- Chọn danh mục --'"></p-select>
                 </div>
 
                 <!-- Trạng thái -->
                 <div class="field">
                     <label class="field-label" for="uf-active">Trạng thái</label>
-                    <select id="uf-active" [formField]="updateForm.isActive" class="p-select-match w-full">
-                        <option value="true">Hoạt động</option>
-                        <option value="false">Ngừng hoạt động</option>
-                    </select>
+                    <p-select id="uf-active" formControlName="isActive"
+                              styleClass="w-full"
+                              [options]="activeOptions"
+                              optionLabel="label"
+                              optionValue="value"></p-select>
                 </div>
 
                 <!-- Mô tả -->
                 <div class="field span-full">
                     <label class="field-label" for="uf-desc">Mô tả</label>
-                    <textarea id="uf-desc" [formField]="updateForm.description"
-                              class="p-textarea-match w-full" placeholder="Nhập mô tả dịch vụ"
+                    <textarea pTextarea id="uf-desc" formControlName="description"
+                              class="w-full" placeholder="Nhập mô tả dịch vụ"
                               rows="3"></textarea>
                 </div>
 

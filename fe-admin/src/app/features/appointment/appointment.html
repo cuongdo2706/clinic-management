@@ -72,8 +72,8 @@
         </p-floatlabel>
 
         <p-floatlabel variant="on">
-            <input pInputText id="appointmentDate" [(ngModel)]="formData.appointmentDate" type="date"
-                   style="width: 100%"/>
+            <p-datepicker id="appointmentDate" [(ngModel)]="appointmentDate" dateFormat="dd/mm/yy"
+                          styleClass="w-full"></p-datepicker>
             <label for="appointmentDate">Ngày hẹn</label>
         </p-floatlabel>
 

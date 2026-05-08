@@ -1,16 +1,20 @@
-import {Component, computed, inject, input, OnInit, output, signal} from '@angular/core';
+import {Component, inject, input, OnInit, output, signal} from '@angular/core';
 import {PatientService} from "../../../core/service/patient.service";
-import {form, FormField} from "@angular/forms/signals";
 import {UpdatePatientRequest} from "../../../core/model/request/update-patient-request";
 import {MessageService} from "primeng/api";
 import {Button} from "primeng/button";
 import {InputText} from "primeng/inputtext";
 import {Card} from "primeng/card";
 import {ProgressSpinner} from "primeng/progressspinner";
+import {FormBuilder, ReactiveFormsModule} from "@angular/forms";
+import {DatePicker} from "primeng/datepicker";
+import {Select} from "primeng/select";
 
 interface PatientFormData {
     code: string;
     fullName: string;
+    dob: Date | null;
+    gender: boolean | null;
     phone: string;
     address: string;
     guardianName: string;
@@ -19,13 +23,14 @@ interface PatientFormData {
 
 @Component({
     selector: 'app-patient-update-form',
-    imports: [Button, InputText, FormField, Card, ProgressSpinner],
+    imports: [Button, InputText, Card, ProgressSpinner, ReactiveFormsModule, DatePicker, Select],
     templateUrl: './patient-update-form.html',
     styleUrl: './patient-update-form.css',
 })
 export class PatientUpdateForm implements OnInit {
     private readonly patientService = inject(PatientService);
     private readonly messageService = inject(MessageService);
+    private readonly fb = inject(FormBuilder);
 
     patient = input.required<number>(); // truyền ID, form tự fetch
 
@@ -34,39 +39,39 @@ export class PatientUpdateForm implements OnInit {
 
     loading = signal(false);
     fetching = signal(true);  // loading khi fetch data ban đầu
-    dobRaw = signal('');
-    genderRaw = signal('');
     errors = signal<Record<string, string>>({});
     private patientVersion = 0;
+    genderOptions = [
+        {label: 'Nam', value: true},
+        {label: 'Nữ', value: false},
+    ];
 
-    updateForm = form(signal<PatientFormData>({
-        code: '',
-        fullName: '',
-        phone: '',
-        address: '',
-        guardianName: '',
-        guardianPhone: ''
-    }));
+    updateForm = this.fb.group({
+        code: this.fb.nonNullable.control(''),
+        fullName: this.fb.nonNullable.control(''),
+        dob: this.fb.control<Date | null>(null),
+        gender: this.fb.control<boolean | null>(null),
+        phone: this.fb.nonNullable.control(''),
+        address: this.fb.nonNullable.control(''),
+        guardianName: this.fb.nonNullable.control(''),
+        guardianPhone: this.fb.nonNullable.control('')
+    });
 
     ngOnInit(): void {
         this.patientService.findById(this.patient().toString()).subscribe({
             next: res => {
                 const p = res.data;
                 this.patientVersion = p.version;
-                this.updateForm().reset({
+                this.updateForm.reset({
                     code: p.code,
                     fullName: p.fullName,
+                    dob: p.dob ? new Date(p.dob) : null,
+                    gender: p.gender,
                     phone: p.phone || '',
                     address: p.address || '',
                     guardianName: p.guardianName || '',
                     guardianPhone: p.guardianPhone || '',
                 });
-                const d = new Date(p.dob);
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                this.dobRaw.set(`${yyyy}-${mm}-${dd}`);
-                this.genderRaw.set(String(p.gender));
                 this.fetching.set(false);
             },
             error: () => {
@@ -81,40 +86,30 @@ export class PatientUpdateForm implements OnInit {
         });
     }
 
-    isAdult = computed(() => {
-        const dobStr = this.dobRaw();
-        if (!dobStr) return true;
-        const dob = new Date(dobStr + 'T00:00:00');
-        if (isNaN(dob.getTime())) return true;
+    isAdult(): boolean {
+        const dob = this.updateForm.controls.dob.value;
+        if (!dob) return true;
+        const date = new Date(dob);
+        if (isNaN(date.getTime())) return true;
         const today = new Date();
-        let age = today.getFullYear() - dob.getFullYear();
-        const m = today.getMonth() - dob.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+        let age = today.getFullYear() - date.getFullYear();
+        const monthDiff = today.getMonth() - date.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) age--;
         return age > 14;
-    });
-
-    onDobChange(event: Event): void {
-        this.dobRaw.set((event.target as HTMLInputElement).value);
-        this.clearError('dob');
     }
 
-    onGenderChange(event: Event): void {
-        this.genderRaw.set((event.target as HTMLSelectElement).value);
-        this.clearError('gender');
-    }
-
-    private clearError(key: string): void {
+    clearError(key: string): void {
         const errs = {...this.errors()};
         delete errs[key];
         this.errors.set(errs);
     }
 
     private validate(): boolean {
-        const val = this.updateForm().value();
+        const val = this.updateForm.getRawValue();
         const errs: Record<string, string> = {};
         if (!val.fullName?.trim()) errs['fullName'] = 'Vui lòng nhập họ và tên';
-        if (!this.dobRaw()) errs['dob'] = 'Vui lòng chọn ngày sinh';
-        if (!this.genderRaw()) errs['gender'] = 'Vui lòng chọn giới tính';
+        if (!val.dob) errs['dob'] = 'Vui lòng chọn ngày sinh';
+        if (val.gender === null) errs['gender'] = 'Vui lòng chọn giới tính';
         if (this.isAdult()) {
             if (!val.phone?.trim()) errs['phone'] = 'Vui lòng nhập số điện thoại';
         } else {
@@ -128,12 +123,12 @@ export class PatientUpdateForm implements OnInit {
     onSubmit(): void {
         if (!this.validate()) return;
 
-        const val = this.updateForm().value();
+        const val = this.updateForm.getRawValue();
         const request: UpdatePatientRequest = {
             code: val.code,
             fullName: val.fullName,
-            dob: new Date(this.dobRaw() + 'T00:00:00'),
-            gender: this.genderRaw() === 'true',
+            dob: val.dob!,
+            gender: val.gender!,
             phone: this.isAdult() ? val.phone : '',
             address: val.address,
             guardianName: this.isAdult() ? '' : val.guardianName,

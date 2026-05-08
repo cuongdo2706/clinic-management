@@ -1,7 +1,6 @@
 import {Component, inject, input, OnInit, output, signal} from '@angular/core';
 import {TreatmentService} from "../../../core/service/treatment.service";
 import {TreatmentCategoryService} from "../../../core/service/treatment-category.service";
-import {form, FormField} from "@angular/forms/signals";
 import {UpdateTreatmentRequest} from "../../../core/model/request/update-treatment-request";
 import {TreatmentCategoryResponse} from "../../../core/model/response/treatment-category-response";
 import {MessageService} from "primeng/api";
@@ -9,7 +8,9 @@ import {Button} from "primeng/button";
 import {InputText} from "primeng/inputtext";
 import {Card} from "primeng/card";
 import {ProgressSpinner} from "primeng/progressspinner";
-import {FormsModule} from "@angular/forms";
+import {FormBuilder, ReactiveFormsModule} from "@angular/forms";
+import {Select} from "primeng/select";
+import {Textarea} from "primeng/textarea";
 
 interface TreatmentFormData {
     code: string;
@@ -17,13 +18,13 @@ interface TreatmentFormData {
     description: string;
     price: string;
     unit: string;
-    isActive: string;
-    treatmentCategoryId: string;
+    isActive: boolean;
+    treatmentCategoryId: number | null;
 }
 
 @Component({
     selector: 'app-treatment-update-form',
-    imports: [Button, InputText, FormField, Card, ProgressSpinner, FormsModule],
+    imports: [Button, InputText, Card, ProgressSpinner, ReactiveFormsModule, Select, Textarea],
     templateUrl: './treatment-update-form.html',
     styleUrl: './treatment-update-form.css',
 })
@@ -31,6 +32,7 @@ export class TreatmentUpdateForm implements OnInit {
     private readonly treatmentService = inject(TreatmentService);
     private readonly treatmentCategoryService = inject(TreatmentCategoryService);
     private readonly messageService = inject(MessageService);
+    private readonly fb = inject(FormBuilder);
 
     treatment = input.required<number>();
 
@@ -41,11 +43,21 @@ export class TreatmentUpdateForm implements OnInit {
     fetching = signal(true);
     errors = signal<Record<string, string>>({});
     categories = signal<TreatmentCategoryResponse[]>([]);
+    activeOptions = [
+        {label: 'Hoạt động', value: true},
+        {label: 'Ngừng hoạt động', value: false},
+    ];
     private treatmentVersion = 0;
 
-    updateForm = form(signal<TreatmentFormData>({
-        code: '', name: '', description: '', price: '', unit: '', isActive: 'true', treatmentCategoryId: '',
-    }));
+    updateForm = this.fb.group({
+        code: this.fb.nonNullable.control(''),
+        name: this.fb.nonNullable.control(''),
+        description: this.fb.nonNullable.control(''),
+        price: this.fb.nonNullable.control(''),
+        unit: this.fb.nonNullable.control(''),
+        isActive: this.fb.nonNullable.control(true),
+        treatmentCategoryId: this.fb.control<number | null>(null),
+    });
 
     ngOnInit(): void {
         this.treatmentCategoryService.search({page: 0, size: 200}).subscribe({
@@ -55,14 +67,14 @@ export class TreatmentUpdateForm implements OnInit {
             next: res => {
                 const t = res.data;
                 this.treatmentVersion = t.version;
-                this.updateForm().reset({
+                this.updateForm.reset({
                     code: t.code ?? '',
                     name: t.name,
                     description: t.description ?? '',
                     price: t.price?.toString() ?? '',
                     unit: t.unit ?? '',
-                    isActive: t.isActive ? 'true' : 'false',
-                    treatmentCategoryId: t.treatmentCategory?.id?.toString() ?? '',
+                    isActive: t.isActive,
+                    treatmentCategoryId: t.treatmentCategory?.id ?? null,
                 });
                 this.fetching.set(false);
             },
@@ -81,7 +93,7 @@ export class TreatmentUpdateForm implements OnInit {
     }
 
     private validate(): boolean {
-        const val = this.updateForm().value();
+        const val = this.updateForm.getRawValue();
         const errs: Record<string, string> = {};
         if (!val.name?.trim()) errs['name'] = 'Vui lòng nhập tên dịch vụ';
         if (!val.price || isNaN(Number(val.price)) || Number(val.price) < 0)
@@ -92,15 +104,15 @@ export class TreatmentUpdateForm implements OnInit {
 
     onSubmit(): void {
         if (!this.validate()) return;
-        const val = this.updateForm().value();
+        const val = this.updateForm.getRawValue();
         const request: UpdateTreatmentRequest = {
             code: val.code,
             name: val.name,
             description: val.description,
             price: Number(val.price),
             unit: val.unit,
-            isActive: val.isActive === 'true',
-            treatmentCategoryId: val.treatmentCategoryId ? Number(val.treatmentCategoryId) : null,
+            isActive: val.isActive,
+            treatmentCategoryId: val.treatmentCategoryId,
             version: this.treatmentVersion,
         };
         this.loading.set(true);

@@ -56,3 +56,8 @@ jwt:
 server:
   servlet:
     context-path: /api/v1/
+file:
+  upload:
+    base-dir: D:/CODE-PROJECT/images
+    max-size: 10485760
+    allowed-extensions: jpg,jpeg,png,webp

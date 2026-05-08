@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/refresh", "/auth/login", "/auth/register", "/error").permitAll()
+                        .requestMatchers("/auth/refresh", "/auth/login", "/auth/register", "/error", "/images/**").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("USERS:READ")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2

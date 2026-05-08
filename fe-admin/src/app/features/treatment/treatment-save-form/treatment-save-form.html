@@ -1,18 +1,18 @@
 <p-card class="save-card">
-    <form class="save-form" novalidate>
+    <form [formGroup]="saveForm" class="save-form" novalidate>
         <div class="form-grid">
 
             <!-- Mã dịch vụ -->
             <div class="field">
                 <label class="field-label" for="sf-code">Mã dịch vụ</label>
-                <input pInputText id="sf-code" [formField]="saveForm.code"
+                <input pInputText id="sf-code" formControlName="code"
                        class="w-full" placeholder="Tự động sinh nếu để trống"/>
             </div>
 
             <!-- Tên dịch vụ -->
             <div class="field">
                 <label class="field-label" for="sf-name">Tên dịch vụ <span class="req">*</span></label>
-                <input pInputText id="sf-name" [formField]="saveForm.name"
+                <input pInputText id="sf-name" formControlName="name"
                        class="w-full" placeholder="Nhập tên dịch vụ"
                        (input)="clearError('name')"
                        [class.ng-invalid]="errors()['name']"/>
@@ -24,7 +24,7 @@
             <!-- Giá -->
             <div class="field">
                 <label class="field-label" for="sf-price">Giá (VNĐ) <span class="req">*</span></label>
-                <input pInputText id="sf-price" [formField]="saveForm.price" type="number"
+                <input pInputText id="sf-price" formControlName="price" type="number"
                        class="w-full" placeholder="Nhập giá dịch vụ"
                        (input)="clearError('price')"
                        [class.ng-invalid]="errors()['price']"/>
@@ -36,35 +36,36 @@
             <!-- Đơn vị -->
             <div class="field">
                 <label class="field-label" for="sf-unit">Đơn vị</label>
-                <input pInputText id="sf-unit" [formField]="saveForm.unit"
+                <input pInputText id="sf-unit" formControlName="unit"
                        class="w-full" placeholder="VD: Lần, Buổi..."/>
             </div>
 
             <!-- Danh mục -->
             <div class="field">
                 <label class="field-label" for="sf-category">Danh mục</label>
-                <select id="sf-category" [formField]="saveForm.treatmentCategoryId" class="p-select-match w-full">
-                    <option value="">-- Chọn danh mục --</option>
-                    @for (cat of categories(); track cat.id) {
-                        <option [value]="cat.id">{{ cat.name }}</option>
-                    }
-                </select>
+                <p-select id="sf-category" formControlName="treatmentCategoryId"
+                          styleClass="w-full"
+                          [options]="categories()"
+                          optionLabel="name"
+                          optionValue="id"
+                          [placeholder]="'-- Chọn danh mục --'"></p-select>
             </div>
 
             <!-- Trạng thái -->
             <div class="field">
                 <label class="field-label" for="sf-active">Trạng thái</label>
-                <select id="sf-active" [formField]="saveForm.isActive" class="p-select-match w-full">
-                    <option value="true">Hoạt động</option>
-                    <option value="false">Ngừng hoạt động</option>
-                </select>
+                <p-select id="sf-active" formControlName="isActive"
+                          styleClass="w-full"
+                          [options]="activeOptions"
+                          optionLabel="label"
+                          optionValue="value"></p-select>
             </div>
 
             <!-- Mô tả -->
             <div class="field span-full">
                 <label class="field-label" for="sf-desc">Mô tả</label>
-                <textarea id="sf-desc" [formField]="saveForm.description"
-                          class="p-textarea-match w-full" placeholder="Nhập mô tả dịch vụ"
+                <textarea pTextarea id="sf-desc" formControlName="description"
+                          class="w-full" placeholder="Nhập mô tả dịch vụ"
                           rows="3"></textarea>
             </div>
 

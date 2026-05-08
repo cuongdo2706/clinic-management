@@ -1,12 +1,12 @@
 <p-card class="save-card">
-    <form class="save-form" novalidate>
+    <form [formGroup]="saveForm" class="save-form" novalidate>
 
         <div class="form-grid">
 
             <!-- Mã thuốc -->
             <div class="field">
                 <label class="field-label" for="sf-code">Mã thuốc</label>
-                <input pInputText id="sf-code" [formField]="saveForm.code"
+                <input pInputText id="sf-code" formControlName="code"
                        class="w-full" placeholder="Tự động sinh nếu để trống"/>
             </div>
 
@@ -15,7 +15,7 @@
                 <label class="field-label" for="sf-name">
                     Tên thuốc <span class="req">*</span>
                 </label>
-                <input pInputText id="sf-name" [formField]="saveForm.name"
+                <input pInputText id="sf-name" formControlName="name"
                        class="w-full" placeholder="Nhập tên thuốc"
                        (input)="clearError('name')"
                        [class.ng-invalid]="errors()['name']"/>
@@ -29,7 +29,7 @@
                 <label class="field-label" for="sf-unit">
                     Đơn vị <span class="req">*</span>
                 </label>
-                <input pInputText id="sf-unit" [formField]="saveForm.unit"
+                <input pInputText id="sf-unit" formControlName="unit"
                        class="w-full" placeholder="VD: Viên, Hộp, Chai..."
                        (input)="clearError('unit')"
                        [class.ng-invalid]="errors()['unit']"/>
@@ -43,7 +43,7 @@
                 <label class="field-label" for="sf-price">
                     Giá (VNĐ) <span class="req">*</span>
                 </label>
-                <input pInputText type="number" id="sf-price" [formField]="saveForm.price"
+                <input pInputText type="number" id="sf-price" formControlName="price"
                        class="w-full" placeholder="Nhập giá"
                        (input)="clearError('price')"
                        [class.ng-invalid]="errors()['price']"/>
@@ -57,7 +57,7 @@
                 <label class="field-label" for="sf-quantity">
                     Số lượng <span class="req">*</span>
                 </label>
-                <input pInputText type="number" id="sf-quantity" [formField]="saveForm.quantity"
+                <input pInputText type="number" id="sf-quantity" formControlName="quantity"
                        class="w-full" placeholder="Nhập số lượng"
                        (input)="clearError('quantity')"
                        [class.ng-invalid]="errors()['quantity']"/>
@@ -69,22 +69,22 @@
             <!-- Nhà sản xuất -->
             <div class="field">
                 <label class="field-label" for="sf-manufacturer">Nhà sản xuất</label>
-                <input pInputText id="sf-manufacturer" [formField]="saveForm.manufacturer"
+                <input pInputText id="sf-manufacturer" formControlName="manufacturer"
                        class="w-full" placeholder="Nhập nhà sản xuất"/>
             </div>
 
             <!-- Xuất xứ -->
             <div class="field">
                 <label class="field-label" for="sf-origin">Xuất xứ</label>
-                <input pInputText id="sf-origin" [formField]="saveForm.origin"
+                <input pInputText id="sf-origin" formControlName="origin"
                        class="w-full" placeholder="VD: Việt Nam, Hàn Quốc..."/>
             </div>
 
             <!-- Mô tả -->
             <div class="field span-full">
                 <label class="field-label" for="sf-desc">Mô tả</label>
-                <textarea id="sf-desc" [formField]="saveForm.description"
-                          class="p-textarea-match w-full" placeholder="Nhập mô tả thuốc"
+                <textarea pTextarea id="sf-desc" formControlName="description"
+                          class="w-full" placeholder="Nhập mô tả thuốc"
                           rows="3"></textarea>
             </div>
 

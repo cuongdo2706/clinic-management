@@ -15,7 +15,7 @@ import java.util.List;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CreateStaffRequest {
+public class UpdateStaffRequest {
     String code;
 
     @NotBlank(message = "Name must have more than 1 digit")
@@ -34,7 +34,11 @@ public class CreateStaffRequest {
     @NotNull(message = "Staff type is required")
     StaffType staffType;
 
+    CreateUserRequest user;
+
     List<WorkingScheduleRequest> workingSchedules;
+
+    Long version;
 
     @Getter
     @Setter

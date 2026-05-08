@@ -5,14 +5,14 @@
             <span>Đang tải thông tin...</span>
         </div>
     } @else {
-<form class="update-form" novalidate>
+<form [formGroup]="updateForm" class="update-form" novalidate>
 
     <div class="form-grid">
 
         <!-- Mã bệnh nhân -->
         <div class="field">
             <label class="field-label" for="uf-code">Mã bệnh nhân</label>
-            <input pInputText id="uf-code" [formField]="updateForm.code"
+            <input pInputText id="uf-code" formControlName="code"
                    class="w-full"/>
         </div>
 
@@ -21,8 +21,9 @@
             <label class="field-label" for="uf-name">
                 Họ và tên <span class="req">*</span>
             </label>
-            <input pInputText id="uf-name" [formField]="updateForm.fullName"
+            <input pInputText id="uf-name" formControlName="fullName"
                    class="w-full" placeholder="Nhập họ và tên"
+                   (input)="clearError('fullName')"
                    [class.ng-invalid]="errors()['fullName']"/>
             @if (errors()['fullName']) {
                 <small class="error-text">{{ errors()['fullName'] }}</small>
@@ -34,11 +35,12 @@
             <label class="field-label" for="uf-dob">
                 Ngày sinh <span class="req">*</span>
             </label>
-            <input type="date" id="uf-dob"
-                   class="p-inputtext date-input w-full"
-                   [class.ng-invalid]="errors()['dob']"
-                   [value]="dobRaw()"
-                   (change)="onDobChange($event)"/>
+            <p-datepicker id="uf-dob"
+                          formControlName="dob"
+                          dateFormat="dd/mm/yy"
+                          styleClass="w-full"
+                          [inputStyleClass]="errors()['dob'] ? 'w-full ng-invalid' : 'w-full'"
+                          (onSelect)="clearError('dob')"></p-datepicker>
             @if (errors()['dob']) {
                 <small class="error-text">{{ errors()['dob'] }}</small>
             }
@@ -49,15 +51,15 @@
             <label class="field-label" for="uf-gender">
                 Giới tính <span class="req">*</span>
             </label>
-            <select id="uf-gender"
-                    class="p-select-match w-full"
-                    [class.ng-invalid]="errors()['gender']"
-                    [value]="genderRaw()"
-                    (change)="onGenderChange($event)">
-                <option value="">-- Chọn giới tính --</option>
-                <option value="true">Nam</option>
-                <option value="false">Nữ</option>
-            </select>
+            <p-select id="uf-gender"
+                      formControlName="gender"
+                      styleClass="w-full"
+                      [options]="genderOptions"
+                      optionLabel="label"
+                      optionValue="value"
+                      [placeholder]="'-- Chọn giới tính --'"
+                      [class.ng-invalid]="errors()['gender']"
+                      (onChange)="clearError('gender')"></p-select>
             @if (errors()['gender']) {
                 <small class="error-text">{{ errors()['gender'] }}</small>
             }
@@ -69,8 +71,9 @@
                 <label class="field-label" for="uf-phone">
                     Số điện thoại <span class="req">*</span>
                 </label>
-                <input pInputText id="uf-phone" [formField]="updateForm.phone"
+                <input pInputText id="uf-phone" formControlName="phone"
                        class="w-full" placeholder="Nhập số điện thoại"
+                       (input)="clearError('phone')"
                        [class.ng-invalid]="errors()['phone']"/>
                 @if (errors()['phone']) {
                     <small class="error-text">{{ errors()['phone'] }}</small>
@@ -90,8 +93,9 @@
                 <label class="field-label" for="uf-guardian-name">
                     Tên người giám hộ <span class="req">*</span>
                 </label>
-                <input pInputText id="uf-guardian-name" [formField]="updateForm.guardianName"
+                <input pInputText id="uf-guardian-name" formControlName="guardianName"
                        class="w-full" placeholder="Nhập tên người giám hộ"
+                       (input)="clearError('guardianName')"
                        [class.ng-invalid]="errors()['guardianName']"/>
                 @if (errors()['guardianName']) {
                     <small class="error-text">{{ errors()['guardianName'] }}</small>
@@ -101,8 +105,9 @@
                 <label class="field-label" for="uf-guardian-phone">
                     SĐT người giám hộ <span class="req">*</span>
                 </label>
-                <input pInputText id="uf-guardian-phone" [formField]="updateForm.guardianPhone"
+                <input pInputText id="uf-guardian-phone" formControlName="guardianPhone"
                        class="w-full" placeholder="Nhập SĐT người giám hộ"
+                       (input)="clearError('guardianPhone')"
                        [class.ng-invalid]="errors()['guardianPhone']"/>
                 @if (errors()['guardianPhone']) {
                     <small class="error-text">{{ errors()['guardianPhone'] }}</small>
@@ -113,7 +118,7 @@
         <!-- Địa chỉ -->
         <div class="field span-full">
             <label class="field-label" for="uf-address">Địa chỉ</label>
-            <input pInputText id="uf-address" [formField]="updateForm.address"
+            <input pInputText id="uf-address" formControlName="address"
                    class="w-full" placeholder="Nhập địa chỉ"/>
         </div>
 

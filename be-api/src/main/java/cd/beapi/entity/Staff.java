@@ -4,6 +4,7 @@ import cd.beapi.enumerate.StaffType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
@@ -47,6 +48,10 @@ public class Staff extends BaseEntity{
     StaffType staffType;
 
     Instant deletedAt;
+
+    @Version
+    @ColumnDefault("0")
+    Long version;
 
     @OneToMany(mappedBy = "staff")
     List<WorkingSchedule> workingSchedules;

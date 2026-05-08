@@ -1,15 +1,19 @@
-import {Component, computed, inject, output, signal} from '@angular/core';
+import {Component, inject, output, signal} from '@angular/core';
 import {PatientService} from "../../../core/service/patient.service";
-import {form, FormField} from "@angular/forms/signals";
 import {CreatePatientRequest} from "../../../core/model/request/create-patient-request";
 import {MessageService} from "primeng/api";
 import {Button} from "primeng/button";
 import {InputText} from "primeng/inputtext";
 import {Card} from "primeng/card";
+import {FormBuilder, ReactiveFormsModule} from "@angular/forms";
+import {DatePicker} from "primeng/datepicker";
+import {Select} from "primeng/select";
 
 interface PatientFormData {
     code: string;
     fullName: string;
+    dob: Date | null;
+    gender: boolean | null;
     phone: string;
     address: string;
     guardianName: string;
@@ -19,6 +23,8 @@ interface PatientFormData {
 const EMPTY_FORM: PatientFormData = {
     code: '',
     fullName: '',
+    dob: null,
+    gender: null,
     phone: '',
     address: '',
     guardianName: '',
@@ -27,57 +33,59 @@ const EMPTY_FORM: PatientFormData = {
 
 @Component({
     selector: 'app-patient-save-form',
-    imports: [Button, InputText, FormField, Card],
+    imports: [Button, InputText, Card, ReactiveFormsModule, DatePicker, Select],
     templateUrl: './patient-save-form.html',
     styleUrl: './patient-save-form.css',
 })
 export class PatientSaveForm {
     private readonly patientService = inject(PatientService);
     private readonly messageService = inject(MessageService);
+    private readonly fb = inject(FormBuilder);
 
     saved = output<void>();
     cancelled = output<void>();
 
     loading = signal(false);
-    dobRaw = signal('');
-    genderRaw = signal('');
     errors = signal<Record<string, string>>({});
-    saveForm = form(signal<PatientFormData>(EMPTY_FORM));
-
-    isAdult = computed(() => {
-        const dobStr = this.dobRaw();
-        if (!dobStr) return true;
-        const dob = new Date(dobStr + 'T00:00:00');
-        if (isNaN(dob.getTime())) return true;
-        const today = new Date();
-        let age = today.getFullYear() - dob.getFullYear();
-        const m = today.getMonth() - dob.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-        return age > 14;
+    genderOptions = [
+        {label: 'Nam', value: true},
+        {label: 'Nữ', value: false},
+    ];
+    saveForm = this.fb.group({
+        code: this.fb.nonNullable.control(EMPTY_FORM.code),
+        fullName: this.fb.nonNullable.control(EMPTY_FORM.fullName),
+        dob: this.fb.control<Date | null>(EMPTY_FORM.dob),
+        gender: this.fb.control<boolean | null>(EMPTY_FORM.gender),
+        phone: this.fb.nonNullable.control(EMPTY_FORM.phone),
+        address: this.fb.nonNullable.control(EMPTY_FORM.address),
+        guardianName: this.fb.nonNullable.control(EMPTY_FORM.guardianName),
+        guardianPhone: this.fb.nonNullable.control(EMPTY_FORM.guardianPhone),
     });
 
-    onDobChange(event: Event): void {
-        this.dobRaw.set((event.target as HTMLInputElement).value);
-        this.clearError('dob');
-    }
-
-    onGenderChange(event: Event): void {
-        this.genderRaw.set((event.target as HTMLSelectElement).value);
-        this.clearError('gender');
-    }
-
-    private clearError(key: string): void {
+    clearError(key: string): void {
         const errs = {...this.errors()};
         delete errs[key];
         this.errors.set(errs);
     }
 
+    isAdult(): boolean {
+        const dob = this.saveForm.controls.dob.value;
+        if (!dob) return true;
+        const date = new Date(dob);
+        if (isNaN(date.getTime())) return true;
+        const today = new Date();
+        let age = today.getFullYear() - date.getFullYear();
+        const monthDiff = today.getMonth() - date.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) age--;
+        return age > 14;
+    }
+
     private validate(): boolean {
-        const val = this.saveForm().value();
+        const val = this.saveForm.getRawValue();
         const errs: Record<string, string> = {};
         if (!val.fullName?.trim()) errs['fullName'] = 'Vui lòng nhập họ và tên';
-        if (!this.dobRaw()) errs['dob'] = 'Vui lòng chọn ngày sinh';
-        if (!this.genderRaw()) errs['gender'] = 'Vui lòng chọn giới tính';
+        if (!val.dob) errs['dob'] = 'Vui lòng chọn ngày sinh';
+        if (val.gender === null) errs['gender'] = 'Vui lòng chọn giới tính';
         if (this.isAdult()) {
             if (!val.phone?.trim()) errs['phone'] = 'Vui lòng nhập số điện thoại';
         } else {
@@ -90,12 +98,12 @@ export class PatientSaveForm {
 
     onSubmit(): void {
         if (!this.validate()) return;
-        const val = this.saveForm().value();
+        const val = this.saveForm.getRawValue();
         const request: CreatePatientRequest = {
             code: val.code,
             fullName: val.fullName,
-            dob: new Date(this.dobRaw() + 'T00:00:00'),
-            gender: this.genderRaw() === 'true',
+            dob: val.dob!,
+            gender: val.gender,
             phone: this.isAdult() ? val.phone : '',
             address: val.address,
             guardianName: this.isAdult() ? '' : val.guardianName,

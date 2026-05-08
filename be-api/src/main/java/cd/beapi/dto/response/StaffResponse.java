@@ -4,6 +4,7 @@ import cd.beapi.enumerate.StaffType;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 public record StaffResponse(
         Long id,
@@ -16,6 +17,8 @@ public record StaffResponse(
         String address,
         String avatarUrl,
         StaffType staffType,
+        List<WorkingScheduleResponse> workingSchedules,
+        Long version,
         Instant createdAt,
         Instant modifiedAt) {
 }

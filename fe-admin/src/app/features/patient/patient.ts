@@ -8,11 +8,10 @@ import {TableModule} from "primeng/table";
 import {Button} from "primeng/button";
 import {InputText} from "primeng/inputtext";
 import {FloatLabel} from "primeng/floatlabel";
-import {FormsModule} from "@angular/forms";
+import {FormBuilder, ReactiveFormsModule} from "@angular/forms";
 import {Toolbar} from "primeng/toolbar";
 import {Select} from "primeng/select";
 import {PatientResponse} from "../../core/model/response/patient-response";
-import {form, FormField} from "@angular/forms/signals";
 import {SearchPatientRequest} from "../../core/model/request/search-patient-request";
 import {Paginator, PaginatorState} from "primeng/paginator";
 import {PageData} from "../../core/model/response/page-data";
@@ -33,9 +32,9 @@ import {PatientUpdateForm} from "./patient-update-form/patient-update-form";
         Button,
         InputText,
         FloatLabel,
-        FormsModule,
+        ReactiveFormsModule,
         Toolbar,
-        FormField,
+        Select,
         Paginator,
         ProgressSpinner,
         DatePipe,
@@ -57,6 +56,7 @@ export class Patient implements OnInit {
     private readonly patientService = inject(PatientService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
+    private readonly fb = inject(FormBuilder);
     
     patients = signal<PageData<PatientResponse> | null>(null);
     loading = signal(false);
@@ -67,18 +67,16 @@ export class Patient implements OnInit {
     showEditDialog = signal(false);
     editingPatient = signal<PatientResponse | null>(null);
     
-    searchForm = form(signal<SearchPatientRequest>(
-            {
-                page: 0,
-                size: 10,
-                sortBy: "CREATED_AT_DESC",
-                codeKeyword: "",
-                nameKeyword: "",
-                phoneKeyword: "",
-                guardianNameKeyword: "",
-                guardianPhoneKeyword: ""
-            }
-    ));
+    searchForm = this.fb.group({
+        page: this.fb.nonNullable.control(0),
+        size: this.fb.nonNullable.control(10),
+        sortBy: this.fb.nonNullable.control("CREATED_AT_DESC"),
+        codeKeyword: this.fb.nonNullable.control(""),
+        nameKeyword: this.fb.nonNullable.control(""),
+        phoneKeyword: this.fb.nonNullable.control(""),
+        guardianNameKeyword: this.fb.nonNullable.control(""),
+        guardianPhoneKeyword: this.fb.nonNullable.control("")
+    });
     
     genderOptions = [
         {label: 'Nam', value: true},
@@ -98,7 +96,7 @@ export class Patient implements OnInit {
     
     onSearch() {
         this.loading.set(true);
-        this.patientService.search(this.searchForm().value()).subscribe({
+        this.patientService.search(this.searchForm.getRawValue()).subscribe({
             next: res => {
                 this.patients.set(res.data);
                 this.loading.set(false);
@@ -117,7 +115,7 @@ export class Patient implements OnInit {
         this.paginatorFirst.set(event.first!);
         this.loading.set(true);
         const request: SearchPatientRequest = {
-            ...this.searchForm().value(),
+            ...this.searchForm.getRawValue(),
             page: event.page!,
             size: event.rows!
         };
@@ -212,7 +210,7 @@ export class Patient implements OnInit {
     }
     
     onResetFilter() {
-        this.searchForm().reset({
+        this.searchForm.reset({
             page: 0,
             size: 10,
             sortBy: "CREATED_AT_DESC",

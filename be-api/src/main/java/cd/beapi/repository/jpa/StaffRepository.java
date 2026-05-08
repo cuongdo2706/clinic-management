@@ -2,16 +2,18 @@ package cd.beapi.repository.jpa;
 
 import cd.beapi.entity.Staff;
 import cd.beapi.enumerate.StaffType;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface StaffRepository extends JpaRepository<Staff, Long> {
+public interface StaffRepository extends JpaRepository<Staff, Long>, QuerydslPredicateExecutor<Staff> {
+    boolean existsByCode(String code);
+
     @EntityGraph(attributePaths = "workingSchedules")
     @Query("select s from Staff s where s.id = :id")
     Optional<Staff> findByIdWithWorkingSchedules(@Param("id") Long id);

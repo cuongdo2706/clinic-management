@@ -8,10 +8,10 @@
     <div class="relative z-10 flex items-center justify-center gap-16 w-full max-w-4xl px-8">
 
         <p-card header="Đăng nhập" [style]="{width:'380px'}">
-            <form (ngSubmit)="onLogin()" class="mt-3">
+            <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="mt-3">
                 <div>
                     <p-floatlabel variant="on">
-                        <input pInputText id="username" [formField]="loginForm.username" style="width: 100%">
+                        <input pInputText id="username" formControlName="username" style="width: 100%">
                         <label for="username">Tài khoản</label>
                     </p-floatlabel>
                 </div>
@@ -20,7 +20,7 @@
                         <p-iconfield>
                             <input pInputText id="password"
                                    [type]="showPassword() ? 'text' : 'password'"
-                                   [formField]="loginForm.password"
+                                   formControlName="password"
                                    autocomplete="off"
                                    style="width: 100%"/>
                             <p-inputicon

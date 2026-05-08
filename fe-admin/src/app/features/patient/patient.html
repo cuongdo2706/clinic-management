@@ -4,45 +4,42 @@
 <div class="page-header">
     <h2>Quản lý bệnh nhân</h2>
 </div>
-<form>
+<form [formGroup]="searchForm" (ngSubmit)="onSearch()">
     <p-toolbar>
         <ng-template #start>
             <div class="flex flex-col">
                 <div class="flex flex-row">
                     <p-floatlabel variant="on">
-                        <input pInputText id="code" [formField]="searchForm.codeKeyword"/>
+                        <input pInputText id="code" formControlName="codeKeyword"/>
                         <label for="code">Mã bệnh nhân</label>
                     </p-floatlabel>
 
                     <p-floatlabel class="ml-3" variant="on">
-                        <input pInputText id="name" [formField]="searchForm.nameKeyword"/>
+                        <input pInputText id="name" formControlName="nameKeyword"/>
                         <label for="name">Tên bệnh nhân</label>
                     </p-floatlabel>
 
                     <p-floatlabel class="ml-3 flex-1" variant="on">
-                        <input pInputText id="phone" [formField]="searchForm.phoneKeyword" class="w-full"/>
+                        <input pInputText id="phone" formControlName="phoneKeyword" class="w-full"/>
                         <label for="phone">SĐT bệnh nhân</label>
                     </p-floatlabel>
                 </div>
                 <div class="flex flex-row mt-2">
                     <p-floatlabel variant="on">
-                        <input pInputText id="guardianName" [formField]="searchForm.guardianNameKeyword"/>
+                        <input pInputText id="guardianName" formControlName="guardianNameKeyword"/>
                         <label for="guardianName">Tên người giám hộ</label>
                     </p-floatlabel>
 
                     <p-floatlabel class="ml-3" variant="on">
-                        <input pInputText id="guardianPhone" [formField]="searchForm.guardianPhoneKeyword"/>
+                        <input pInputText id="guardianPhone" formControlName="guardianPhoneKeyword"/>
                         <label for="guardianPhone">SĐT người giám hộ</label>
                     </p-floatlabel>
 
-                    <select class="ml-3 p-select-match flex-1" [formField]="searchForm.sortBy">
-                        @for (opt of sortOptions(); track opt.value) {
-                            <option [value]="opt.value">{{ opt.name }}</option>
-                        }
-                    </select>
+                    <p-select styleClass="ml-3 p-select-match flex-1" formControlName="sortBy" [options]="sortOptions()"
+                              optionLabel="name" optionValue="value"></p-select>
 
-                    <p-button type="submit" (onClick)="onSearch()" icon="pi pi-search" [loading]="loading()" class="ml-3"></p-button>
-                    <p-button (onClick)="onResetFilter()" icon="pi pi-refresh" [loading]="loading()" severity="secondary" class="ml-3"></p-button>
+                    <p-button type="submit" icon="pi pi-search" [loading]="loading()" class="ml-3"></p-button>
+                    <p-button type="button" (onClick)="onResetFilter()" icon="pi pi-refresh" [loading]="loading()" severity="secondary" class="ml-3"></p-button>
                 </div>
             </div>
 

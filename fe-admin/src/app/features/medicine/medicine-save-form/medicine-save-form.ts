@@ -1,11 +1,12 @@
 import {Component, inject, output, signal} from '@angular/core';
 import {MedicineService} from "../../../core/service/medicine.service";
-import {form, FormField} from "@angular/forms/signals";
 import {CreateMedicineRequest} from "../../../core/model/request/create-medicine-request";
 import {MessageService} from "primeng/api";
 import {Button} from "primeng/button";
 import {InputText} from "primeng/inputtext";
 import {Card} from "primeng/card";
+import {FormBuilder, ReactiveFormsModule} from "@angular/forms";
+import {Textarea} from "primeng/textarea";
 
 interface MedicineFormData {
     code: string;
@@ -31,23 +32,33 @@ const EMPTY_FORM: MedicineFormData = {
 
 @Component({
     selector: 'app-medicine-save-form',
-    imports: [Button, InputText, FormField, Card],
+    imports: [Button, InputText, Card, ReactiveFormsModule, Textarea],
     templateUrl: './medicine-save-form.html',
     styleUrl: './medicine-save-form.css',
 })
 export class MedicineSaveForm {
     private readonly medicineService = inject(MedicineService);
     private readonly messageService = inject(MessageService);
+    private readonly fb = inject(FormBuilder);
 
     saved = output<void>();
     cancelled = output<void>();
 
     loading = signal(false);
     errors = signal<Record<string, string>>({});
-    saveForm = form(signal<MedicineFormData>(EMPTY_FORM));
+    saveForm = this.fb.nonNullable.group({
+        code: EMPTY_FORM.code,
+        name: EMPTY_FORM.name,
+        unit: EMPTY_FORM.unit,
+        price: EMPTY_FORM.price,
+        quantity: EMPTY_FORM.quantity,
+        manufacturer: EMPTY_FORM.manufacturer,
+        origin: EMPTY_FORM.origin,
+        description: EMPTY_FORM.description,
+    });
 
     private validate(): boolean {
-        const val = this.saveForm().value();
+        const val = this.saveForm.getRawValue();
         const errs: Record<string, string> = {};
         if (!val.name?.trim()) errs['name'] = 'Vui lòng nhập tên thuốc';
         if (!val.unit?.trim()) errs['unit'] = 'Vui lòng nhập đơn vị';
@@ -65,7 +76,7 @@ export class MedicineSaveForm {
 
     onSubmit(): void {
         if (!this.validate()) return;
-        const val = this.saveForm().value();
+        const val = this.saveForm.getRawValue();
         const request: CreateMedicineRequest = {
             code: val.code,
             name: val.name,

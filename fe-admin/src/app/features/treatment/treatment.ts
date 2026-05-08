@@ -8,10 +8,9 @@ import {TableModule} from "primeng/table";
 import {Button} from "primeng/button";
 import {InputText} from "primeng/inputtext";
 import {FloatLabel} from "primeng/floatlabel";
-import {FormsModule} from "@angular/forms";
+import {FormBuilder, ReactiveFormsModule} from "@angular/forms";
 import {Toolbar} from "primeng/toolbar";
 import {TreatmentResponse} from "../../core/model/response/treatment-response";
-import {form, FormField} from "@angular/forms/signals";
 import {SearchTreatmentRequest} from "../../core/model/request/search-treatment-request";
 import {Paginator, PaginatorState} from "primeng/paginator";
 import {PageData} from "../../core/model/response/page-data";
@@ -21,6 +20,7 @@ import {Tag} from "primeng/tag";
 import {Dialog} from "primeng/dialog";
 import {TreatmentSaveForm} from "./treatment-save-form/treatment-save-form";
 import {TreatmentUpdateForm} from "./treatment-update-form/treatment-update-form";
+import {Select} from "primeng/select";
 
 @Component({
     selector: 'app-treatment',
@@ -31,9 +31,9 @@ import {TreatmentUpdateForm} from "./treatment-update-form/treatment-update-form
         Button,
         InputText,
         FloatLabel,
-        FormsModule,
+        ReactiveFormsModule,
         Toolbar,
-        FormField,
+        Select,
         Paginator,
         ProgressSpinner,
         DatePipe,
@@ -52,6 +52,7 @@ export class Treatment implements OnInit {
     private readonly treatmentService = inject(TreatmentService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
+    private readonly fb = inject(FormBuilder);
 
     treatments = signal<PageData<TreatmentResponse> | null>(null);
     loading = signal(false);
@@ -61,15 +62,15 @@ export class Treatment implements OnInit {
     showEditDialog = signal(false);
     editingTreatment = signal<TreatmentResponse | null>(null);
 
-    searchForm = form(signal<SearchTreatmentRequest>({
-        page: 0,
-        size: 10,
-        sortBy: "CREATED_AT_DESC",
-        codeKeyword: "",
-        nameKeyword: "",
-        priceFrom: null,
-        priceTo: null,
-    }));
+    searchForm = this.fb.group({
+        page: this.fb.nonNullable.control(0),
+        size: this.fb.nonNullable.control(10),
+        sortBy: this.fb.nonNullable.control("CREATED_AT_DESC"),
+        codeKeyword: this.fb.nonNullable.control(""),
+        nameKeyword: this.fb.nonNullable.control(""),
+        priceFrom: null as number | null,
+        priceTo: null as number | null,
+    });
 
     sortOptions = signal([
         {name: 'Tên: A -> Z', value: "NAME"},
@@ -86,7 +87,7 @@ export class Treatment implements OnInit {
 
     onSearch() {
         this.loading.set(true);
-        this.treatmentService.search(this.searchForm().value()).subscribe({
+        this.treatmentService.search(this.searchForm.getRawValue()).subscribe({
             next: res => {
                 this.treatments.set(res.data);
                 this.loading.set(false);
@@ -99,7 +100,7 @@ export class Treatment implements OnInit {
         this.paginatorFirst.set(event.first!);
         this.loading.set(true);
         const request: SearchTreatmentRequest = {
-            ...this.searchForm().value(),
+            ...this.searchForm.getRawValue(),
             page: event.page!,
             size: event.rows!,
         };
@@ -157,7 +158,7 @@ export class Treatment implements OnInit {
     }
 
     onResetFilter() {
-        this.searchForm().reset({
+        this.searchForm.reset({
             page: 0,
             size: 10,
             sortBy: "CREATED_AT_DESC",
