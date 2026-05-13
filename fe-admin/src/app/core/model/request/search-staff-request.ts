@@ -5,6 +5,6 @@ export interface SearchStaffRequest extends PaginationFormat {
     codeKeyword: string;
     nameKeyword: string;
     phoneKeyword: string;
-    emailKeyword: string;
     staffType: string | null;
+    isActive: boolean | null;
 }

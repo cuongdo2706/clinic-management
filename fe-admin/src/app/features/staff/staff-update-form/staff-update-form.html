@@ -34,7 +34,7 @@
 
                 <div class="field">
                     <label class="field-label" for="uf-dob">Ngày sinh <span class="req">*</span></label>
-                    <p-datepicker id="uf-dob" formControlName="dob" dateFormat="dd/mm/yy" styleClass="w-full"
+                    <p-datepicker id="uf-dob" formControlName="dob" dateFormat="dd/mm/yy" class="w-full"
                                   [inputStyleClass]="errors()['dob'] ? 'w-full ng-invalid' : 'w-full'"
                                   (onSelect)="clearError('dob')"/>
                     @if (errors()['dob']) {
@@ -44,7 +44,7 @@
 
                 <div class="field">
                     <label class="field-label" for="uf-gender">Giới tính <span class="req">*</span></label>
-                    <p-select id="uf-gender" formControlName="gender" styleClass="w-full" [options]="genderOptions"
+                    <p-select id="uf-gender" formControlName="gender" class="w-full" [options]="genderOptions"
                               optionLabel="label" optionValue="value" placeholder="-- Chọn giới tính --"
                               (onChange)="clearError('gender')"/>
                     @if (errors()['gender']) {
@@ -72,12 +72,18 @@
 
                 <div class="field">
                     <label class="field-label" for="uf-type">Chức vụ <span class="req">*</span></label>
-                    <p-select id="uf-type" formControlName="staffType" styleClass="w-full" [options]="staffTypeOptions"
+                    <p-select id="uf-type" formControlName="staffType" class="w-full" [options]="staffTypeOptions"
                               optionLabel="label" optionValue="value" placeholder="-- Chọn chức vụ --"
                               (onChange)="clearError('staffType')"/>
                     @if (errors()['staffType']) {
                         <small class="error-text">{{ errors()['staffType'] }}</small>
                     }
+                </div>
+
+                <div class="field">
+                    <label class="field-label" for="uf-active">Trạng thái</label>
+                    <p-select id="uf-active" formControlName="isActive" class="w-full" [options]="activeOptions"
+                              optionLabel="label" optionValue="value"/>
                 </div>
 
                 <div class="field span-full">
@@ -89,29 +95,41 @@
             <div class="schedule-section">
                 <div class="section-title">
                     <span>Lịch làm việc</span>
-                    <p-button type="button" label="Thêm lịch" icon="pi pi-plus" size="small" severity="secondary"
-                              (onClick)="addSchedule()"/>
                 </div>
-                @if (schedules().length === 0) {
-                    <div class="empty-schedule">Chưa có lịch làm việc</div>
-                } @else {
-                    <div class="schedule-list">
-                        @for (schedule of schedules(); track schedule.uid) {
-                            <div class="schedule-row">
-                                <p-select [options]="dayOptions" optionLabel="label" optionValue="value"
-                                          [ngModel]="schedule.dayOfWeek" [ngModelOptions]="{standalone: true}"
-                                          placeholder="Chọn ngày"
-                                          (onChange)="updateSchedule(schedule.uid, 'dayOfWeek', $event.value)"/>
-                                <input pInputText type="time" [value]="schedule.startTime"
-                                       (input)="updateSchedule(schedule.uid, 'startTime', $any($event.target).value)"/>
-                                <input pInputText type="time" [value]="schedule.endTime"
-                                       (input)="updateSchedule(schedule.uid, 'endTime', $any($event.target).value)"/>
-                                <p-button type="button" icon="pi pi-trash" severity="danger" [text]="true"
-                                          (onClick)="removeSchedule(schedule.uid)"/>
+                <div class="schedule-list">
+                    @for (schedule of schedules(); track schedule.dayOfWeek) {
+                        <div class="schedule-row" [class.schedule-row-disabled]="!schedule.isWorking">
+                            <div class="schedule-day">
+                                <p-checkbox [inputId]="'uf-schedule-' + schedule.dayOfWeek"
+                                            [binary]="true"
+                                            [ngModel]="schedule.isWorking"
+                                            [ngModelOptions]="{standalone: true}"
+                                            (onChange)="toggleSchedule(schedule.dayOfWeek, $event.checked === true)"/>
+                                <label [for]="'uf-schedule-' + schedule.dayOfWeek">{{ schedule.label }}</label>
                             </div>
-                        }
-                    </div>
-                }
+                            <label class="time-label" [for]="'uf-start-' + schedule.dayOfWeek">Từ</label>
+                            <p-select [inputId]="'uf-start-' + schedule.dayOfWeek"
+                                      class="time-select"
+                                      [options]="workingTimeOptions"
+                                      optionLabel="label"
+                                      optionValue="value"
+                                      [ngModel]="schedule.startTime"
+                                      [ngModelOptions]="{standalone: true}"
+                                      [disabled]="!schedule.isWorking"
+                                      (onChange)="updateScheduleTime(schedule.dayOfWeek, 'startTime', $event.value)"/>
+                            <label class="time-label" [for]="'uf-end-' + schedule.dayOfWeek">Đến</label>
+                            <p-select [inputId]="'uf-end-' + schedule.dayOfWeek"
+                                      class="time-select"
+                                      [options]="workingTimeOptions"
+                                      optionLabel="label"
+                                      optionValue="value"
+                                      [ngModel]="schedule.endTime"
+                                      [ngModelOptions]="{standalone: true}"
+                                      [disabled]="!schedule.isWorking"
+                                      (onChange)="updateScheduleTime(schedule.dayOfWeek, 'endTime', $event.value)"/>
+                        </div>
+                    }
+                </div>
                 @if (errors()['workingSchedules']) {
                     <small class="error-text">{{ errors()['workingSchedules'] }}</small>
                 }

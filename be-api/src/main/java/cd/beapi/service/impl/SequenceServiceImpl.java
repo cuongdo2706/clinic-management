@@ -17,8 +17,8 @@ public class SequenceServiceImpl implements SequenceService {
     }
 
     @Override
-    public String generateDentistCode() {
-        return format("NV", SequenceName.DENTIST,8);
+    public String generateStaffCode() {
+        return format("NV", SequenceName.STAFF,5);
     }
 
     @Override

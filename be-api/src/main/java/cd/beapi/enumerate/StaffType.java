@@ -9,8 +9,7 @@ import lombok.experimental.FieldDefaults;
 public enum StaffType {
     DENTIST("Nha sĩ"),
     RECEPTIONIST("Lễ tân"),
-    NURSE("Y tá"),
-    ADMIN("Quản lý");
+    MANAGER("Quản lý");
 
     String label;
 

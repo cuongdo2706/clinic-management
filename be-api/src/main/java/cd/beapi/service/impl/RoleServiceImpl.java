@@ -20,6 +20,12 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     @Override
     public List<RoleResponse> getAllRoles() {
-        return roleMapper.toRoleResponses(roleRepository.findAll());
+        return roleMapper.toRoleResponses(roleRepository.findAllRolesForSecurity());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<RoleResponse> getAssignableRoles() {
+        return roleMapper.toRoleResponses(roleRepository.findAllRolesExceptAdmin());
     }
 }

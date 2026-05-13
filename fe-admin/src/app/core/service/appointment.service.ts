@@ -3,39 +3,71 @@ import {HttpClient, HttpParams} from "@angular/common/http";
 import {ENV} from "../../environment";
 import {Observable} from "rxjs";
 import {SuccessResponse} from "../model/response/success-response";
-import {AppointmentRequest, AppointmentResponse} from "../../features/appointment/model/appointment.model";
+import {PageData} from "../model/response/page-data";
+import {
+    AppointmentResponse,
+    AvailableSlotResponse,
+    CheckInAppointmentRequest,
+    CreateAppointmentRequest,
+    SearchAppointmentRequest,
+    UpdateAppointmentRequest
+} from "../../features/appointment/model/appointment.model";
 
 @Injectable({
     providedIn: 'root',
 })
 export class AppointmentService {
-    private readonly url = ENV.API_BASE_URL + "appointments";
+    private readonly url = ENV.API_BASE_URL + "clinic/appointments";
     private readonly http = inject(HttpClient);
 
-    getAll(page = 0, size = 10, keyword = ''): Observable<SuccessResponse<any>> {
-        let params = new HttpParams()
-            .set('page', page)
-            .set('size', size);
-        if (keyword) {
-            params = params.set('keyword', keyword);
-        }
-        return this.http.get<SuccessResponse<any>>(this.url, {params});
+    search(request: SearchAppointmentRequest): Observable<SuccessResponse<PageData<AppointmentResponse>>> {
+        return this.http.post<SuccessResponse<PageData<AppointmentResponse>>>(`${this.url}/search`, request);
     }
 
-    getById(id: string): Observable<SuccessResponse<AppointmentResponse>> {
+    getById(id: number): Observable<SuccessResponse<AppointmentResponse>> {
         return this.http.get<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}`);
     }
 
-    create(request: AppointmentRequest): Observable<SuccessResponse<AppointmentResponse>> {
+    create(request: CreateAppointmentRequest): Observable<SuccessResponse<AppointmentResponse>> {
         return this.http.post<SuccessResponse<AppointmentResponse>>(this.url, request);
     }
 
-    update(id: string, request: AppointmentRequest): Observable<SuccessResponse<AppointmentResponse>> {
+    update(id: number, request: UpdateAppointmentRequest): Observable<SuccessResponse<AppointmentResponse>> {
         return this.http.put<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}`, request);
     }
 
-    delete(id: string): Observable<SuccessResponse<void>> {
+    delete(id: number): Observable<SuccessResponse<void>> {
         return this.http.delete<SuccessResponse<void>>(`${this.url}/${id}`);
     }
-}
 
+    confirm(id: number): Observable<SuccessResponse<AppointmentResponse>> {
+        return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/confirm`, {});
+    }
+
+    checkIn(id: number, request: CheckInAppointmentRequest = {}): Observable<SuccessResponse<AppointmentResponse>> {
+        return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/check-in`, request);
+    }
+
+    start(id: number): Observable<SuccessResponse<AppointmentResponse>> {
+        return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/start`, {});
+    }
+
+    done(id: number): Observable<SuccessResponse<AppointmentResponse>> {
+        return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/done`, {});
+    }
+
+    cancel(id: number): Observable<SuccessResponse<AppointmentResponse>> {
+        return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/cancel`, {});
+    }
+
+    noShow(id: number): Observable<SuccessResponse<AppointmentResponse>> {
+        return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/no-show`, {});
+    }
+
+    getAvailableSlots(dentistId: number, date: string): Observable<SuccessResponse<AvailableSlotResponse>> {
+        const params = new HttpParams()
+            .set('dentistId', dentistId)
+            .set('date', date);
+        return this.http.get<SuccessResponse<AvailableSlotResponse>>(`${this.url}/available-slots`, {params});
+    }
+}

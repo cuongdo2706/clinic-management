@@ -35,7 +35,7 @@
                         <label for="guardianPhone">SĐT người giám hộ</label>
                     </p-floatlabel>
 
-                    <p-select styleClass="ml-3 p-select-match flex-1" formControlName="sortBy" [options]="sortOptions()"
+                    <p-select class="ml-3 p-select-match flex-1" formControlName="sortBy" [options]="sortOptions()"
                               optionLabel="name" optionValue="value"></p-select>
 
                     <p-button type="submit" icon="pi pi-search" [loading]="loading()" class="ml-3"></p-button>
@@ -251,5 +251,4 @@
                 (cancelled)="showEditDialog.set(false)"/>
     }
 </p-dialog>
-
 

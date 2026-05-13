@@ -9,35 +9,35 @@
     <p-toolbar>
         <ng-template #start>
             <div class="filter-grid">
-                <p-floatlabel variant="on">
+                <p-floatlabel class="filter-field" variant="on">
                     <input pInputText id="staff-code" formControlName="codeKeyword"/>
                     <label for="staff-code">Mã nhân viên</label>
                 </p-floatlabel>
 
-                <p-floatlabel variant="on">
+                <p-floatlabel class="filter-field" variant="on">
                     <input pInputText id="staff-name" formControlName="nameKeyword"/>
                     <label for="staff-name">Tên nhân viên</label>
                 </p-floatlabel>
 
-                <p-floatlabel variant="on">
+                <p-floatlabel class="filter-field" variant="on">
                     <input pInputText id="staff-phone" formControlName="phoneKeyword"/>
                     <label for="staff-phone">Số điện thoại</label>
                 </p-floatlabel>
 
-                <p-floatlabel variant="on">
-                    <input pInputText id="staff-email" formControlName="emailKeyword"/>
-                    <label for="staff-email">Email</label>
-                </p-floatlabel>
-
-                <p-select styleClass="filter-select" formControlName="staffType" [options]="staffTypeOptions"
+                <p-select class="filter-field filter-select" formControlName="staffType" [options]="staffTypeOptions"
                           optionLabel="label" optionValue="value" placeholder="Tất cả chức vụ" [showClear]="true"/>
 
-                <p-select styleClass="filter-select" formControlName="sortBy" [options]="sortOptions"
+                <p-select class="filter-field filter-select" formControlName="isActive" [options]="activeOptions"
+                          optionLabel="label" optionValue="value" placeholder="Tất cả trạng thái" [showClear]="true"/>
+
+                <p-select class="filter-field filter-field-wide filter-select" formControlName="sortBy" [options]="sortOptions"
                           optionLabel="name" optionValue="value"/>
 
-                <p-button type="submit" icon="pi pi-search" [loading]="loading()"/>
-                <p-button type="button" icon="pi pi-refresh" severity="secondary" [loading]="loading()"
-                          (onClick)="onResetFilter()"/>
+                <div class="filter-actions">
+                    <p-button type="submit" icon="pi pi-search" [loading]="loading()"/>
+                    <p-button type="button" icon="pi pi-refresh" severity="secondary" [loading]="loading()"
+                              (onClick)="onResetFilter()"/>
+                </div>
             </div>
         </ng-template>
         <ng-template #end>
@@ -58,6 +58,7 @@
                 <th>Mã</th>
                 <th>Họ tên</th>
                 <th>Chức vụ</th>
+                <th>Trạng thái</th>
                 <th>Số điện thoại</th>
                 <th>Email</th>
                 <th>Ngày tạo</th>
@@ -76,6 +77,10 @@
                     <p-tag [value]="getStaffTypeLabel(staff.staffType)"
                            [severity]="getStaffTypeSeverity(staff.staffType)"/>
                 </td>
+                <td>
+                    <p-tag [value]="getStatusLabel(staff.isActive)"
+                           [severity]="getStatusSeverity(staff.isActive)"/>
+                </td>
                 <td>{{ staff.phone || '—' }}</td>
                 <td>{{ staff.email || '—' }}</td>
                 <td>{{ staff.createdAt | date: 'dd/MM/yyyy' }}</td>
@@ -83,15 +88,16 @@
                     <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
                               pTooltip="Chỉnh sửa" tooltipPosition="top"
                               (onClick)="openEditDialog(staff)"/>
-                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
-                              pTooltip="Xóa" tooltipPosition="top"
-                              (onClick)="confirmDelete(staff)"/>
+                    <p-button [icon]="staff.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'" [rounded]="true" [text]="true"
+                              [severity]="staff.isActive ? 'danger' : 'success'"
+                              [pTooltip]="staff.isActive ? 'Ẩn nhân viên' : 'Hiện lại nhân viên'" tooltipPosition="top"
+                              (onClick)="confirmUpdateStatus(staff)"/>
                 </td>
             </tr>
         </ng-template>
         <ng-template #expandedrow let-staff>
             <tr>
-                <td colspan="8" class="expanded-row-cell">
+                <td colspan="9" class="expanded-row-cell">
                     <div class="staff-detail-card">
                         <div class="detail-header">
                             <i class="pi pi-users"></i>
@@ -119,6 +125,14 @@
                                 <div class="detail-item">
                                     <span class="detail-label"><i class="pi pi-venus-mars"></i> Giới tính</span>
                                     <span class="detail-value">{{ getGenderLabel(staff.gender) }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><i class="pi pi-check-circle"></i> Trạng thái</span>
+                                    <span class="detail-value">
+                                        <span class="badge" [class.badge-active]="staff.isActive" [class.badge-inactive]="!staff.isActive">
+                                            {{ getStatusLabel(staff.isActive) }}
+                                        </span>
+                                    </span>
                                 </div>
                             </div>
                             <div class="detail-divider"></div>
@@ -162,7 +176,7 @@
         </ng-template>
         <ng-template #emptymessage>
             <tr>
-                <td colspan="8" class="text-center p-4">Không có dữ liệu</td>
+                <td colspan="9" class="text-center p-4">Không có dữ liệu</td>
             </tr>
         </ng-template>
         <ng-template #footer>

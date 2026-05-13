@@ -10,88 +10,188 @@
         <p-button label="Thêm mới" icon="pi pi-plus" severity="success" (onClick)="openNew()"></p-button>
     </ng-template>
     <ng-template #end>
-        <p-iconfield>
-            <p-inputicon class="pi pi-search"></p-inputicon>
-            <input pInputText placeholder="Tìm kiếm..." [(ngModel)]="searchKeyword" (keyup.enter)="onSearch()"/>
-        </p-iconfield>
+        <div class="appointment-filter">
+            <p-select [options]="statusOptions"
+                      [(ngModel)]="statusFilter"
+                      optionLabel="label"
+                      optionValue="value"
+                      [showClear]="true"
+                      placeholder="Trạng thái"
+                      (onChange)="onSearch()"
+                      class="status-filter"></p-select>
+            <p-iconfield>
+                <p-inputicon class="pi pi-search"></p-inputicon>
+                <input pInputText placeholder="Tìm mã, bệnh nhân, SĐT..."
+                       [ngModel]="searchKeyword()"
+                       (ngModelChange)="searchKeyword.set($event)"
+                       (keyup.enter)="onSearch()"/>
+            </p-iconfield>
+            <p-button icon="pi pi-search" (onClick)="onSearch()" [loading]="loading()"></p-button>
+            <p-button icon="pi pi-refresh" severity="secondary" (onClick)="onResetFilter()"></p-button>
+        </div>
     </ng-template>
 </p-toolbar>
 
 <p-table [value]="appointments()" [loading]="loading()" [paginator]="true" [rows]="10"
          [rowsPerPageOptions]="[5, 10, 20]" [showCurrentPageReport]="true"
          currentPageReportTemplate="Hiển thị {first} - {last} / {totalRecords} lịch hẹn"
-         styleClass="mt-4">
+         class="mt-4">
     <ng-template #header>
         <tr>
+            <th>Mã</th>
             <th>Bệnh nhân</th>
             <th>Nha sĩ</th>
-            <th>Ngày hẹn</th>
-            <th>Giờ</th>
+            <th>Ngày giờ</th>
+            <th>STT</th>
             <th>Trạng thái</th>
-            <th>Ghi chú</th>
-            <th style="width: 150px">Thao tác</th>
+            <th>Lý do khám</th>
+            <th style="width: 240px">Thao tác</th>
         </tr>
     </ng-template>
     <ng-template #body let-appt>
         <tr>
-            <td>{{ appt.patientName }}</td>
-            <td>{{ appt.dentistName }}</td>
-            <td>{{ appt.appointmentDate }}</td>
-            <td>{{ appt.timeSlot }}</td>
+            <td>{{ appt.code }}</td>
             <td>
-                <p-tag [value]="appt.status" [severity]="getStatusSeverity(appt.status)"></p-tag>
+                <div class="person-cell">
+                    <strong>{{ appt.patientName }}</strong>
+                    <span>{{ appt.patientCode }} · {{ appt.patientPhone || 'Chưa có SĐT' }}</span>
+                </div>
             </td>
-            <td>{{ appt.notes }}</td>
+            <td>{{ appt.dentistName || 'Chưa phân nha sĩ' }}</td>
+            <td>{{ appt.appointmentDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ appt.queueNumber || '—' }}</td>
             <td>
-                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
-                          (onClick)="openEdit(appt)"></p-button>
-                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
-                          (onClick)="confirmDelete(appt)"></p-button>
+                <p-tag [value]="getStatusLabel(appt.status)" [severity]="getStatusSeverity(appt.status)"></p-tag>
+            </td>
+            <td>{{ appt.symptom || appt.note || '—' }}</td>
+            <td>
+                <div class="action-list">
+                    @if (canConfirm(appt)) {
+                        <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success"
+                                  pTooltip="Xác nhận" tooltipPosition="top"
+                                  (onClick)="runAction(appt, 'confirm')"></p-button>
+                    }
+                    @if (canCheckIn(appt)) {
+                        <p-button icon="pi pi-sign-in" [rounded]="true" [text]="true" severity="info"
+                                  pTooltip="Check-in" tooltipPosition="top"
+                                  (onClick)="runAction(appt, 'checkIn')"></p-button>
+                    }
+                    @if (canStart(appt)) {
+                        <p-button icon="pi pi-play" [rounded]="true" [text]="true" severity="contrast"
+                                  pTooltip="Bắt đầu khám" tooltipPosition="top"
+                                  (onClick)="runAction(appt, 'start')"></p-button>
+                    }
+                    @if (canDone(appt)) {
+                        <p-button icon="pi pi-verified" [rounded]="true" [text]="true" severity="success"
+                                  pTooltip="Hoàn tất" tooltipPosition="top"
+                                  (onClick)="confirmAction(appt, 'done')"></p-button>
+                    }
+                    @if (canNoShow(appt)) {
+                        <p-button icon="pi pi-calendar-times" [rounded]="true" [text]="true" severity="warn"
+                                  pTooltip="Không đến" tooltipPosition="top"
+                                  (onClick)="confirmAction(appt, 'noShow')"></p-button>
+                    }
+                    @if (canCancel(appt)) {
+                        <p-button icon="pi pi-ban" [rounded]="true" [text]="true" severity="danger"
+                                  pTooltip="Hủy lịch" tooltipPosition="top"
+                                  (onClick)="confirmAction(appt, 'cancel')"></p-button>
+                    }
+                    @if (canEdit(appt)) {
+                        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                                  pTooltip="Chỉnh sửa" tooltipPosition="top"
+                                  (onClick)="openEdit(appt)"></p-button>
+                    }
+                    @if (canHardDelete(appt)) {
+                        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                                  pTooltip="Xóa dữ liệu tạo nhầm" tooltipPosition="top"
+                                  (onClick)="confirmDelete(appt)"></p-button>
+                    }
+                </div>
             </td>
         </tr>
     </ng-template>
     <ng-template #emptymessage>
         <tr>
-            <td colspan="7" class="text-center p-4">Không có dữ liệu</td>
+            <td colspan="8" class="text-center p-4">Không có dữ liệu</td>
         </tr>
     </ng-template>
 </p-table>
 
-<!-- Dialog thêm/sửa -->
-<p-dialog [header]="isEdit() ? 'Cập nhật lịch hẹn' : 'Thêm lịch hẹn mới'" [(visible)]="dialogVisible"
-          [style]="{width: '480px'}" [modal]="true">
-    <div class="flex flex-col gap-6 mt-4">
+<p-dialog [header]="isEdit() ? 'Cập nhật lịch hẹn' : 'Thêm lịch hẹn mới'"
+          [(visible)]="dialogVisible"
+          [style]="{width: '560px'}"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false">
+    <div class="appointment-form">
         <p-floatlabel variant="on">
-            <input pInputText id="patientId" [(ngModel)]="formData.patientId" style="width: 100%"/>
-            <label for="patientId">Mã bệnh nhân</label>
+            <p-select inputId="patientId"
+                      [options]="patientOptions()"
+                      [(ngModel)]="formData.patientId"
+                      optionLabel="label"
+                      optionValue="value"
+                      [filter]="true"
+                      filterBy="label"
+                      appendTo="body"
+                      class="w-full"></p-select>
+            <label for="patientId">Bệnh nhân</label>
         </p-floatlabel>
 
         <p-floatlabel variant="on">
-            <input pInputText id="dentistId" [(ngModel)]="formData.dentistId" style="width: 100%"/>
-            <label for="dentistId">Mã nha sĩ</label>
+            <p-select inputId="dentistId"
+                      [options]="dentistOptions()"
+                      [(ngModel)]="formData.dentistId"
+                      optionLabel="label"
+                      optionValue="value"
+                      [showClear]="true"
+                      [filter]="true"
+                      filterBy="label"
+                      appendTo="body"
+                      class="w-full"
+                      (onChange)="onSlotContextChange()"></p-select>
+            <label for="dentistId">Nha sĩ</label>
+        </p-floatlabel>
+
+        <div class="date-time-grid">
+            <p-floatlabel variant="on">
+                <p-date-picker inputId="appointmentDate"
+                              [(ngModel)]="appointmentDate"
+                              dateFormat="dd/mm/yy"
+                              appendTo="body"
+                              class="w-full"
+                              (onSelect)="onSlotContextChange()"></p-date-picker>
+                <label for="appointmentDate">Ngày hẹn</label>
+            </p-floatlabel>
+
+            <p-floatlabel variant="on">
+                <p-select inputId="appointmentTime"
+                          [options]="slotOptions()"
+                          [(ngModel)]="appointmentTime"
+                          optionLabel="label"
+                          optionValue="value"
+                          [disabled]="!appointmentDate || !formData.dentistId"
+                          [emptyMessage]="getTimeEmptyMessage()"
+                          appendTo="body"
+                          class="w-full"></p-select>
+                <label for="appointmentTime">Giờ hẹn</label>
+            </p-floatlabel>
+        </div>
+
+        <p-floatlabel variant="on">
+            <textarea pTextarea id="symptom" [(ngModel)]="formData.symptom" rows="3" style="width: 100%"></textarea>
+            <label for="symptom">Lý do khám / triệu chứng</label>
         </p-floatlabel>
 
         <p-floatlabel variant="on">
-            <p-datepicker id="appointmentDate" [(ngModel)]="appointmentDate" dateFormat="dd/mm/yy"
-                          styleClass="w-full"></p-datepicker>
-            <label for="appointmentDate">Ngày hẹn</label>
-        </p-floatlabel>
-
-        <p-floatlabel variant="on">
-            <input pInputText id="timeSlot" [(ngModel)]="formData.timeSlot" style="width: 100%"/>
-            <label for="timeSlot">Giờ (vd: 08:00 - 09:00)</label>
-        </p-floatlabel>
-
-        <p-floatlabel variant="on">
-            <textarea pTextarea id="notes" [(ngModel)]="formData.notes" rows="3" style="width: 100%"></textarea>
-            <label for="notes">Ghi chú</label>
+            <textarea pTextarea id="note" [(ngModel)]="formData.note" rows="3" style="width: 100%"></textarea>
+            <label for="note">Ghi chú nội bộ</label>
         </p-floatlabel>
     </div>
 
     <ng-template #footer>
         <p-button label="Huỷ" icon="pi pi-times" [text]="true" severity="secondary"
                   (onClick)="dialogVisible.set(false)"></p-button>
-        <p-button label="Lưu" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+        <p-button label="Lưu" icon="pi pi-check" severity="success" [loading]="saving()"
+                  (onClick)="save()"></p-button>
     </ng-template>
 </p-dialog>
-

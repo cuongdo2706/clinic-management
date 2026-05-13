@@ -23,5 +23,10 @@ public class RoleController {
         return new SuccessResponse<>(HttpStatus.OK.value(), "Get data successfully",
                 Instant.now(), roleService.getAllRoles());
     }
-}
 
+    @GetMapping("/assignable")
+    public SuccessResponse<List<RoleResponse>> getAssignableRoles() {
+        return new SuccessResponse<>(HttpStatus.OK.value(), "Get data successfully",
+                Instant.now(), roleService.getAssignableRoles());
+    }
+}

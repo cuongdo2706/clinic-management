@@ -38,7 +38,7 @@
             <p-datepicker id="uf-dob"
                           formControlName="dob"
                           dateFormat="dd/mm/yy"
-                          styleClass="w-full"
+                          class="w-full"
                           [inputStyleClass]="errors()['dob'] ? 'w-full ng-invalid' : 'w-full'"
                           (onSelect)="clearError('dob')"></p-datepicker>
             @if (errors()['dob']) {
@@ -53,7 +53,7 @@
             </label>
             <p-select id="uf-gender"
                       formControlName="gender"
-                      styleClass="w-full"
+                      class="w-full"
                       [options]="genderOptions"
                       optionLabel="label"
                       optionValue="value"
@@ -136,4 +136,3 @@
 </form>
     }
 </p-card>
-

@@ -69,8 +69,8 @@ export class Staff implements OnInit {
         codeKeyword: this.fb.nonNullable.control(""),
         nameKeyword: this.fb.nonNullable.control(""),
         phoneKeyword: this.fb.nonNullable.control(""),
-        emailKeyword: this.fb.nonNullable.control(""),
         staffType: this.fb.control<string | null>(null),
+        isActive: this.fb.control<boolean | null>(true),
     });
 
     staffTypeOptions = [
@@ -85,6 +85,11 @@ export class Staff implements OnInit {
         {name: 'Tên: Z -> A', value: "NAME_DESC"},
         {name: 'Ngày tạo: Gần nhất', value: "CREATED_AT_DESC"},
         {name: 'Ngày tạo: Xa nhất', value: "CREATED_AT"},
+    ];
+
+    activeOptions = [
+        {label: 'Đang hoạt động', value: true},
+        {label: 'Đã ẩn', value: false},
     ];
 
     private readonly dayLabels: Record<string, string> = {
@@ -140,22 +145,27 @@ export class Staff implements OnInit {
         this.loadStaffs(this.searchForm.getRawValue());
     }
 
-    confirmDelete(staff: StaffResponse): void {
+    confirmUpdateStatus(staff: StaffResponse): void {
+        const nextActive = !staff.isActive;
+        const actionLabel = nextActive ? 'hiện lại' : 'ẩn';
+        const successDetail = nextActive ? 'Đã hiện lại nhân viên thành công' : 'Đã ẩn nhân viên thành công';
+        const errorDetail = nextActive ? 'Không thể hiện lại nhân viên, vui lòng thử lại' : 'Không thể ẩn nhân viên, vui lòng thử lại';
+
         this.confirmationService.confirm({
-            message: `Bạn có chắc muốn xóa nhân viên <b>${staff.fullName}</b> (${staff.code})?`,
-            header: 'Xác nhận xóa',
+            message: `Bạn có chắc muốn ${actionLabel} nhân viên <b>${staff.fullName}</b> (${staff.code})?`,
+            header: nextActive ? 'Xác nhận hiện lại' : 'Xác nhận ẩn',
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Xóa',
+            acceptLabel: nextActive ? 'Hiện lại' : 'Ẩn',
             rejectLabel: 'Hủy',
-            acceptButtonStyleClass: 'p-button-danger',
+            acceptButtonStyleClass: nextActive ? 'p-button-success' : 'p-button-danger',
             accept: () => {
-                this.staffService.delete(staff.id).subscribe({
+                this.staffService.updateStatus(staff.id, {isActive: nextActive, version: staff.version}).subscribe({
                     next: () => {
-                        this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Đã xóa nhân viên thành công'});
+                        this.messageService.add({severity: 'success', summary: 'Thành công', detail: successDetail});
                         this.loadStaffs(this.searchForm.getRawValue());
                     },
                     error: () => {
-                        this.messageService.add({severity: 'error', summary: 'Lỗi', detail: 'Không thể xóa nhân viên, vui lòng thử lại'});
+                        this.messageService.add({severity: 'error', summary: 'Lỗi', detail: errorDetail});
                     }
                 });
             }
@@ -170,8 +180,8 @@ export class Staff implements OnInit {
             codeKeyword: "",
             nameKeyword: "",
             phoneKeyword: "",
-            emailKeyword: "",
             staffType: null,
+            isActive: true,
         });
         this.paginatorFirst.set(0);
         this.loadStaffs(this.searchForm.getRawValue());
@@ -198,6 +208,14 @@ export class Staff implements OnInit {
             default:
                 return 'secondary';
         }
+    }
+
+    getStatusLabel(isActive: boolean | null | undefined): string {
+        return isActive ? 'Hoạt động' : 'Đã ẩn';
+    }
+
+    getStatusSeverity(isActive: boolean | null | undefined): 'success' | 'danger' {
+        return isActive ? 'success' : 'danger';
     }
 
     getDayLabel(dayOfWeek: string): string {

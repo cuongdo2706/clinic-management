@@ -34,6 +34,8 @@ public class CreateStaffRequest {
     @NotNull(message = "Staff type is required")
     StaffType staffType;
 
+    String roleCode;
+
     List<WorkingScheduleRequest> workingSchedules;
 
     @Getter

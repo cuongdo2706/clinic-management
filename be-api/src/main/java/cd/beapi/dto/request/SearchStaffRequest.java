@@ -12,7 +12,7 @@ public class SearchStaffRequest extends PaginationFormat {
     String codeKeyword;
     String nameKeyword;
     String phoneKeyword;
-    String emailKeyword;
     StaffType staffType;
+    Boolean isActive;
     StaffSortOption sortBy;
 }

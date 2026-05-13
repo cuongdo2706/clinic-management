@@ -49,7 +49,7 @@
                 <div class="field">
                     <label class="field-label" for="uf-category">Danh mục</label>
                     <p-select id="uf-category" formControlName="treatmentCategoryId"
-                              styleClass="w-full"
+                              class="w-full"
                               [options]="categories()"
                               optionLabel="name"
                               optionValue="id"
@@ -60,7 +60,7 @@
                 <div class="field">
                     <label class="field-label" for="uf-active">Trạng thái</label>
                     <p-select id="uf-active" formControlName="isActive"
-                              styleClass="w-full"
+                              class="w-full"
                               [options]="activeOptions"
                               optionLabel="label"
                               optionValue="value"></p-select>
@@ -87,4 +87,3 @@
         </form>
     }
 </p-card>
-

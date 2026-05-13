@@ -7,6 +7,8 @@ export interface CreateStaffRequest {
     email: string;
     address: string;
     staffType: string;
+    isActive: boolean;
+    roleCode: string | null;
     workingSchedules: WorkingScheduleRequest[];
 }
 

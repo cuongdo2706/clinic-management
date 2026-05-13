@@ -5,8 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -24,8 +22,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@SQLRestriction("deleted_at is null")
-@SQLDelete(sql = "UPDATE staffs SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 public class Staff extends BaseEntity{
     @Column(unique = true,nullable = false)
     String code;
@@ -47,7 +43,8 @@ public class Staff extends BaseEntity{
     @Enumerated(EnumType.STRING)
     StaffType staffType;
 
-    Instant deletedAt;
+    @Builder.Default
+    Boolean isActive = true;
 
     @Version
     @ColumnDefault("0")

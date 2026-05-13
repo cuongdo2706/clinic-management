@@ -22,7 +22,8 @@
         </tr>
     </ng-template>
     <ng-template #body let-item let-rowIndex="rowIndex" let-expanded="expanded">
-        <tr (click)="toggleRow(item)" class="role-row" [class.row-expanded]="expanded">
+        <tr (click)="toggleRow(item)" class="role-row" [class.row-expanded]="expanded"
+            [class.role-readonly]="isRoleReadonly(item)">
             <td>{{ rowIndex + 1 }}</td>
             <td>
                 <p-tag [value]="item.code" severity="info"/>
@@ -43,7 +44,8 @@
                         <div class="detail-header-right">
                             @if (editingRoleId() !== item.id) {
                                 <p-button label="Chỉnh sửa" icon="pi pi-pencil" severity="warn" size="small"
-                                          (onClick)="enterEditMode(item); $event.stopPropagation()"></p-button>
+                                          (onClick)="enterEditMode(item); $event.stopPropagation()"
+                                          [disabled]="isRoleReadonly(item)"></p-button>
                             } @else {
                                 <p-button label="Lưu" icon="pi pi-check" severity="success" size="small"
                                           (onClick)="savePermissions(item); $event.stopPropagation()"
@@ -150,4 +152,3 @@
         </tr>
     </ng-template>
 </p-table>
-

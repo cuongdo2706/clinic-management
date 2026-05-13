@@ -7,5 +7,6 @@ import java.util.List;
 public interface RoleService {
 
     List<RoleResponse> getAllRoles();
-}
 
+    List<RoleResponse> getAssignableRoles();
+}

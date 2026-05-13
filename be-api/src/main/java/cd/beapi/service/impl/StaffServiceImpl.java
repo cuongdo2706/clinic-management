@@ -3,6 +3,7 @@ package cd.beapi.service.impl;
 import cd.beapi.dto.request.CreateStaffRequest;
 import cd.beapi.dto.request.SearchStaffRequest;
 import cd.beapi.dto.request.UpdateStaffRequest;
+import cd.beapi.dto.request.UpdateStaffStatusRequest;
 import cd.beapi.dto.response.PageData;
 import cd.beapi.dto.response.StaffResponse;
 import cd.beapi.entity.QStaff;
@@ -15,6 +16,7 @@ import cd.beapi.repository.jpa.WorkingScheduleRepository;
 import cd.beapi.service.ImageService;
 import cd.beapi.service.StaffService;
 import cd.beapi.service.SequenceService;
+import cd.beapi.service.UserService;
 import cd.beapi.utility.StringUtil;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.Expressions;
@@ -44,6 +46,7 @@ public class StaffServiceImpl implements StaffService {
     private final StaffMapper staffMapper;
     private final SequenceService sequenceService;
     private final ImageService imageService;
+    private final UserService userService;
 
     @Transactional(readOnly = true)
     @Override
@@ -66,12 +69,10 @@ public class StaffServiceImpl implements StaffService {
         if (StringUtils.hasText(searchStaffRequest.getPhoneKeyword())) {
             whereClause.and(s.phone.like("%" + searchStaffRequest.getPhoneKeyword() + "%"));
         }
-        if (StringUtils.hasText(searchStaffRequest.getEmailKeyword())) {
-            whereClause.and(s.email.likeIgnoreCase("%" + searchStaffRequest.getEmailKeyword() + "%"));
-        }
         if (searchStaffRequest.getStaffType() != null) {
             whereClause.and(s.staffType.eq(searchStaffRequest.getStaffType()));
         }
+        whereClause.and(s.isActive.eq(searchStaffRequest.getIsActive() == null || searchStaffRequest.getIsActive()));
 
         Sort sort = switch (searchStaffRequest.getSortBy()) {
             case null -> Sort.by("createdAt").descending();
@@ -114,6 +115,7 @@ public class StaffServiceImpl implements StaffService {
                 .email(createStaffRequest.getEmail())
                 .address(createStaffRequest.getAddress())
                 .staffType(createStaffRequest.getStaffType())
+                .isActive(true)
                 .build();
 
         if (StringUtils.hasText(createStaffRequest.getCode())) {
@@ -122,14 +124,47 @@ public class StaffServiceImpl implements StaffService {
             }
             newStaff.setCode(createStaffRequest.getCode());
         } else {
-            newStaff.setCode(sequenceService.generateDentistCode());
+            newStaff.setCode(sequenceService.generateStaffCode());
         }
         if (file != null && !file.isEmpty()) {
             newStaff.setAvatarUrl(imageService.upload(file, STAFF_FOLDER_NAME));
         }
+        UserService.CreatedStaffUser createdUser = null;
+        if (StringUtils.hasText(createStaffRequest.getRoleCode())) {
+            createdUser = userService.createStaffUser(
+                    createStaffRequest.getFullName(),
+                    newStaff.getCode(),
+                    createStaffRequest.getRoleCode()
+            );
+            newStaff.setUser(createdUser.user());
+        }
         Staff savedStaff = staffRepository.save(newStaff);
         savedStaff.setWorkingSchedules(saveCreateWorkingSchedules(savedStaff, createStaffRequest.getWorkingSchedules()));
-        return staffMapper.toStaffResponse(savedStaff);
+        StaffResponse response = staffMapper.toStaffResponse(savedStaff);
+        return createdUser == null ? response : withTemporaryPassword(response, createdUser.temporaryPassword());
+    }
+
+    private StaffResponse withTemporaryPassword(StaffResponse response, String temporaryPassword) {
+        return new StaffResponse(
+                response.id(),
+                response.code(),
+                response.fullName(),
+                response.phone(),
+                response.email(),
+                response.dob(),
+                response.gender(),
+                response.address(),
+                response.avatarUrl(),
+                response.staffType(),
+                response.isActive(),
+                response.workingSchedules(),
+                response.version(),
+                response.createdAt(),
+                response.modifiedAt(),
+                response.userId(),
+                response.username(),
+                temporaryPassword
+        );
     }
 
     @Transactional
@@ -167,15 +202,18 @@ public class StaffServiceImpl implements StaffService {
         return staffMapper.toStaffResponse(savedStaff);
     }
 
+    @Transactional
     @Override
-    public void delete(Long id) {
-        if (!staffRepository.existsById(id)) {
-            throw new AppException("Cannot find staff with id: " + id, HttpStatus.BAD_REQUEST);
-        }
-        Staff staff = staffRepository.findById(id).orElseThrow(
+    public StaffResponse updateStatus(Long id, UpdateStaffStatusRequest updateStaffStatusRequest) {
+        Staff existedStaff = staffRepository.findById(id).orElseThrow(
                 () -> new AppException("Cannot find staff with id: " + id, HttpStatus.BAD_REQUEST));
-        imageService.delete(staff.getAvatarUrl());
-        staffRepository.deleteById(id);
+
+        existedStaff.setIsActive(updateStaffStatusRequest.getIsActive());
+        if (updateStaffStatusRequest.getVersion() != null) {
+            existedStaff.setVersion(updateStaffStatusRequest.getVersion());
+        }
+
+        return staffMapper.toStaffResponse(staffRepository.save(existedStaff));
     }
 
     private List<WorkingSchedule> saveCreateWorkingSchedules(Staff staff, List<CreateStaffRequest.WorkingScheduleRequest> requests) {

@@ -17,8 +17,12 @@ public record StaffResponse(
         String address,
         String avatarUrl,
         StaffType staffType,
+        Boolean isActive,
         List<WorkingScheduleResponse> workingSchedules,
         Long version,
         Instant createdAt,
-        Instant modifiedAt) {
+        Instant modifiedAt,
+        Long userId,
+        String username,
+        String temporaryPassword) {
 }

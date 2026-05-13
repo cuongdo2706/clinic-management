@@ -35,6 +35,8 @@ interface MatrixRow {
     styleUrl: './permission.css',
 })
 export class Permission implements OnInit {
+    private static readonly ADMIN_ROLE_CODE = 'ADMIN';
+
     private readonly roleService = inject(RoleService);
     private readonly permissionService = inject(PermissionService);
     private readonly messageService = inject(MessageService);
@@ -134,6 +136,8 @@ export class Permission implements OnInit {
     // ─── Edit mode ──────────────────────────────────────────
 
     enterEditMode(item: RoleResponse) {
+        if (this.isRoleReadonly(item)) return;
+
         this.matrixSnapshot = this.matrixRows().map(row => ({
             pageCode: row.pageCode,
             pageName: row.pageName,
@@ -221,6 +225,8 @@ export class Permission implements OnInit {
     // ─── Lưu quyền ─────────────────────────────────────────
 
     savePermissions(item: RoleResponse) {
+        if (this.isRoleReadonly(item)) return;
+
         const permissions: { pageCode: string; actionCode: string }[] = [];
         for (const row of this.matrixRows()) {
             for (const action of this.matrixActions()) {
@@ -254,5 +260,9 @@ export class Permission implements OnInit {
 
     getActionLabel(code: string): string {
         return this.actionLabels[code] || code;
+    }
+
+    isRoleReadonly(item: RoleResponse): boolean {
+        return item.code === Permission.ADMIN_ROLE_CODE;
     }
 }

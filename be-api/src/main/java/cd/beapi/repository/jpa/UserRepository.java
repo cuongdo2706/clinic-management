@@ -11,6 +11,15 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
 
+    @Query(value = """
+            SELECT EXISTS (
+                SELECT 1
+                FROM users
+                WHERE username = :username
+            )
+            """, nativeQuery = true)
+    boolean existsByUsernameIncludingDeleted(@Param("username") String username);
+
     @EntityGraph(attributePaths = {"role"})
     @Query(value = """
                     SELECT u FROM User u

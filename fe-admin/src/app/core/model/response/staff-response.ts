@@ -18,6 +18,7 @@ export interface StaffResponse {
     address: string;
     avatarUrl: string | null;
     staffType: string;
+    isActive: boolean;
     workingSchedules: WorkingScheduleResponse[];
     version: number;
     createdAt: Date;

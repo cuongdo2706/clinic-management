@@ -9,3 +9,50 @@
     margin: 0;
 }
 
+.appointment-filter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.status-filter {
+    width: 180px;
+}
+
+.person-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.person-cell span {
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.action-list {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-wrap: wrap;
+}
+
+.appointment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding-top: 14px;
+}
+
+.date-time-grid {
+    display: grid;
+    grid-template-columns: 1fr 160px;
+    gap: 16px;
+}
+
+@media (max-width: 640px) {
+    .date-time-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,7 +1,7 @@
 package cd.beapi.enumerate;
 
 public enum SequenceName {
-    DENTIST,
+    STAFF,
     PATIENT,
     APPOINTMENT,
     MEDICAL_RECORD,

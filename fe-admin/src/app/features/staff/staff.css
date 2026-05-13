@@ -10,14 +10,57 @@
 }
 
 .filter-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(11rem, 1fr));
     gap: 0.75rem;
     align-items: center;
+    width: min(100%, 64rem);
+}
+
+.filter-field,
+.filter-field input {
+    display: block;
+    width: 100%;
+}
+
+.filter-field-wide {
+    grid-column: span 1;
+}
+
+.filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 :host ::ng-deep .filter-select {
-    min-width: 12rem;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    min-height: 42px;
+}
+
+:host ::ng-deep .filter-select .p-select-label {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+:host ::ng-deep .filter-select .p-select-dropdown {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 900px) {
+    .filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .filter-field-wide,
+    .filter-actions {
+        grid-column: span 2;
+    }
 }
 
 .staff-avatar {
@@ -151,6 +194,26 @@
     font-weight: 500;
     color: #1e293b;
     padding-left: 2px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.badge-active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-inactive {
+    background: #fee2e2;
+    color: #991b1b;
 }
 
 .detail-divider {

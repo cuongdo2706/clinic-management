@@ -26,6 +26,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class PermissionServiceImpl implements PermissionService {
+    private static final String ADMIN_ROLE_CODE = "ADMIN";
+
     private final RoleRepository roleRepository;
     private final PageRepository pageRepository;
     private final ActionRepository actionRepository;
@@ -71,6 +73,9 @@ public class PermissionServiceImpl implements PermissionService {
     public PermissionResponse updatePermissions(UpdatePermissionRequest request) {
         Role role = roleRepository.findByIdWithPermissions(request.getRoleId())
                 .orElseThrow(() -> new AppException("Cannot find role with id: " + request.getRoleId(), HttpStatus.BAD_REQUEST));
+        if (ADMIN_ROLE_CODE.equals(role.getCode())) {
+            throw new AppException("Admin role permissions cannot be modified", HttpStatus.FORBIDDEN);
+        }
         Map<String, Page> pageMap = pageRepository.findAll().stream()
                 .collect(Collectors.toMap(p -> p.getCode().name(), p -> p));
         Map<String, Action> actionMap = actionRepository.findAll().stream()
@@ -103,4 +108,3 @@ public class PermissionServiceImpl implements PermissionService {
         return getPermissionMatrix(role.getId());
     }
 }
-

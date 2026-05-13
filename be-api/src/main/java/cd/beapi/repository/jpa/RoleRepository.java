@@ -6,11 +6,25 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface RoleRepository extends JpaRepository<Role, Long> {
 
     Optional<Role> findByCode(String code);
+
+    @Query("""
+            SELECT r FROM Role r
+            ORDER BY r.name
+            """)
+    List<Role> findAllRolesForSecurity();
+
+    @Query("""
+            SELECT r FROM Role r
+            WHERE r.code <> 'ADMIN'
+            ORDER BY r.name
+            """)
+    List<Role> findAllRolesExceptAdmin();
 
     @EntityGraph(attributePaths = {"permissions", "permissions.page", "permissions.action"})
     @Query("""

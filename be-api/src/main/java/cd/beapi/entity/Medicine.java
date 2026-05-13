@@ -23,7 +23,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SQLRestriction("deleted_at is null")
-@SQLDelete(sql = "UPDATE medicines SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLDelete(sql = "UPDATE medicines SET deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND version = ?")
 public class Medicine extends BaseEntity {
     @Column(unique = true, nullable = false)
     String code;

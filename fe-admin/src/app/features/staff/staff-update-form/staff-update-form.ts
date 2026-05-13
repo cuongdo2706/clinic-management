@@ -7,30 +7,35 @@ import {Select} from "primeng/select";
 import {ProgressSpinner} from "primeng/progressspinner";
 import {FormBuilder, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MessageService} from "primeng/api";
+import {Checkbox} from "primeng/checkbox";
 import {StaffService} from "../../../core/service/staff.service";
 import {UpdateStaffRequest} from "../../../core/model/request/update-staff-request";
 import {WorkingScheduleRequest} from "../../../core/model/request/create-staff-request";
 import {ENV} from "../../../environment";
 
 interface ScheduleRow {
-    uid: number;
     dayOfWeek: string;
+    label: string;
+    isWorking: boolean;
     startTime: string;
     endTime: string;
 }
 
 @Component({
     selector: 'app-staff-update-form',
-    imports: [Button, InputText, Card, DatePicker, Select, ProgressSpinner, FormsModule, ReactiveFormsModule],
+    imports: [Button, InputText, Card, DatePicker, Select, Checkbox, ProgressSpinner, FormsModule, ReactiveFormsModule],
     templateUrl: './staff-update-form.html',
     styleUrl: './staff-update-form.css',
 })
 export class StaffUpdateForm implements OnInit, OnDestroy {
+    readonly minWorkingTime = '07:00';
+    readonly maxWorkingTime = '20:00';
+    readonly workingTimeOptions = this.createWorkingTimeOptions();
+
     private readonly staffService = inject(StaffService);
     private readonly messageService = inject(MessageService);
     private readonly fb = inject(FormBuilder);
     private previewObjectUrl: string | null = null;
-    private nextScheduleUid = 1;
     private staffVersion = 0;
     private currentAvatarUrl: string | null = null;
 
@@ -58,7 +63,12 @@ export class StaffUpdateForm implements OnInit, OnDestroy {
         {label: 'Quản lý', value: 'ADMIN'},
     ];
 
-    dayOptions = [
+    activeOptions = [
+        {label: 'Hoạt động', value: true},
+        {label: 'Đã ẩn', value: false},
+    ];
+
+    readonly dayOptions = [
         {label: 'Thứ 2', value: 'MONDAY'},
         {label: 'Thứ 3', value: 'TUESDAY'},
         {label: 'Thứ 4', value: 'WEDNESDAY'},
@@ -77,6 +87,7 @@ export class StaffUpdateForm implements OnInit, OnDestroy {
         email: this.fb.nonNullable.control(''),
         address: this.fb.nonNullable.control(''),
         staffType: this.fb.control<string | null>(null),
+        isActive: this.fb.nonNullable.control(true),
     });
 
     ngOnInit(): void {
@@ -95,13 +106,9 @@ export class StaffUpdateForm implements OnInit, OnDestroy {
                     email: data.email || '',
                     address: data.address || '',
                     staffType: data.staffType,
+                    isActive: data.isActive,
                 });
-                this.schedules.set((data.workingSchedules || []).map(schedule => ({
-                    uid: this.nextScheduleUid++,
-                    dayOfWeek: schedule.dayOfWeek,
-                    startTime: this.toTimeInput(schedule.startTime),
-                    endTime: this.toTimeInput(schedule.endTime),
-                })));
+                this.schedules.set(this.createSchedules(data.workingSchedules || []));
                 this.fetching.set(false);
             },
             error: () => {
@@ -122,21 +129,13 @@ export class StaffUpdateForm implements OnInit, OnDestroy {
         this.errors.set(errs);
     }
 
-    addSchedule(): void {
-        this.schedules.update(rows => [
-            ...rows,
-            {uid: this.nextScheduleUid++, dayOfWeek: '', startTime: '08:00', endTime: '17:00'},
-        ]);
+    toggleSchedule(dayOfWeek: string, isWorking: boolean): void {
+        this.schedules.update(rows => rows.map(row => row.dayOfWeek === dayOfWeek ? {...row, isWorking} : row));
         this.clearError('workingSchedules');
     }
 
-    removeSchedule(uid: number): void {
-        this.schedules.update(rows => rows.filter(row => row.uid !== uid));
-        this.clearError('workingSchedules');
-    }
-
-    updateSchedule(uid: number, field: keyof Omit<ScheduleRow, 'uid'>, value: string): void {
-        this.schedules.update(rows => rows.map(row => row.uid === uid ? {...row, [field]: value} : row));
+    updateScheduleTime(dayOfWeek: string, field: 'startTime' | 'endTime', value: string): void {
+        this.schedules.update(rows => rows.map(row => row.dayOfWeek === dayOfWeek ? {...row, [field]: value} : row));
         this.clearError('workingSchedules');
     }
 
@@ -165,15 +164,17 @@ export class StaffUpdateForm implements OnInit, OnDestroy {
         if (!val.staffType) errs['staffType'] = 'Vui lòng chọn chức vụ';
 
         const schedules = this.buildWorkingSchedules();
-        const hasPartialSchedule = this.schedules().some(row =>
-            Boolean(row.dayOfWeek || row.startTime || row.endTime) &&
-            (!row.dayOfWeek || !row.startTime || !row.endTime)
+        const hasMissingTime = this.schedules().some(row => row.isWorking && (!row.startTime || !row.endTime));
+        const outOfWorkingRange = schedules.some(row =>
+            row.startTime < this.minWorkingTime ||
+            row.startTime > this.maxWorkingTime ||
+            row.endTime < this.minWorkingTime ||
+            row.endTime > this.maxWorkingTime
         );
-        const duplicateDay = new Set(schedules.map(row => row.dayOfWeek)).size !== schedules.length;
         const invalidTime = schedules.some(row => row.startTime >= row.endTime);
 
-        if (hasPartialSchedule) errs['workingSchedules'] = 'Vui lòng điền đủ thứ, giờ bắt đầu và giờ kết thúc';
-        else if (duplicateDay) errs['workingSchedules'] = 'Mỗi ngày chỉ được tạo một lịch làm';
+        if (hasMissingTime) errs['workingSchedules'] = 'Vui lòng nhập đủ giờ bắt đầu và giờ kết thúc cho ngày làm việc';
+        else if (outOfWorkingRange) errs['workingSchedules'] = 'Thời gian làm việc chỉ được chọn từ 07:00 đến 20:00';
         else if (invalidTime) errs['workingSchedules'] = 'Giờ bắt đầu phải nhỏ hơn giờ kết thúc';
 
         this.errors.set(errs);
@@ -193,6 +194,7 @@ export class StaffUpdateForm implements OnInit, OnDestroy {
             email: val.email,
             address: val.address,
             staffType: val.staffType!,
+            isActive: val.isActive,
             workingSchedules: this.buildWorkingSchedules(),
             version: this.staffVersion,
         };
@@ -213,12 +215,36 @@ export class StaffUpdateForm implements OnInit, OnDestroy {
 
     private buildWorkingSchedules(): WorkingScheduleRequest[] {
         return this.schedules()
-            .filter(row => row.dayOfWeek && row.startTime && row.endTime)
+            .filter(row => row.isWorking && row.startTime && row.endTime)
             .map(row => ({
                 dayOfWeek: row.dayOfWeek,
                 startTime: row.startTime,
                 endTime: row.endTime,
             }));
+    }
+
+    private createSchedules(existingSchedules: WorkingScheduleRequest[]): ScheduleRow[] {
+        const schedulesByDay = new Map(existingSchedules.map(schedule => [schedule.dayOfWeek, schedule]));
+
+        return this.dayOptions.map(day => {
+            const schedule = schedulesByDay.get(day.value);
+            return {
+                dayOfWeek: day.value,
+                label: day.label,
+                isWorking: Boolean(schedule),
+                startTime: schedule ? this.toTimeInput(schedule.startTime) : '08:00',
+                endTime: schedule ? this.toTimeInput(schedule.endTime) : '17:00',
+            };
+        });
+    }
+
+    private createWorkingTimeOptions(): { label: string; value: string }[] {
+        const options: { label: string; value: string }[] = [];
+        for (let hour = 7; hour <= 20; hour++) {
+            const value = `${hour}`.padStart(2, '0') + ':00';
+            options.push({label: value, value});
+        }
+        return options;
     }
 
     private formatLocalDate(value: Date | null): string | null {

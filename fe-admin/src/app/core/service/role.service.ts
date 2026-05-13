@@ -15,4 +15,8 @@ export class RoleService {
     findAll(): Observable<SuccessResponse<RoleResponse[]>> {
         return this.http.get<SuccessResponse<RoleResponse[]>>(this.url);
     }
+
+    findAssignable(): Observable<SuccessResponse<RoleResponse[]>> {
+        return this.http.get<SuccessResponse<RoleResponse[]>>(`${this.url}/assignable`);
+    }
 }

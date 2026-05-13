@@ -44,7 +44,7 @@
             <div class="field">
                 <label class="field-label" for="sf-category">Danh mục</label>
                 <p-select id="sf-category" formControlName="treatmentCategoryId"
-                          styleClass="w-full"
+                          class="w-full"
                           [options]="categories()"
                           optionLabel="name"
                           optionValue="id"
@@ -55,7 +55,7 @@
             <div class="field">
                 <label class="field-label" for="sf-active">Trạng thái</label>
                 <p-select id="sf-active" formControlName="isActive"
-                          styleClass="w-full"
+                          class="w-full"
                           [options]="activeOptions"
                           optionLabel="label"
                           optionValue="value"></p-select>
@@ -81,4 +81,3 @@
         </div>
     </form>
 </p-card>
-

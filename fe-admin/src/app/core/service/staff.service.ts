@@ -8,6 +8,7 @@ import {StaffResponse} from "../model/response/staff-response";
 import {SearchStaffRequest} from "../model/request/search-staff-request";
 import {CreateStaffRequest} from "../model/request/create-staff-request";
 import {UpdateStaffRequest} from "../model/request/update-staff-request";
+import {UpdateStaffStatusRequest} from "../model/request/update-staff-status-request";
 
 @Injectable({
     providedIn: 'root',
@@ -32,8 +33,8 @@ export class StaffService {
         return this.http.put<SuccessResponse<StaffResponse>>(`${this.url}/${id}`, this.toFormData(request, file));
     }
 
-    delete(id: number): Observable<SuccessResponse<void>> {
-        return this.http.delete<SuccessResponse<void>>(`${this.url}/${id}`);
+    updateStatus(id: number, request: UpdateStaffStatusRequest): Observable<SuccessResponse<StaffResponse>> {
+        return this.http.patch<SuccessResponse<StaffResponse>>(`${this.url}/${id}/status`, request);
     }
 
     private toFormData(request: CreateStaffRequest | UpdateStaffRequest, file: File | null): FormData {

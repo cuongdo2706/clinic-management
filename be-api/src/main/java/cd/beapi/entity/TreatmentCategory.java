@@ -26,7 +26,7 @@ import java.time.Instant;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SQLRestriction("deleted_at is null")
-@SQLDelete(sql = "UPDATE treatment_categories SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLDelete(sql = "UPDATE treatment_categories SET deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND version = ?")
 public class TreatmentCategory extends BaseEntity {
     @Column(unique = true)
     String code;
@@ -49,4 +49,3 @@ public class TreatmentCategory extends BaseEntity {
     @LastModifiedDate
     Instant modifiedAt;
 }
-

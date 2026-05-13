@@ -9,6 +9,7 @@ export interface UpdateStaffRequest {
     email: string;
     address: string;
     staffType: string;
+    isActive: boolean;
     workingSchedules: WorkingScheduleRequest[];
     version: number;
 }
