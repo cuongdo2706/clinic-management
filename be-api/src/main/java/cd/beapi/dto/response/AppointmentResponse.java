@@ -9,6 +9,7 @@ public record AppointmentResponse(
         Long id,
         String code,
         LocalDateTime appointmentDate,
+        Integer estimatedDurationMinutes,
         Instant createdAt,
         Instant modifiedAt,
         String symptom,

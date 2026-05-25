@@ -1,12 +1,3 @@
-export interface WorkingScheduleResponse {
-    id: number;
-    dayOfWeek: string;
-    startTime: string;
-    endTime: string;
-    createdAt: Date;
-    modifiedAt: Date;
-}
-
 export interface StaffResponse {
     id: number;
     code: string;
@@ -19,7 +10,6 @@ export interface StaffResponse {
     avatarUrl: string | null;
     staffType: string;
     isActive: boolean;
-    workingSchedules: WorkingScheduleResponse[];
     version: number;
     createdAt: Date;
     modifiedAt: Date;

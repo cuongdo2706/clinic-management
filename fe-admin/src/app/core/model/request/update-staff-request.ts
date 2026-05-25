@@ -1,5 +1,3 @@
-import {WorkingScheduleRequest} from "./create-staff-request";
-
 export interface UpdateStaffRequest {
     code: string;
     fullName: string;
@@ -10,6 +8,5 @@ export interface UpdateStaffRequest {
     address: string;
     staffType: string;
     isActive: boolean;
-    workingSchedules: WorkingScheduleRequest[];
     version: number;
 }

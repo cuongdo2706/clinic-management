@@ -88,19 +88,9 @@ export class Staff implements OnInit {
     ];
 
     activeOptions = [
-        {label: 'Đang hoạt động', value: true},
-        {label: 'Đã ẩn', value: false},
+        {label: 'Đang làm việc', value: true},
+        {label: 'Đã nghỉ', value: false},
     ];
-
-    private readonly dayLabels: Record<string, string> = {
-        MONDAY: 'Thứ 2',
-        TUESDAY: 'Thứ 3',
-        WEDNESDAY: 'Thứ 4',
-        THURSDAY: 'Thứ 5',
-        FRIDAY: 'Thứ 6',
-        SATURDAY: 'Thứ 7',
-        SUNDAY: 'Chủ nhật',
-    };
 
     ngOnInit(): void {
         this.onSearch();
@@ -147,15 +137,15 @@ export class Staff implements OnInit {
 
     confirmUpdateStatus(staff: StaffResponse): void {
         const nextActive = !staff.isActive;
-        const actionLabel = nextActive ? 'hiện lại' : 'ẩn';
-        const successDetail = nextActive ? 'Đã hiện lại nhân viên thành công' : 'Đã ẩn nhân viên thành công';
-        const errorDetail = nextActive ? 'Không thể hiện lại nhân viên, vui lòng thử lại' : 'Không thể ẩn nhân viên, vui lòng thử lại';
+        const actionLabel = nextActive ? 'chuyển sang đang làm việc' : 'chuyển sang đã nghỉ';
+        const successDetail = nextActive ? 'Đã chuyển nhân viên sang đang làm việc' : 'Đã chuyển nhân viên sang đã nghỉ';
+        const errorDetail = nextActive ? 'Không thể chuyển nhân viên sang đang làm việc, vui lòng thử lại' : 'Không thể chuyển nhân viên sang đã nghỉ, vui lòng thử lại';
 
         this.confirmationService.confirm({
             message: `Bạn có chắc muốn ${actionLabel} nhân viên <b>${staff.fullName}</b> (${staff.code})?`,
-            header: nextActive ? 'Xác nhận hiện lại' : 'Xác nhận ẩn',
+            header: nextActive ? 'Xác nhận đang làm việc' : 'Xác nhận đã nghỉ',
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: nextActive ? 'Hiện lại' : 'Ẩn',
+            acceptLabel: nextActive ? 'Đang làm việc' : 'Đã nghỉ',
             rejectLabel: 'Hủy',
             acceptButtonStyleClass: nextActive ? 'p-button-success' : 'p-button-danger',
             accept: () => {
@@ -211,19 +201,11 @@ export class Staff implements OnInit {
     }
 
     getStatusLabel(isActive: boolean | null | undefined): string {
-        return isActive ? 'Hoạt động' : 'Đã ẩn';
+        return isActive ? 'Đang làm việc' : 'Đã nghỉ';
     }
 
     getStatusSeverity(isActive: boolean | null | undefined): 'success' | 'danger' {
         return isActive ? 'success' : 'danger';
-    }
-
-    getDayLabel(dayOfWeek: string): string {
-        return this.dayLabels[dayOfWeek] ?? dayOfWeek;
-    }
-
-    formatTime(time: string): string {
-        return time ? time.slice(0, 5) : '—';
     }
 
     getAvatarUrl(avatarUrl: string | null | undefined): string {

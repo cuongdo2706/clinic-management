@@ -35,15 +35,4 @@ public class CreateStaffRequest {
     StaffType staffType;
 
     String roleCode;
-
-    List<WorkingScheduleRequest> workingSchedules;
-
-    @Getter
-    @Setter
-    @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class WorkingScheduleRequest {
-        DayOfWeek dayOfWeek;
-        LocalTime startTime;
-        LocalTime endTime;
-    }
 }

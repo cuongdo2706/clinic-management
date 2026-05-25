@@ -11,7 +11,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
@@ -49,9 +48,6 @@ public class Staff extends BaseEntity{
     @Version
     @ColumnDefault("0")
     Long version;
-
-    @OneToMany(mappedBy = "staff")
-    List<WorkingSchedule> workingSchedules;
 
     @CreatedDate
     @Column(updatable = false)

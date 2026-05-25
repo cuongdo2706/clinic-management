@@ -155,10 +155,6 @@
     gap: 10px;
 }
 
-.schedule-group {
-    min-width: 260px;
-}
-
 .detail-group-title {
     font-size: 0.78rem;
     font-weight: 700;
@@ -221,28 +217,6 @@
     background: #d1fae5;
     margin: 0 20px;
     align-self: stretch;
-}
-
-.schedule-chip {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    background: #f0fdf4;
-    border: 1px solid #d1fae5;
-    color: #334155;
-}
-
-.schedule-chip span {
-    color: #166534;
-    font-weight: 600;
-}
-
-.empty-detail {
-    color: #94a3b8;
-    font-size: 0.9rem;
-    padding: 12px 0;
 }
 
 @media (max-width: 900px) {

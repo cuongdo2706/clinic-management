@@ -8,11 +8,9 @@ import cd.beapi.dto.response.PageData;
 import cd.beapi.dto.response.StaffResponse;
 import cd.beapi.entity.QStaff;
 import cd.beapi.entity.Staff;
-import cd.beapi.entity.WorkingSchedule;
 import cd.beapi.exception.AppException;
 import cd.beapi.mapper.StaffMapper;
 import cd.beapi.repository.jpa.StaffRepository;
-import cd.beapi.repository.jpa.WorkingScheduleRepository;
 import cd.beapi.service.ImageService;
 import cd.beapi.service.StaffService;
 import cd.beapi.service.SequenceService;
@@ -31,18 +29,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.DayOfWeek;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 @Service
 @RequiredArgsConstructor
 public class StaffServiceImpl implements StaffService {
     private static final String STAFF_FOLDER_NAME = "staff";
 
     private final StaffRepository staffRepository;
-    private final WorkingScheduleRepository workingScheduleRepository;
     private final StaffMapper staffMapper;
     private final SequenceService sequenceService;
     private final ImageService imageService;
@@ -98,7 +90,7 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public StaffResponse findById(Long id) {
         return staffMapper.toStaffResponse(
-                staffRepository.findByIdWithWorkingSchedules(id).orElseThrow(
+                staffRepository.findById(id).orElseThrow(
                         () -> new AppException("Cannot find staff with id: " + id, HttpStatus.BAD_REQUEST)
                 )
         );
@@ -139,7 +131,6 @@ public class StaffServiceImpl implements StaffService {
             newStaff.setUser(createdUser.user());
         }
         Staff savedStaff = staffRepository.save(newStaff);
-        savedStaff.setWorkingSchedules(saveCreateWorkingSchedules(savedStaff, createStaffRequest.getWorkingSchedules()));
         StaffResponse response = staffMapper.toStaffResponse(savedStaff);
         return createdUser == null ? response : withTemporaryPassword(response, createdUser.temporaryPassword());
     }
@@ -157,7 +148,6 @@ public class StaffServiceImpl implements StaffService {
                 response.avatarUrl(),
                 response.staffType(),
                 response.isActive(),
-                response.workingSchedules(),
                 response.version(),
                 response.createdAt(),
                 response.modifiedAt(),
@@ -170,7 +160,7 @@ public class StaffServiceImpl implements StaffService {
     @Transactional
     @Override
     public StaffResponse update(Long id, UpdateStaffRequest updateStaffRequest, MultipartFile file) {
-        Staff existedStaff = staffRepository.findByIdWithWorkingSchedules(id).orElseThrow(
+        Staff existedStaff = staffRepository.findById(id).orElseThrow(
                 () -> new AppException("Cannot find staff with id: " + id, HttpStatus.BAD_REQUEST));
         String oldAvatarUrl = existedStaff.getAvatarUrl();
 
@@ -193,12 +183,6 @@ public class StaffServiceImpl implements StaffService {
             existedStaff.setAvatarUrl(imageService.update(file, oldAvatarUrl, STAFF_FOLDER_NAME));
         }
         Staff savedStaff = staffRepository.save(existedStaff);
-        if (updateStaffRequest.getWorkingSchedules() != null) {
-            workingScheduleRepository.deleteByStaffId(savedStaff.getId());
-            workingScheduleRepository.flush();
-            savedStaff.setWorkingSchedules(saveUpdateWorkingSchedules(savedStaff, updateStaffRequest.getWorkingSchedules()));
-        }
-
         return staffMapper.toStaffResponse(savedStaff);
     }
 
@@ -214,66 +198,5 @@ public class StaffServiceImpl implements StaffService {
         }
 
         return staffMapper.toStaffResponse(staffRepository.save(existedStaff));
-    }
-
-    private List<WorkingSchedule> saveCreateWorkingSchedules(Staff staff, List<CreateStaffRequest.WorkingScheduleRequest> requests) {
-        if (requests == null || requests.isEmpty()) {
-            return List.of();
-        }
-        validateWorkingSchedules(requests);
-        List<WorkingSchedule> schedules = requests.stream()
-                .map(request -> WorkingSchedule.builder()
-                        .staff(staff)
-                        .dayOfWeek(request.getDayOfWeek())
-                        .startTime(request.getStartTime())
-                        .endTime(request.getEndTime())
-                        .build())
-                .toList();
-        return workingScheduleRepository.saveAll(schedules);
-    }
-
-    private List<WorkingSchedule> saveUpdateWorkingSchedules(Staff staff, List<UpdateStaffRequest.WorkingScheduleRequest> requests) {
-        if (requests == null || requests.isEmpty()) {
-            return List.of();
-        }
-        validateUpdateWorkingSchedules(requests);
-        List<WorkingSchedule> schedules = requests.stream()
-                .map(request -> WorkingSchedule.builder()
-                        .staff(staff)
-                        .dayOfWeek(request.getDayOfWeek())
-                        .startTime(request.getStartTime())
-                        .endTime(request.getEndTime())
-                        .build())
-                .toList();
-        return workingScheduleRepository.saveAll(schedules);
-    }
-
-    private void validateWorkingSchedules(List<CreateStaffRequest.WorkingScheduleRequest> requests) {
-        Set<DayOfWeek> days = new HashSet<>();
-        for (CreateStaffRequest.WorkingScheduleRequest request : requests) {
-            validateScheduleFields(request.getDayOfWeek(), request.getStartTime(), request.getEndTime(), days);
-        }
-    }
-
-    private void validateUpdateWorkingSchedules(List<UpdateStaffRequest.WorkingScheduleRequest> requests) {
-        Set<DayOfWeek> days = new HashSet<>();
-        for (UpdateStaffRequest.WorkingScheduleRequest request : requests) {
-            validateScheduleFields(request.getDayOfWeek(), request.getStartTime(), request.getEndTime(), days);
-        }
-    }
-
-    private void validateScheduleFields(java.time.DayOfWeek dayOfWeek,
-                                        java.time.LocalTime startTime,
-                                        java.time.LocalTime endTime,
-                                        Set<DayOfWeek> days) {
-        if (dayOfWeek == null || startTime == null || endTime == null) {
-            throw new AppException("Working schedule day, start time and end time are required", HttpStatus.BAD_REQUEST);
-        }
-        if (!startTime.isBefore(endTime)) {
-            throw new AppException("Working schedule start time must be before end time", HttpStatus.BAD_REQUEST);
-        }
-        if (!days.add(dayOfWeek)) {
-            throw new AppException("Working schedule day must be unique for each staff", HttpStatus.BAD_REQUEST);
-        }
     }
 }

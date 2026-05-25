@@ -8,10 +8,7 @@ import org.mapstruct.MappingConstants;
 
 import java.util.List;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING,
-        uses = {
-                WorkingScheduleMapper.class
-        })
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface StaffMapper {
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "username", source = "user.username")

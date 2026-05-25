@@ -33,5 +33,5 @@ public interface AppointmentService {
 
     AppointmentResponse noShow(Long id);
 
-    AvailableSlotResponse getAvailableSlots(Long dentistId, LocalDate date);
+    AvailableSlotResponse getAvailableSlots(Long dentistId, LocalDate date, Integer estimatedDurationMinutes);
 }

@@ -15,8 +15,6 @@
     </ng-template>
     <ng-template #header>
         <tr>
-            <th style="width: 4rem">#</th>
-            <th>Mã vai trò</th>
             <th>Tên vai trò</th>
             <th>Mô tả</th>
         </tr>
@@ -24,10 +22,6 @@
     <ng-template #body let-item let-rowIndex="rowIndex" let-expanded="expanded">
         <tr (click)="toggleRow(item)" class="role-row" [class.row-expanded]="expanded"
             [class.role-readonly]="isRoleReadonly(item)">
-            <td>{{ rowIndex + 1 }}</td>
-            <td>
-                <p-tag [value]="item.code" severity="info"/>
-            </td>
             <td>{{ item.name }}</td>
             <td>{{ item.description }}</td>
         </tr>

@@ -34,16 +34,5 @@ public class UpdateStaffRequest {
     @NotNull(message = "Staff type is required")
     StaffType staffType;
 
-    List<WorkingScheduleRequest> workingSchedules;
-
     Long version;
-
-    @Getter
-    @Setter
-    @FieldDefaults(level = AccessLevel.PRIVATE)
-    public static class WorkingScheduleRequest {
-        DayOfWeek dayOfWeek;
-        LocalTime startTime;
-        LocalTime endTime;
-    }
 }

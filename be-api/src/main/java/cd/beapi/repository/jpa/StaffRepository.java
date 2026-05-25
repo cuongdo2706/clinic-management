@@ -14,10 +14,6 @@ import java.util.Optional;
 public interface StaffRepository extends JpaRepository<Staff, Long>, QuerydslPredicateExecutor<Staff> {
     boolean existsByCode(String code);
 
-    @EntityGraph(attributePaths = "workingSchedules")
-    @Query("select s from Staff s where s.id = :id")
-    Optional<Staff> findByIdWithWorkingSchedules(@Param("id") Long id);
-
     @Query("SELECT s FROM Staff s WHERE s.staffType = :type ORDER BY s.fullName")
     List<Staff> findByStaffType(@Param("type") StaffType staffType);
 

@@ -64,6 +64,8 @@ type AppointmentAction = 'confirm' | 'checkIn' | 'start' | 'done' | 'cancel' | '
     styleUrl: './appointment.css',
 })
 export class Appointment implements OnInit {
+    private static readonly DEFAULT_TIME_OPTIONS = Appointment.generateTimeOptions();
+
     private readonly appointmentService = inject(AppointmentService);
     private readonly patientService = inject(PatientService);
     private readonly staffService = inject(StaffService);
@@ -94,6 +96,9 @@ export class Appointment implements OnInit {
         {label: 'Đã hủy', value: 'CANCELLED'},
         {label: 'Không đến', value: 'NO_SHOW'},
     ];
+
+    readonly durationOptions: SelectOption<number>[] = [15, 30, 45, 60, 75, 90, 105, 120]
+        .map(minutes => ({label: this.formatDurationLabel(minutes), value: minutes}));
 
     formData: CreateAppointmentRequest & { version: number | null } = this.emptyForm();
 
@@ -127,7 +132,7 @@ export class Appointment implements OnInit {
         this.formData = this.emptyForm();
         this.appointmentDate = null;
         this.appointmentTime = '';
-        this.slotOptions.set([]);
+        this.slotOptions.set(Appointment.DEFAULT_TIME_OPTIONS);
         this.selectedId = null;
         this.isEdit.set(false);
         this.dialogVisible.set(true);
@@ -139,6 +144,7 @@ export class Appointment implements OnInit {
             patientId: appointment.patientId,
             dentistId: appointment.dentistId,
             appointmentDate: appointment.appointmentDate,
+            estimatedDurationMinutes: appointment.estimatedDurationMinutes ?? 30,
             symptom: appointment.symptom ?? '',
             note: appointment.note ?? '',
             version: appointment.version,
@@ -153,11 +159,11 @@ export class Appointment implements OnInit {
 
     save() {
         const appointmentDate = this.toDateTimeString(this.appointmentDate, this.appointmentTime);
-        if (!this.formData.patientId || !appointmentDate) {
+        if (!this.formData.patientId || !appointmentDate || !this.formData.estimatedDurationMinutes) {
             this.messageService.add({
                 severity: 'warn',
                 summary: 'Thiếu thông tin',
-                detail: 'Vui lòng chọn bệnh nhân, ngày hẹn và giờ hẹn'
+                detail: 'Vui lòng chọn bệnh nhân, ngày hẹn, giờ hẹn và thời gian dự kiến'
             });
             return;
         }
@@ -168,6 +174,7 @@ export class Appointment implements OnInit {
                 patientId: this.formData.patientId,
                 dentistId: this.formData.dentistId,
                 appointmentDate,
+                estimatedDurationMinutes: this.formData.estimatedDurationMinutes,
                 symptom: this.formData.symptom,
                 note: this.formData.note,
                 version: this.formData.version,
@@ -183,6 +190,7 @@ export class Appointment implements OnInit {
             patientId: this.formData.patientId,
             dentistId: this.formData.dentistId,
             appointmentDate,
+            estimatedDurationMinutes: this.formData.estimatedDurationMinutes,
             symptom: this.formData.symptom,
             note: this.formData.note,
         };
@@ -200,12 +208,13 @@ export class Appointment implements OnInit {
     loadAvailableSlots() {
         const date = this.toDateString(this.appointmentDate);
         const dentistId = this.formData.dentistId;
-        this.slotOptions.set([]);
-        if (!date || !dentistId) {
+        const estimatedDurationMinutes = this.formData.estimatedDurationMinutes;
+        this.slotOptions.set(Appointment.DEFAULT_TIME_OPTIONS);
+        if (!date || !dentistId || !estimatedDurationMinutes) {
             return;
         }
 
-        this.appointmentService.getAvailableSlots(dentistId, date).subscribe({
+        this.appointmentService.getAvailableSlots(dentistId, date, estimatedDurationMinutes).subscribe({
             next: (res) => {
                 const slots = [...(res.data?.slots ?? [])];
                 if (this.isEdit() && this.appointmentTime && !slots.includes(this.appointmentTime)) {
@@ -216,7 +225,7 @@ export class Appointment implements OnInit {
                     this.appointmentTime = '';
                 }
             },
-            error: () => this.slotOptions.set([]),
+            error: () => this.slotOptions.set(Appointment.DEFAULT_TIME_OPTIONS),
         });
     }
 
@@ -319,22 +328,10 @@ export class Appointment implements OnInit {
     }
 
     getTimePlaceholder(): string {
-        if (!this.appointmentDate) {
-            return 'Chọn ngày';
-        }
-        if (!this.formData.dentistId) {
-            return 'Chọn nha sĩ';
-        }
         return 'Chọn giờ';
     }
 
     getTimeEmptyMessage(): string {
-        if (!this.appointmentDate) {
-            return 'Vui lòng chọn ngày hẹn';
-        }
-        if (!this.formData.dentistId) {
-            return 'Vui lòng chọn nha sĩ';
-        }
         return 'Không có giờ trống';
     }
 
@@ -386,6 +383,7 @@ export class Appointment implements OnInit {
             patientId: null,
             dentistId: null,
             appointmentDate: '',
+            estimatedDurationMinutes: 30,
             symptom: '',
             note: '',
             version: null,
@@ -506,6 +504,28 @@ export class Appointment implements OnInit {
 
     private toTimeString(date: Date): string {
         return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    }
+
+    private formatDurationLabel(minutes: number): string {
+        if (minutes <= 60) {
+            return `${minutes} phút`;
+        }
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        return remainingMinutes === 0
+            ? `${hours} giờ`
+            : `${hours} giờ ${remainingMinutes} phút`;
+    }
+
+    private static generateTimeOptions(): SelectOption<string>[] {
+        const options: SelectOption<string>[] = [];
+        for (let hour = 8; hour < 17; hour++) {
+            for (const minute of [0, 15, 30, 45]) {
+                const value = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                options.push({label: value, value});
+            }
+        }
+        return options;
     }
 }
 

@@ -64,10 +64,11 @@ export class AppointmentService {
         return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/no-show`, {});
     }
 
-    getAvailableSlots(dentistId: number, date: string): Observable<SuccessResponse<AvailableSlotResponse>> {
+    getAvailableSlots(dentistId: number, date: string, estimatedDurationMinutes: number): Observable<SuccessResponse<AvailableSlotResponse>> {
         const params = new HttpParams()
             .set('dentistId', dentistId)
-            .set('date', date);
+            .set('date', date)
+            .set('estimatedDurationMinutes', estimatedDurationMinutes);
         return this.http.get<SuccessResponse<AvailableSlotResponse>>(`${this.url}/available-slots`, {params});
     }
 }

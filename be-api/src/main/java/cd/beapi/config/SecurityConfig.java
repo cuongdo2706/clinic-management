@@ -5,6 +5,7 @@ import cd.beapi.security.exception.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -18,10 +19,13 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+
 public class SecurityConfig {
     private final JwtDecoder jwtDecoder;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
@@ -29,6 +33,19 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CorsConfig corsConfig;
 
+    private record EndpointRule(HttpMethod method, String matcher) {}
+    private record SecurityRule(String authority, List<EndpointRule> endpoints) {}
+    private static final List<SecurityRule> SECURITY_RULES = List.of(
+            new SecurityRule("USERS:READ", List.of(
+                    new EndpointRule(HttpMethod.POST, "/api/users/search"),
+                    new EndpointRule(HttpMethod.GET, "/api/users/{id}")
+            )),
+            new SecurityRule("USERS:WRITE", List.of(
+                    new EndpointRule(HttpMethod.POST, "/api/users"),
+                    new EndpointRule(HttpMethod.PUT, "/api/users/{id}")
+            ))
+    );
+    
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
         http
@@ -60,3 +77,4 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 }
+

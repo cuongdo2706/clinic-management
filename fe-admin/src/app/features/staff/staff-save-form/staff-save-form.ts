@@ -4,33 +4,21 @@ import {InputText} from "primeng/inputtext";
 import {Card} from "primeng/card";
 import {DatePicker} from "primeng/datepicker";
 import {Select} from "primeng/select";
-import {FormBuilder, FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {FormBuilder, ReactiveFormsModule} from "@angular/forms";
 import {MessageService} from "primeng/api";
 import {Checkbox} from "primeng/checkbox";
 import {StaffService} from "../../../core/service/staff.service";
-import {CreateStaffRequest, WorkingScheduleRequest} from "../../../core/model/request/create-staff-request";
+import {CreateStaffRequest} from "../../../core/model/request/create-staff-request";
 import {RoleService} from "../../../core/service/role.service";
 import {RoleResponse} from "../../../core/model/response/role-response";
 
-interface ScheduleRow {
-    dayOfWeek: string;
-    label: string;
-    isWorking: boolean;
-    startTime: string;
-    endTime: string;
-}
-
 @Component({
     selector: 'app-staff-save-form',
-    imports: [Button, InputText, Card, DatePicker, Select, Checkbox, FormsModule, ReactiveFormsModule],
+    imports: [Button, InputText, Card, DatePicker, Select, Checkbox, ReactiveFormsModule],
     templateUrl: './staff-save-form.html',
     styleUrl: './staff-save-form.css',
 })
 export class StaffSaveForm implements OnInit, OnDestroy {
-    readonly minWorkingTime = '07:00';
-    readonly maxWorkingTime = '20:00';
-    readonly workingTimeOptions = this.createWorkingTimeOptions();
-
     private readonly staffService = inject(StaffService);
     private readonly roleService = inject(RoleService);
     private readonly messageService = inject(MessageService);
@@ -44,7 +32,6 @@ export class StaffSaveForm implements OnInit, OnDestroy {
     errors = signal<Record<string, string>>({});
     selectedFile = signal<File | null>(null);
     previewUrl = signal<string | null>(null);
-    schedules = signal<ScheduleRow[]>([]);
     roleLoading = signal(false);
     roleOptions = signal<{ label: string; value: string }[]>([]);
 
@@ -61,18 +48,8 @@ export class StaffSaveForm implements OnInit, OnDestroy {
     ];
 
     activeOptions = [
-        {label: 'Hoạt động', value: true},
-        {label: 'Đã ẩn', value: false},
-    ];
-
-    readonly dayOptions = [
-        {label: 'Thứ 2', value: 'MONDAY'},
-        {label: 'Thứ 3', value: 'TUESDAY'},
-        {label: 'Thứ 4', value: 'WEDNESDAY'},
-        {label: 'Thứ 5', value: 'THURSDAY'},
-        {label: 'Thứ 6', value: 'FRIDAY'},
-        {label: 'Thứ 7', value: 'SATURDAY'},
-        {label: 'Chủ nhật', value: 'SUNDAY'},
+        {label: 'Đang làm việc', value: true},
+        {label: 'Đã nghỉ', value: false},
     ];
 
     saveForm = this.fb.group({
@@ -90,7 +67,6 @@ export class StaffSaveForm implements OnInit, OnDestroy {
     });
 
     ngOnInit(): void {
-        this.schedules.set(this.createDefaultSchedules());
         if (this.saveForm.controls.createUser.value) {
             this.loadRoles();
         }
@@ -104,16 +80,6 @@ export class StaffSaveForm implements OnInit, OnDestroy {
         const errs = {...this.errors()};
         delete errs[key];
         this.errors.set(errs);
-    }
-
-    toggleSchedule(dayOfWeek: string, isWorking: boolean): void {
-        this.schedules.update(rows => rows.map(row => row.dayOfWeek === dayOfWeek ? {...row, isWorking} : row));
-        this.clearError('workingSchedules');
-    }
-
-    updateScheduleTime(dayOfWeek: string, field: 'startTime' | 'endTime', value: string): void {
-        this.schedules.update(rows => rows.map(row => row.dayOfWeek === dayOfWeek ? {...row, [field]: value} : row));
-        this.clearError('workingSchedules');
     }
 
     onCreateUserChange(checked: boolean): void {
@@ -151,20 +117,6 @@ export class StaffSaveForm implements OnInit, OnDestroy {
         if (!val.staffType) errs['staffType'] = 'Vui lòng chọn chức vụ';
         if (val.createUser && !val.roleCode) errs['roleCode'] = 'Vui lòng chọn vai trò';
 
-        const schedules = this.buildWorkingSchedules();
-        const hasMissingTime = this.schedules().some(row => row.isWorking && (!row.startTime || !row.endTime));
-        const outOfWorkingRange = schedules.some(row =>
-            row.startTime < this.minWorkingTime ||
-            row.startTime > this.maxWorkingTime ||
-            row.endTime < this.minWorkingTime ||
-            row.endTime > this.maxWorkingTime
-        );
-        const invalidTime = schedules.some(row => row.startTime >= row.endTime);
-
-        if (hasMissingTime) errs['workingSchedules'] = 'Vui lòng nhập đủ giờ bắt đầu và giờ kết thúc cho ngày làm việc';
-        else if (outOfWorkingRange) errs['workingSchedules'] = 'Thời gian làm việc chỉ được chọn từ 07:00 đến 20:00';
-        else if (invalidTime) errs['workingSchedules'] = 'Giờ bắt đầu phải nhỏ hơn giờ kết thúc';
-
         this.errors.set(errs);
         return Object.keys(errs).length === 0;
     }
@@ -184,7 +136,6 @@ export class StaffSaveForm implements OnInit, OnDestroy {
             staffType: val.staffType!,
             isActive: val.isActive,
             roleCode: val.createUser ? val.roleCode : null,
-            workingSchedules: this.buildWorkingSchedules(),
         };
 
         this.loading.set(true);
@@ -199,35 +150,6 @@ export class StaffSaveForm implements OnInit, OnDestroy {
                 this.messageService.add({severity: 'error', summary: 'Lỗi', detail: 'Không thể thêm nhân viên, vui lòng thử lại'});
             }
         });
-    }
-
-    private buildWorkingSchedules(): WorkingScheduleRequest[] {
-        return this.schedules()
-            .filter(row => row.isWorking && row.startTime && row.endTime)
-            .map(row => ({
-                dayOfWeek: row.dayOfWeek,
-                startTime: row.startTime,
-                endTime: row.endTime,
-            }));
-    }
-
-    private createDefaultSchedules(): ScheduleRow[] {
-        return this.dayOptions.map(day => ({
-            dayOfWeek: day.value,
-            label: day.label,
-            isWorking: true,
-            startTime: '08:00',
-            endTime: '17:00',
-        }));
-    }
-
-    private createWorkingTimeOptions(): { label: string; value: string }[] {
-        const options: { label: string; value: string }[] = [];
-        for (let hour = 7; hour <= 20; hour++) {
-            const value = `${hour}`.padStart(2, '0') + ':00';
-            options.push({label: value, value});
-        }
-        return options;
     }
 
     private loadRoles(): void {

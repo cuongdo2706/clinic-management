@@ -90,7 +90,7 @@
                               (onClick)="openEditDialog(staff)"/>
                     <p-button [icon]="staff.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'" [rounded]="true" [text]="true"
                               [severity]="staff.isActive ? 'danger' : 'success'"
-                              [pTooltip]="staff.isActive ? 'Ẩn nhân viên' : 'Hiện lại nhân viên'" tooltipPosition="top"
+                              [pTooltip]="staff.isActive ? 'Chuyển sang đã nghỉ' : 'Chuyển sang đang làm việc'" tooltipPosition="top"
                               (onClick)="confirmUpdateStatus(staff)"/>
                 </td>
             </tr>
@@ -154,20 +154,6 @@
                                     <span class="detail-label"><i class="pi pi-clock"></i> Ngày tạo</span>
                                     <span class="detail-value">{{ staff.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
                                 </div>
-                            </div>
-                            <div class="detail-divider"></div>
-                            <div class="detail-group schedule-group">
-                                <div class="detail-group-title">Lịch làm việc</div>
-                                @if (staff.workingSchedules?.length) {
-                                    @for (schedule of staff.workingSchedules; track schedule.id) {
-                                        <div class="schedule-chip">
-                                            <span>{{ getDayLabel(schedule.dayOfWeek) }}</span>
-                                            <strong>{{ formatTime(schedule.startTime) }} - {{ formatTime(schedule.endTime) }}</strong>
-                                        </div>
-                                    }
-                                } @else {
-                                    <div class="empty-detail">Chưa có lịch làm việc</div>
-                                }
                             </div>
                         </div>
                     </div>

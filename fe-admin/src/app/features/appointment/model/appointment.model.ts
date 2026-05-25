@@ -13,6 +13,7 @@ export interface AppointmentResponse {
     id: number;
     code: string;
     appointmentDate: string;
+    estimatedDurationMinutes: number;
     createdAt: string;
     modifiedAt: string;
     symptom: string | null;
@@ -37,6 +38,7 @@ export interface CreateAppointmentRequest {
     patientId: number | null;
     dentistId: number | null;
     appointmentDate: string;
+    estimatedDurationMinutes: number | null;
     symptom: string;
     note: string;
 }

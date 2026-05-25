@@ -47,7 +47,7 @@
 
 .date-time-grid {
     display: grid;
-    grid-template-columns: 1fr 160px;
+    grid-template-columns: 1fr 180px 160px;
     gap: 16px;
 }
 

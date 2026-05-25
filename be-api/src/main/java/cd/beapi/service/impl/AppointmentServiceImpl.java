@@ -11,21 +11,16 @@ import cd.beapi.entity.Appointment;
 import cd.beapi.entity.Patient;
 import cd.beapi.entity.QAppointment;
 import cd.beapi.entity.Staff;
-import cd.beapi.entity.WorkingSchedule;
-import cd.beapi.enumerate.AppointmentSortOption;
 import cd.beapi.enumerate.AppointmentStatus;
 import cd.beapi.enumerate.StaffType;
 import cd.beapi.exception.AppException;
-import cd.beapi.mapper.AppointmentMapper;
 import cd.beapi.repository.jpa.AppointmentRepository;
 import cd.beapi.repository.jpa.PatientRepository;
 import cd.beapi.repository.jpa.StaffRepository;
 import cd.beapi.service.AppointmentService;
 import cd.beapi.service.QueueService;
 import cd.beapi.service.SequenceService;
-import cd.beapi.utility.StringUtil;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.dsl.Expressions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,18 +31,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class AppointmentServiceImpl implements AppointmentService {
-    private static final int SLOT_MINUTES = 30;
+    private static final int SLOT_MINUTES = 15;
+    private static final int DEFAULT_DURATION_MINUTES = 30;
     private static final LocalTime DEFAULT_WORK_START = LocalTime.of(8, 0);
     private static final LocalTime DEFAULT_WORK_END = LocalTime.of(17, 0);
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
     private static final List<AppointmentStatus> IGNORED_CONFLICT_STATUSES = List.of(
             AppointmentStatus.CANCELLED,
             AppointmentStatus.NO_SHOW
@@ -56,72 +55,67 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final PatientRepository patientRepository;
     private final StaffRepository staffRepository;
-    private final AppointmentMapper appointmentMapper;
     private final SequenceService sequenceService;
     private final QueueService queueService;
 
     @Transactional(readOnly = true)
     @Override
     public AppointmentResponse findById(Long id) {
-        return appointmentMapper.toAppointmentResponse(findAppointment(id));
+        return toResponse(findAppointment(id));
     }
 
     @Transactional(readOnly = true)
     @Override
     public PageData<AppointmentResponse> search(SearchAppointmentRequest request) {
-        QAppointment a = QAppointment.appointment;
+        QAppointment appointment = QAppointment.appointment;
         BooleanBuilder whereClause = new BooleanBuilder();
 
         if (StringUtils.hasText(request.getKeyword())) {
-            String keyword = "%" + StringUtil.normalizeKeyword(request.getKeyword()) + "%";
-            String rawKeyword = "%" + request.getKeyword() + "%";
+            String keyword = request.getKeyword().trim();
             whereClause.and(
-                    Expressions.stringTemplate("cast(ai_ci({0}) as string)", a.code).like(keyword)
-                            .or(Expressions.stringTemplate("cast(ai_ci({0}) as string)", a.patient.fullName).like(keyword))
-                            .or(Expressions.stringTemplate("cast(ai_ci({0}) as string)", a.dentist.fullName).like(keyword))
-                            .or(a.patient.phone.like(rawKeyword))
-                            .or(a.patient.guardianPhone.like(rawKeyword))
+                    appointment.code.containsIgnoreCase(keyword)
+                            .or(appointment.patient.fullName.containsIgnoreCase(keyword))
+                            .or(appointment.patient.phone.containsIgnoreCase(keyword))
+                            .or(appointment.patient.guardianPhone.containsIgnoreCase(keyword))
+                            .or(appointment.dentist.fullName.containsIgnoreCase(keyword))
             );
         }
         if (StringUtils.hasText(request.getCodeKeyword())) {
-            whereClause.and(
-                    Expressions.stringTemplate("cast(ai_ci({0}) as string)", a.code)
-                            .like("%" + StringUtil.normalizeKeyword(request.getCodeKeyword()) + "%")
-            );
+            whereClause.and(appointment.code.containsIgnoreCase(request.getCodeKeyword().trim()));
         }
         if (StringUtils.hasText(request.getPatientKeyword())) {
-            String keyword = "%" + StringUtil.normalizeKeyword(request.getPatientKeyword()) + "%";
-            String rawKeyword = "%" + request.getPatientKeyword() + "%";
+            String keyword = request.getPatientKeyword().trim();
             whereClause.and(
-                    Expressions.stringTemplate("cast(ai_ci({0}) as string)", a.patient.fullName).like(keyword)
-                            .or(a.patient.phone.like(rawKeyword))
-                            .or(a.patient.guardianPhone.like(rawKeyword))
+                    appointment.patient.fullName.containsIgnoreCase(keyword)
+                            .or(appointment.patient.phone.containsIgnoreCase(keyword))
+                            .or(appointment.patient.guardianPhone.containsIgnoreCase(keyword))
             );
         }
         if (StringUtils.hasText(request.getDentistKeyword())) {
-            whereClause.and(
-                    Expressions.stringTemplate("cast(ai_ci({0}) as string)", a.dentist.fullName)
-                            .like("%" + StringUtil.normalizeKeyword(request.getDentistKeyword()) + "%")
-            );
+            whereClause.and(appointment.dentist.fullName.containsIgnoreCase(request.getDentistKeyword().trim()));
         }
         if (request.getStatus() != null) {
-            whereClause.and(a.status.eq(request.getStatus()));
+            whereClause.and(appointment.status.eq(request.getStatus()));
         }
         if (request.getDateFrom() != null) {
-            whereClause.and(a.appointmentDate.goe(request.getDateFrom().atStartOfDay()));
+            whereClause.and(appointment.appointmentDate.goe(request.getDateFrom().atStartOfDay()));
         }
         if (request.getDateTo() != null) {
-            whereClause.and(a.appointmentDate.lt(request.getDateTo().plusDays(1).atStartOfDay()));
+            whereClause.and(appointment.appointmentDate.lt(request.getDateTo().plusDays(1).atStartOfDay()));
         }
 
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), resolveSort(request.getSortBy()));
-        Page<Appointment> pages = appointmentRepository.findAll(whereClause, pageable);
+        Pageable pageable = PageRequest.of(
+                request.getPage() == null ? 0 : request.getPage(),
+                request.getSize() == null ? 10 : request.getSize(),
+                resolveSort(request.getSortBy())
+        );
+        Page<Appointment> page = appointmentRepository.findAll(whereClause, pageable);
         return new PageData<>(
-                appointmentMapper.toAppointmentResponses(pages.getContent()),
-                pages.getNumber(),
-                pages.getSize(),
-                pages.getTotalElements(),
-                pages.getTotalPages()
+                page.getContent().stream().map(this::toResponse).toList(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
         );
     }
 
@@ -130,21 +124,21 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse save(CreateAppointmentRequest request) {
         Patient patient = findPatient(request.getPatientId());
         Staff dentist = request.getDentistId() == null ? null : findDentist(request.getDentistId());
-        if (dentist != null) {
-            validateDentistAvailable(dentist, request.getAppointmentDate(), null);
-        }
+        validateAppointmentTiming(request.getAppointmentDate(), request.getEstimatedDurationMinutes());
+        validateDentistAvailable(dentist, request.getAppointmentDate(), request.getEstimatedDurationMinutes(), null);
 
         Appointment appointment = Appointment.builder()
                 .code(sequenceService.generateAppointmentCode())
                 .patient(patient)
                 .dentist(dentist)
                 .appointmentDate(request.getAppointmentDate())
+                .estimatedDurationMinutes(request.getEstimatedDurationMinutes())
                 .symptom(request.getSymptom())
                 .note(request.getNote())
                 .status(AppointmentStatus.CONFIRMED)
                 .build();
 
-        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
+        return toResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -155,20 +149,20 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Patient patient = findPatient(request.getPatientId());
         Staff dentist = request.getDentistId() == null ? null : findDentist(request.getDentistId());
-        if (dentist != null) {
-            validateDentistAvailable(dentist, request.getAppointmentDate(), id);
-        }
+        validateAppointmentTiming(request.getAppointmentDate(), request.getEstimatedDurationMinutes());
+        validateDentistAvailable(dentist, request.getAppointmentDate(), request.getEstimatedDurationMinutes(), id);
 
         appointment.setPatient(patient);
         appointment.setDentist(dentist);
         appointment.setAppointmentDate(request.getAppointmentDate());
+        appointment.setEstimatedDurationMinutes(request.getEstimatedDurationMinutes());
         appointment.setSymptom(request.getSymptom());
         appointment.setNote(request.getNote());
         if (request.getVersion() != null) {
             appointment.setVersion(request.getVersion());
         }
 
-        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
+        return toResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -184,11 +178,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse confirm(Long id) {
         Appointment appointment = findAppointment(id);
         requireStatus(appointment, AppointmentStatus.PENDING);
-        if (appointment.getDentist() != null) {
-            validateDentistAvailable(appointment.getDentist(), appointment.getAppointmentDate(), id);
-        }
+        validateDentistAvailable(
+                appointment.getDentist(),
+                appointment.getAppointmentDate(),
+                durationOf(appointment),
+                id
+        );
         appointment.setStatus(AppointmentStatus.CONFIRMED);
-        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
+        return toResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -199,7 +196,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         if (request != null && request.getDentistId() != null) {
             Staff dentist = findDentist(request.getDentistId());
-            validateDentistAvailable(dentist, appointment.getAppointmentDate(), id);
+            validateDentistAvailable(dentist, appointment.getAppointmentDate(), durationOf(appointment), id);
             appointment.setDentist(dentist);
         }
         if (request != null && request.getReceptionistId() != null) {
@@ -212,7 +209,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
         appointment.setSnapshotPatientName(appointment.getPatient().getFullName());
         appointment.setSnapshotPatientPhone(preferredPhone(appointment.getPatient()));
-        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
+        return toResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -224,7 +221,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new AppException("Dentist is required before starting appointment", HttpStatus.BAD_REQUEST);
         }
         appointment.setStatus(AppointmentStatus.IN_PROGRESS);
-        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
+        return toResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -233,7 +230,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = findAppointment(id);
         requireStatus(appointment, AppointmentStatus.IN_PROGRESS);
         appointment.setStatus(AppointmentStatus.DONE);
-        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
+        return toResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -242,7 +239,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = findAppointment(id);
         ensureNotFinal(appointment);
         appointment.setStatus(AppointmentStatus.CANCELLED);
-        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
+        return toResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -251,38 +248,37 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = findAppointment(id);
         requireStatus(appointment, AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED);
         appointment.setStatus(AppointmentStatus.NO_SHOW);
-        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
+        return toResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional(readOnly = true)
     @Override
-    public AvailableSlotResponse getAvailableSlots(Long dentistId, LocalDate date) {
-        Staff dentist = findDentist(dentistId);
-        WorkingSchedule schedule = findScheduleForDate(dentist, date);
-        if (schedule == null && hasConfiguredSchedules(dentist)) {
-            return new AvailableSlotResponse(dentistId, date, List.of());
-        }
-        if (schedule == null && date.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) {
+    public AvailableSlotResponse getAvailableSlots(Long dentistId, LocalDate date, Integer estimatedDurationMinutes) {
+        findDentist(dentistId);
+        validateDuration(estimatedDurationMinutes);
+        if (date == null || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
             return new AvailableSlotResponse(dentistId, date, List.of());
         }
 
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
-        Set<LocalTime> bookedTimes = appointmentRepository.findActiveByDentistAndDateRange(
-                        dentistId,
-                        startOfDay,
-                        endOfDay,
-                        IGNORED_CONFLICT_STATUSES
-                ).stream()
-                .map(appointment -> appointment.getAppointmentDate().toLocalTime())
-                .collect(java.util.stream.Collectors.toSet());
+        List<Appointment> bookedAppointments = appointmentRepository.findActiveByDentistAndDateRange(
+                dentistId,
+                startOfDay,
+                endOfDay,
+                IGNORED_CONFLICT_STATUSES
+        );
 
-        LocalTime startTime = schedule == null ? DEFAULT_WORK_START : schedule.getStartTime();
-        LocalTime endTime = schedule == null ? DEFAULT_WORK_END : schedule.getEndTime();
-        List<String> slots = scheduleSlots(startTime, endTime).stream()
-                .filter(slot -> !bookedTimes.contains(slot))
-                .map(slot -> slot.toString().substring(0, 5))
-                .toList();
+        List<String> slots = new ArrayList<>();
+        LocalTime cursor = DEFAULT_WORK_START;
+        while (!cursor.plusMinutes(estimatedDurationMinutes).isAfter(DEFAULT_WORK_END)) {
+            LocalDateTime slotStart = LocalDateTime.of(date, cursor);
+            LocalDateTime slotEnd = slotStart.plusMinutes(estimatedDurationMinutes);
+            if (bookedAppointments.stream().noneMatch(booked -> overlaps(slotStart, slotEnd, booked))) {
+                slots.add(cursor.format(TIME_FORMATTER));
+            }
+            cursor = cursor.plusMinutes(SLOT_MINUTES);
+        }
         return new AvailableSlotResponse(dentistId, date, slots);
     }
 
@@ -299,7 +295,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     private Staff findDentist(Long id) {
-        Staff dentist = staffRepository.findByIdWithWorkingSchedules(id).orElseThrow(
+        Staff dentist = staffRepository.findById(id).orElseThrow(
                 () -> new AppException("Cannot find dentist with id: " + id, HttpStatus.BAD_REQUEST)
         );
         if (dentist.getStaffType() != StaffType.DENTIST || !Boolean.TRUE.equals(dentist.getIsActive())) {
@@ -313,69 +309,70 @@ public class AppointmentServiceImpl implements AppointmentService {
                 () -> new AppException("Cannot find receptionist with id: " + id, HttpStatus.BAD_REQUEST)
         );
         if (!Boolean.TRUE.equals(staff.getIsActive())
-            || (staff.getStaffType() != StaffType.RECEPTIONIST && staff.getStaffType() != StaffType.MANAGER)) {
+                || (staff.getStaffType() != StaffType.RECEPTIONIST && staff.getStaffType() != StaffType.MANAGER)) {
             throw new AppException("Selected staff is not an active receptionist", HttpStatus.BAD_REQUEST);
         }
         return staff;
     }
 
-    private void validateDentistAvailable(Staff dentist, LocalDateTime appointmentDate, Long excludeId) {
+    private void validateAppointmentTiming(LocalDateTime appointmentDate, Integer estimatedDurationMinutes) {
         if (appointmentDate == null) {
             throw new AppException("Appointment date is required", HttpStatus.BAD_REQUEST);
         }
-        boolean withinSchedule = isDentistWorkingAt(dentist, appointmentDate);
-        if (!withinSchedule) {
-            throw new AppException("Dentist is not working at selected time", HttpStatus.BAD_REQUEST);
+        validateDuration(estimatedDurationMinutes);
+        LocalTime time = appointmentDate.toLocalTime();
+        if (time.getMinute() % SLOT_MINUTES != 0 || time.getSecond() != 0 || time.getNano() != 0) {
+            throw new AppException("Appointment time minute must be 00, 15, 30 or 45", HttpStatus.BAD_REQUEST);
         }
-        long conflicts = appointmentRepository.countActiveAtDateTime(
-                dentist.getId(),
-                appointmentDate,
-                excludeId,
-                IGNORED_CONFLICT_STATUSES
-        );
-        if (conflicts > 0) {
+        if (appointmentDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            throw new AppException("Appointments cannot be scheduled on Sunday", HttpStatus.BAD_REQUEST);
+        }
+        if (time.isBefore(DEFAULT_WORK_START) || time.plusMinutes(estimatedDurationMinutes).isAfter(DEFAULT_WORK_END)) {
+            throw new AppException("Appointment time is outside working hours", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void validateDuration(Integer estimatedDurationMinutes) {
+        if (estimatedDurationMinutes == null || estimatedDurationMinutes <= 0 || estimatedDurationMinutes % SLOT_MINUTES != 0) {
+            throw new AppException("Estimated duration must be a positive multiple of 15 minutes", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void validateDentistAvailable(Staff dentist,
+                                          LocalDateTime appointmentDate,
+                                          Integer estimatedDurationMinutes,
+                                          Long excludeId) {
+        if (dentist == null) {
+            return;
+        }
+        LocalDate date = appointmentDate.toLocalDate();
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+        LocalDateTime start = appointmentDate;
+        LocalDateTime end = appointmentDate.plusMinutes(estimatedDurationMinutes);
+        boolean hasConflict = appointmentRepository.findActiveByDentistAndDateRange(
+                        dentist.getId(),
+                        startOfDay,
+                        endOfDay,
+                        IGNORED_CONFLICT_STATUSES
+                ).stream()
+                .filter(existing -> excludeId == null || !existing.getId().equals(excludeId))
+                .anyMatch(existing -> overlaps(start, end, existing));
+        if (hasConflict) {
             throw new AppException("Dentist already has an appointment at selected time", HttpStatus.CONFLICT);
         }
     }
 
-    private boolean isWithinSchedule(LocalTime time, WorkingSchedule schedule) {
-        return !time.isBefore(schedule.getStartTime()) && time.isBefore(schedule.getEndTime());
+    private boolean overlaps(LocalDateTime start, LocalDateTime end, Appointment existing) {
+        LocalDateTime existingStart = existing.getAppointmentDate();
+        LocalDateTime existingEnd = existingStart.plusMinutes(durationOf(existing));
+        return start.isBefore(existingEnd) && existingStart.isBefore(end);
     }
 
-    private boolean isDentistWorkingAt(Staff dentist, LocalDateTime appointmentDate) {
-        WorkingSchedule schedule = findScheduleForDate(dentist, appointmentDate.toLocalDate());
-        if (schedule != null) {
-            return isWithinSchedule(appointmentDate.toLocalTime(), schedule);
-        }
-        if (hasConfiguredSchedules(dentist) || appointmentDate.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) {
-            return false;
-        }
-        LocalTime time = appointmentDate.toLocalTime();
-        return !time.isBefore(DEFAULT_WORK_START) && time.isBefore(DEFAULT_WORK_END);
-    }
-
-    private WorkingSchedule findScheduleForDate(Staff dentist, LocalDate date) {
-        if (!hasConfiguredSchedules(dentist)) {
-            return null;
-        }
-        return dentist.getWorkingSchedules().stream()
-                .filter(item -> item.getDayOfWeek() == date.getDayOfWeek())
-                .findFirst()
-                .orElse(null);
-    }
-
-    private boolean hasConfiguredSchedules(Staff dentist) {
-        return dentist.getWorkingSchedules() != null && !dentist.getWorkingSchedules().isEmpty();
-    }
-
-    private List<LocalTime> scheduleSlots(LocalTime startTime, LocalTime endTime) {
-        java.util.ArrayList<LocalTime> slots = new java.util.ArrayList<>();
-        LocalTime cursor = startTime;
-        while (cursor.isBefore(endTime)) {
-            slots.add(cursor);
-            cursor = cursor.plusMinutes(SLOT_MINUTES);
-        }
-        return slots;
+    private int durationOf(Appointment appointment) {
+        return appointment.getEstimatedDurationMinutes() == null
+                ? DEFAULT_DURATION_MINUTES
+                : appointment.getEstimatedDurationMinutes();
     }
 
     private void requireStatus(Appointment appointment, AppointmentStatus... allowedStatuses) {
@@ -401,12 +398,45 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     private Sort resolveSort(AppointmentSortOption sortBy) {
+        if (sortBy == null) {
+            return Sort.by("appointmentDate").descending();
+        }
         return switch (sortBy) {
-            case null -> Sort.by("appointmentDate").descending();
             case APPOINTMENT_DATE -> Sort.by("appointmentDate");
             case APPOINTMENT_DATE_DESC -> Sort.by("appointmentDate").descending();
             case CREATED_AT -> Sort.by("createdAt");
             case CREATED_AT_DESC -> Sort.by("createdAt").descending();
         };
+    }
+
+    private AppointmentResponse toResponse(Appointment appointment) {
+        Patient patient = appointment.getPatient();
+        Staff dentist = appointment.getDentist();
+        Staff receptionist = appointment.getReceptionist();
+
+        return new AppointmentResponse(
+                appointment.getId(),
+                appointment.getCode(),
+                appointment.getAppointmentDate(),
+                durationOf(appointment),
+                appointment.getCreatedAt(),
+                appointment.getModifiedAt(),
+                appointment.getSymptom(),
+                appointment.getNote(),
+                appointment.getStatus(),
+                appointment.getQueueNumber(),
+                appointment.getVersion(),
+                patient == null ? null : patient.getId(),
+                patient == null ? null : patient.getCode(),
+                patient == null ? null : patient.getFullName(),
+                patient == null ? null : preferredPhone(patient),
+                dentist == null ? null : dentist.getId(),
+                dentist == null ? null : dentist.getCode(),
+                dentist == null ? null : dentist.getFullName(),
+                receptionist == null ? null : receptionist.getId(),
+                receptionist == null ? null : receptionist.getFullName(),
+                appointment.getSnapshotPatientName(),
+                appointment.getSnapshotPatientPhone()
+        );
     }
 }

@@ -9,11 +9,4 @@ export interface CreateStaffRequest {
     staffType: string;
     isActive: boolean;
     roleCode: string | null;
-    workingSchedules: WorkingScheduleRequest[];
-}
-
-export interface WorkingScheduleRequest {
-    dayOfWeek: string;
-    startTime: string;
-    endTime: string;
 }

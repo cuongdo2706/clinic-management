@@ -31,6 +31,8 @@ public class Appointment extends BaseEntity {
 
     LocalDateTime appointmentDate;
 
+    Integer estimatedDurationMinutes;
+
     @Column(columnDefinition = "TEXT")
     String symptom;
 

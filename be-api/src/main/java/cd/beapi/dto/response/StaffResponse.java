@@ -4,7 +4,6 @@ import cd.beapi.enumerate.StaffType;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.List;
 
 public record StaffResponse(
         Long id,
@@ -18,7 +17,6 @@ public record StaffResponse(
         String avatarUrl,
         StaffType staffType,
         Boolean isActive,
-        List<WorkingScheduleResponse> workingSchedules,
         Long version,
         Instant createdAt,
         Instant modifiedAt,
