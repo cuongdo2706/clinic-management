@@ -43,7 +43,6 @@
             <th>Nha sĩ</th>
             <th>Ngày giờ</th>
             <th>Dự kiến</th>
-            <th>STT</th>
             <th>Trạng thái</th>
             <th>Lý do khám</th>
             <th style="width: 240px">Thao tác</th>
@@ -61,60 +60,35 @@
             <td>{{ appt.dentistName || 'Chưa phân nha sĩ' }}</td>
             <td>{{ appt.appointmentDate | date: 'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ appt.estimatedDurationMinutes }} phút</td>
-            <td>{{ appt.queueNumber || '—' }}</td>
             <td>
-                <p-tag [value]="getStatusLabel(appt.status)" [severity]="getStatusSeverity(appt.status)"></p-tag>
+                <p-select [options]="getAvailableStatusOptions(appt)"
+                          [ngModel]="appt.status"
+                          optionLabel="label"
+                          optionValue="value"
+                          appendTo="body"
+                          class="status-select"
+                          [loading]="updatingStatusId() === appt.id"
+                          [disabled]="getAvailableStatusOptions(appt).length === 1 || updatingStatusId() === appt.id"
+                          (onChange)="onStatusChange(appt, $event.value)"></p-select>
             </td>
             <td>{{ appt.symptom || appt.note || '—' }}</td>
             <td>
                 <div class="action-list">
-                    @if (canConfirm(appt)) {
-                        <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success"
-                                  pTooltip="Xác nhận" tooltipPosition="top"
-                                  (onClick)="runAction(appt, 'confirm')"></p-button>
-                    }
-                    @if (canCheckIn(appt)) {
-                        <p-button icon="pi pi-sign-in" [rounded]="true" [text]="true" severity="info"
-                                  pTooltip="Check-in" tooltipPosition="top"
-                                  (onClick)="runAction(appt, 'checkIn')"></p-button>
-                    }
-                    @if (canStart(appt)) {
-                        <p-button icon="pi pi-play" [rounded]="true" [text]="true" severity="contrast"
-                                  pTooltip="Bắt đầu khám" tooltipPosition="top"
-                                  (onClick)="runAction(appt, 'start')"></p-button>
-                    }
-                    @if (canDone(appt)) {
-                        <p-button icon="pi pi-verified" [rounded]="true" [text]="true" severity="success"
-                                  pTooltip="Hoàn tất" tooltipPosition="top"
-                                  (onClick)="confirmAction(appt, 'done')"></p-button>
-                    }
-                    @if (canNoShow(appt)) {
-                        <p-button icon="pi pi-calendar-times" [rounded]="true" [text]="true" severity="warn"
-                                  pTooltip="Không đến" tooltipPosition="top"
-                                  (onClick)="confirmAction(appt, 'noShow')"></p-button>
-                    }
-                    @if (canCancel(appt)) {
-                        <p-button icon="pi pi-ban" [rounded]="true" [text]="true" severity="danger"
-                                  pTooltip="Hủy lịch" tooltipPosition="top"
-                                  (onClick)="confirmAction(appt, 'cancel')"></p-button>
-                    }
-                    @if (canEdit(appt)) {
-                        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
-                                  pTooltip="Chỉnh sửa" tooltipPosition="top"
-                                  (onClick)="openEdit(appt)"></p-button>
-                    }
-                    @if (canHardDelete(appt)) {
-                        <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
-                                  pTooltip="Xóa dữ liệu tạo nhầm" tooltipPosition="top"
-                                  (onClick)="confirmDelete(appt)"></p-button>
-                    }
+                    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="info"
+                              pTooltip="Chỉnh sửa" tooltipPosition="top"
+                              [disabled]="!canEdit(appt)"
+                              (onClick)="openEdit(appt)"></p-button>
+                    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger"
+                              pTooltip="Xóa dữ liệu tạo nhầm" tooltipPosition="top"
+                              [disabled]="!canHardDelete(appt)"
+                              (onClick)="confirmDelete(appt)"></p-button>
                 </div>
             </td>
         </tr>
     </ng-template>
     <ng-template #emptymessage>
         <tr>
-            <td colspan="9" class="text-center p-4">Không có dữ liệu</td>
+            <td colspan="8" class="text-center p-4">Không có dữ liệu</td>
         </tr>
     </ng-template>
 </p-table>

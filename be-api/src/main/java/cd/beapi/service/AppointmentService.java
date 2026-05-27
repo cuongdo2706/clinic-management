@@ -4,6 +4,7 @@ import cd.beapi.dto.request.CheckInAppointmentRequest;
 import cd.beapi.dto.request.CreateAppointmentRequest;
 import cd.beapi.dto.request.SearchAppointmentRequest;
 import cd.beapi.dto.request.UpdateAppointmentRequest;
+import cd.beapi.dto.request.UpdateAppointmentStatusRequest;
 import cd.beapi.dto.response.AppointmentResponse;
 import cd.beapi.dto.response.AvailableSlotResponse;
 import cd.beapi.dto.response.PageData;
@@ -18,6 +19,8 @@ public interface AppointmentService {
     AppointmentResponse save(CreateAppointmentRequest createAppointmentRequest);
 
     AppointmentResponse update(Long id, UpdateAppointmentRequest updateAppointmentRequest);
+
+    AppointmentResponse updateStatus(Long id, UpdateAppointmentStatusRequest request);
 
     void delete(Long id);
 

@@ -4,6 +4,7 @@ import cd.beapi.dto.request.CheckInAppointmentRequest;
 import cd.beapi.dto.request.CreateAppointmentRequest;
 import cd.beapi.dto.request.SearchAppointmentRequest;
 import cd.beapi.dto.request.UpdateAppointmentRequest;
+import cd.beapi.dto.request.UpdateAppointmentStatusRequest;
 import cd.beapi.dto.response.AppointmentResponse;
 import cd.beapi.dto.response.AvailableSlotResponse;
 import cd.beapi.dto.response.PageData;
@@ -11,9 +12,11 @@ import cd.beapi.entity.Appointment;
 import cd.beapi.entity.Patient;
 import cd.beapi.entity.QAppointment;
 import cd.beapi.entity.Staff;
+import cd.beapi.enumerate.AppointmentSortOption;
 import cd.beapi.enumerate.AppointmentStatus;
 import cd.beapi.enumerate.StaffType;
 import cd.beapi.exception.AppException;
+import cd.beapi.mapper.AppointmentMapper;
 import cd.beapi.repository.jpa.AppointmentRepository;
 import cd.beapi.repository.jpa.PatientRepository;
 import cd.beapi.repository.jpa.StaffRepository;
@@ -56,12 +59,12 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final PatientRepository patientRepository;
     private final StaffRepository staffRepository;
     private final SequenceService sequenceService;
-    private final QueueService queueService;
+    private final AppointmentMapper appointmentMapper;
 
     @Transactional(readOnly = true)
     @Override
     public AppointmentResponse findById(Long id) {
-        return toResponse(findAppointment(id));
+        return appointmentMapper.toAppointmentResponse(findAppointment(id));
     }
 
     @Transactional(readOnly = true)
@@ -111,7 +114,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         );
         Page<Appointment> page = appointmentRepository.findAll(whereClause, pageable);
         return new PageData<>(
-                page.getContent().stream().map(this::toResponse).toList(),
+                page.getContent().stream().map(appointmentMapper::toAppointmentResponse).toList(),
                 page.getNumber(),
                 page.getSize(),
                 page.getTotalElements(),
@@ -138,7 +141,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .status(AppointmentStatus.CONFIRMED)
                 .build();
 
-        return toResponse(appointmentRepository.save(appointment));
+        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -162,7 +165,26 @@ public class AppointmentServiceImpl implements AppointmentService {
             appointment.setVersion(request.getVersion());
         }
 
-        return toResponse(appointmentRepository.save(appointment));
+        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
+    }
+
+    @Transactional
+    @Override
+    public AppointmentResponse updateStatus(Long id, UpdateAppointmentStatusRequest request) {
+        Appointment appointment = findAppointment(id);
+        if (appointment.getStatus() == request.getStatus()) {
+            return appointmentMapper.toAppointmentResponse(appointment);
+        }
+
+        return switch (request.getStatus()) {
+            case CONFIRMED -> confirm(id);
+            case IN_QUEUE -> checkIn(id, null);
+            case IN_PROGRESS -> start(id);
+            case DONE -> done(id);
+            case CANCELLED -> cancel(id);
+            case NO_SHOW -> noShow(id);
+            case PENDING -> throw new AppException("Appointment cannot be returned to pending status", HttpStatus.BAD_REQUEST);
+        };
     }
 
     @Transactional
@@ -185,7 +207,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 id
         );
         appointment.setStatus(AppointmentStatus.CONFIRMED);
-        return toResponse(appointmentRepository.save(appointment));
+        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -204,12 +226,9 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         appointment.setStatus(AppointmentStatus.IN_QUEUE);
-        if (appointment.getQueueNumber() == null) {
-            appointment.setQueueNumber(queueService.nextQueueNumberForDate(LocalDate.now()));
-        }
         appointment.setSnapshotPatientName(appointment.getPatient().getFullName());
         appointment.setSnapshotPatientPhone(preferredPhone(appointment.getPatient()));
-        return toResponse(appointmentRepository.save(appointment));
+        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -221,7 +240,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new AppException("Dentist is required before starting appointment", HttpStatus.BAD_REQUEST);
         }
         appointment.setStatus(AppointmentStatus.IN_PROGRESS);
-        return toResponse(appointmentRepository.save(appointment));
+        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -230,7 +249,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = findAppointment(id);
         requireStatus(appointment, AppointmentStatus.IN_PROGRESS);
         appointment.setStatus(AppointmentStatus.DONE);
-        return toResponse(appointmentRepository.save(appointment));
+        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -239,7 +258,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = findAppointment(id);
         ensureNotFinal(appointment);
         appointment.setStatus(AppointmentStatus.CANCELLED);
-        return toResponse(appointmentRepository.save(appointment));
+        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional
@@ -248,7 +267,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = findAppointment(id);
         requireStatus(appointment, AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED);
         appointment.setStatus(AppointmentStatus.NO_SHOW);
-        return toResponse(appointmentRepository.save(appointment));
+        return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
     }
 
     @Transactional(readOnly = true)
@@ -268,13 +287,13 @@ public class AppointmentServiceImpl implements AppointmentService {
                 endOfDay,
                 IGNORED_CONFLICT_STATUSES
         );
-
         List<String> slots = new ArrayList<>();
         LocalTime cursor = DEFAULT_WORK_START;
         while (!cursor.plusMinutes(estimatedDurationMinutes).isAfter(DEFAULT_WORK_END)) {
             LocalDateTime slotStart = LocalDateTime.of(date, cursor);
             LocalDateTime slotEnd = slotStart.plusMinutes(estimatedDurationMinutes);
-            if (bookedAppointments.stream().noneMatch(booked -> overlaps(slotStart, slotEnd, booked))) {
+            boolean isOccupied = bookedAppointments.stream().anyMatch(booked -> overlaps(slotStart, slotEnd, booked));
+            if (!isOccupied) {
                 slots.add(cursor.format(TIME_FORMATTER));
             }
             cursor = cursor.plusMinutes(SLOT_MINUTES);
@@ -409,34 +428,4 @@ public class AppointmentServiceImpl implements AppointmentService {
         };
     }
 
-    private AppointmentResponse toResponse(Appointment appointment) {
-        Patient patient = appointment.getPatient();
-        Staff dentist = appointment.getDentist();
-        Staff receptionist = appointment.getReceptionist();
-
-        return new AppointmentResponse(
-                appointment.getId(),
-                appointment.getCode(),
-                appointment.getAppointmentDate(),
-                durationOf(appointment),
-                appointment.getCreatedAt(),
-                appointment.getModifiedAt(),
-                appointment.getSymptom(),
-                appointment.getNote(),
-                appointment.getStatus(),
-                appointment.getQueueNumber(),
-                appointment.getVersion(),
-                patient == null ? null : patient.getId(),
-                patient == null ? null : patient.getCode(),
-                patient == null ? null : patient.getFullName(),
-                patient == null ? null : preferredPhone(patient),
-                dentist == null ? null : dentist.getId(),
-                dentist == null ? null : dentist.getCode(),
-                dentist == null ? null : dentist.getFullName(),
-                receptionist == null ? null : receptionist.getId(),
-                receptionist == null ? null : receptionist.getFullName(),
-                appointment.getSnapshotPatientName(),
-                appointment.getSnapshotPatientPhone()
-        );
-    }
 }

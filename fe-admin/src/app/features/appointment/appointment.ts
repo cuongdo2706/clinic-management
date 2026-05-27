@@ -13,7 +13,6 @@ import {InputIcon} from 'primeng/inputicon';
 import {InputText} from 'primeng/inputtext';
 import {Select} from 'primeng/select';
 import {TableModule} from 'primeng/table';
-import {Tag} from 'primeng/tag';
 import {Textarea} from 'primeng/textarea';
 import {Toast} from 'primeng/toast';
 import {Toolbar} from 'primeng/toolbar';
@@ -36,8 +35,6 @@ interface SelectOption<T> {
     value: T;
 }
 
-type AppointmentAction = 'confirm' | 'checkIn' | 'start' | 'done' | 'cancel' | 'noShow';
-
 @Component({
     selector: 'app-appointment',
     imports: [
@@ -49,7 +46,6 @@ type AppointmentAction = 'confirm' | 'checkIn' | 'start' | 'done' | 'cancel' | '
         InputText,
         FloatLabel,
         FormsModule,
-        Tag,
         IconField,
         InputIcon,
         Toolbar,
@@ -78,6 +74,7 @@ export class Appointment implements OnInit {
     slotOptions = signal<SelectOption<string>[]>([]);
     loading = signal(false);
     saving = signal(false);
+    updatingStatusId = signal<number | null>(null);
     dialogVisible = signal(false);
     isEdit = signal(false);
     searchKeyword = signal('');
@@ -96,6 +93,15 @@ export class Appointment implements OnInit {
         {label: 'Đã hủy', value: 'CANCELLED'},
         {label: 'Không đến', value: 'NO_SHOW'},
     ];
+    private readonly statusTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
+        PENDING: ['CONFIRMED', 'IN_QUEUE', 'CANCELLED', 'NO_SHOW'],
+        CONFIRMED: ['IN_QUEUE', 'CANCELLED', 'NO_SHOW'],
+        IN_QUEUE: ['IN_PROGRESS', 'CANCELLED'],
+        IN_PROGRESS: ['DONE'],
+        DONE: [],
+        CANCELLED: [],
+        NO_SHOW: [],
+    };
 
     readonly durationOptions: SelectOption<number>[] = [15, 30, 45, 60, 75, 90, 105, 120]
         .map(minutes => ({label: this.formatDurationLabel(minutes), value: minutes}));
@@ -249,78 +255,33 @@ export class Appointment implements OnInit {
         });
     }
 
-    confirmAction(appointment: AppointmentResponse, action: AppointmentAction) {
-        this.confirmationService.confirm({
-            message: this.actionConfirmMessage(appointment, action),
-            header: this.actionConfirmHeader(action),
-            icon: 'pi pi-exclamation-triangle',
-            acceptLabel: this.actionAcceptLabel(action),
-            rejectLabel: 'Huỷ',
-            acceptButtonStyleClass: this.actionAcceptButtonClass(action),
-            accept: () => this.runAction(appointment, action),
-        });
+    getAvailableStatusOptions(appointment: AppointmentResponse): SelectOption<AppointmentStatus>[] {
+        const available = new Set([appointment.status, ...this.statusTransitions[appointment.status]]);
+        return this.statusOptions.filter(option => available.has(option.value));
     }
 
-    runAction(appointment: AppointmentResponse, action: AppointmentAction) {
-        const request = switchAction(this.appointmentService, appointment.id, action);
-        request.subscribe({
-            next: () => {
-                this.messageService.add({severity: 'success', summary: 'Thành công', detail: this.actionSuccessMessage(action)});
-                this.loadData();
-            },
-            error: (err: HttpErrorResponse) => this.showError(err),
-        });
-    }
-
-    getStatusLabel(status: AppointmentStatus): string {
-        return this.statusOptions.find(option => option.value === status)?.label ?? status;
-    }
-
-    getStatusSeverity(status: AppointmentStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-        switch (status) {
-            case 'CONFIRMED':
-            case 'DONE':
-                return 'success';
-            case 'PENDING':
-                return 'warn';
-            case 'IN_QUEUE':
-                return 'info';
-            case 'IN_PROGRESS':
-                return 'contrast';
-            case 'CANCELLED':
-            case 'NO_SHOW':
-                return 'danger';
-            default:
-                return 'secondary';
+    onStatusChange(appointment: AppointmentResponse, nextStatus: AppointmentStatus) {
+        if (appointment.status === nextStatus) {
+            return;
         }
-    }
-
-    canConfirm(appointment: AppointmentResponse): boolean {
-        return appointment.status === 'PENDING';
-    }
-
-    canCheckIn(appointment: AppointmentResponse): boolean {
-        return appointment.status === 'PENDING' || appointment.status === 'CONFIRMED';
-    }
-
-    canStart(appointment: AppointmentResponse): boolean {
-        return appointment.status === 'IN_QUEUE' && Boolean(appointment.dentistId);
-    }
-
-    canDone(appointment: AppointmentResponse): boolean {
-        return appointment.status === 'IN_PROGRESS';
+        const update = () => this.updateStatus(appointment, nextStatus);
+        if (nextStatus === 'CANCELLED' || nextStatus === 'NO_SHOW') {
+            this.confirmationService.confirm({
+                message: `Chuyển lịch hẹn <b>${appointment.code}</b> của <b>${appointment.patientName}</b> sang trạng thái <b>${this.statusLabel(nextStatus)}</b>?`,
+                header: 'Xác nhận trạng thái',
+                icon: 'pi pi-exclamation-triangle',
+                acceptLabel: 'Xác nhận',
+                rejectLabel: 'Huỷ',
+                acceptButtonStyleClass: nextStatus === 'CANCELLED' ? 'p-button-danger' : 'p-button-warn',
+                accept: update,
+            });
+            return;
+        }
+        update();
     }
 
     canEdit(appointment: AppointmentResponse): boolean {
         return ['PENDING', 'CONFIRMED', 'IN_QUEUE'].includes(appointment.status);
-    }
-
-    canCancel(appointment: AppointmentResponse): boolean {
-        return ['PENDING', 'CONFIRMED', 'IN_QUEUE'].includes(appointment.status);
-    }
-
-    canNoShow(appointment: AppointmentResponse): boolean {
-        return appointment.status === 'PENDING' || appointment.status === 'CONFIRMED';
     }
 
     canHardDelete(appointment: AppointmentResponse): boolean {
@@ -406,71 +367,26 @@ export class Appointment implements OnInit {
         this.messageService.add({severity: 'error', summary: 'Lỗi', detail: err.error?.message || 'Có lỗi xảy ra'});
     }
 
-    private actionConfirmHeader(action: AppointmentAction): string {
-        switch (action) {
-            case 'done':
-                return 'Hoàn tất lịch hẹn';
-            case 'cancel':
-                return 'Huỷ lịch hẹn';
-            case 'noShow':
-                return 'Đánh dấu không đến';
-            default:
-                return 'Xác nhận thao tác';
-        }
+    private statusLabel(status: AppointmentStatus): string {
+        return this.statusOptions.find(option => option.value === status)?.label ?? status;
     }
 
-    private actionConfirmMessage(appointment: AppointmentResponse, action: AppointmentAction): string {
-        switch (action) {
-            case 'done':
-                return `Hoàn tất lịch hẹn <b>${appointment.code}</b> của <b>${appointment.patientName}</b>?`;
-            case 'cancel':
-                return `Huỷ lịch hẹn <b>${appointment.code}</b> của <b>${appointment.patientName}</b>? Lịch hẹn sẽ được giữ lại trong lịch sử với trạng thái Đã hủy.`;
-            case 'noShow':
-                return `Đánh dấu bệnh nhân <b>${appointment.patientName}</b> không đến lịch hẹn <b>${appointment.code}</b>?`;
-            default:
-                return `Thực hiện thao tác với lịch hẹn <b>${appointment.code}</b>?`;
-        }
-    }
-
-    private actionAcceptLabel(action: AppointmentAction): string {
-        switch (action) {
-            case 'done':
-                return 'Hoàn tất';
-            case 'cancel':
-                return 'Huỷ lịch';
-            case 'noShow':
-                return 'Không đến';
-            default:
-                return 'Xác nhận';
-        }
-    }
-
-    private actionAcceptButtonClass(action: AppointmentAction): string {
-        switch (action) {
-            case 'cancel':
-                return 'p-button-danger';
-            case 'noShow':
-                return 'p-button-warn';
-            default:
-                return 'p-button-success';
-        }
-    }
-
-    private actionSuccessMessage(action: AppointmentAction): string {
-        switch (action) {
-            case 'confirm':
-                return 'Đã xác nhận lịch hẹn';
-            case 'checkIn':
-                return 'Đã check-in và cấp số thứ tự';
-            case 'start':
-                return 'Đã bắt đầu khám';
-            case 'done':
-                return 'Đã hoàn tất lịch hẹn';
-            case 'cancel':
-                return 'Đã hủy lịch hẹn';
-            case 'noShow':
-                return 'Đã đánh dấu không đến';
-        }
+    private updateStatus(appointment: AppointmentResponse, status: AppointmentStatus) {
+        this.updatingStatusId.set(appointment.id);
+        this.appointmentService.updateStatus(appointment.id, status).subscribe({
+            next: (res) => {
+                const updated = res.data;
+                if (updated) {
+                    this.appointments.update(items => items.map(item => item.id === updated.id ? updated : item));
+                }
+                this.updatingStatusId.set(null);
+                this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Đã cập nhật trạng thái lịch hẹn'});
+            },
+            error: (err: HttpErrorResponse) => {
+                this.updatingStatusId.set(null);
+                this.showError(err);
+            },
+        });
     }
 
     private toPatientOption(patient: PatientResponse): SelectOption<number> {
@@ -526,26 +442,5 @@ export class Appointment implements OnInit {
             }
         }
         return options;
-    }
-}
-
-function switchAction(
-    service: AppointmentService,
-    id: number,
-    action: AppointmentAction
-) {
-    switch (action) {
-        case 'confirm':
-            return service.confirm(id);
-        case 'checkIn':
-            return service.checkIn(id);
-        case 'start':
-            return service.start(id);
-        case 'done':
-            return service.done(id);
-        case 'cancel':
-            return service.cancel(id);
-        case 'noShow':
-            return service.noShow(id);
     }
 }

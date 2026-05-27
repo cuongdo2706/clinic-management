@@ -56,15 +56,6 @@ public class Appointment extends BaseEntity {
     @JoinColumn(name = "patient_id", nullable = false)
     Patient patient;
 
-    // === CHECK-IN INFO (set khi BN có mặt tại phòng khám) ===
-    Integer queueNumber;
-
-    // Snapshot tên & SĐT tại thời điểm tiếp nhận — giữ nguyên dù BN sau này đổi thông tin
-    String snapshotPatientName;
-    String snapshotPatientPhone;
-
-
-    // === META ===
     @CreatedDate
     @Column(updatable = false)
     Instant createdAt;

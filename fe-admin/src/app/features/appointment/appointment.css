@@ -20,6 +20,10 @@
     width: 180px;
 }
 
+.status-select {
+    min-width: 168px;
+}
+
 .person-cell {
     display: flex;
     flex-direction: column;

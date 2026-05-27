@@ -8,7 +8,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public enum AppointmentStatus {
     // === BOOKING STAGE ===
-    PENDING("Chờ xác nhận"),       // Đặt online, chờ clinic duyệt
+    PENDING("Chờ xác nhận"),       // Lịch hẹn nội bộ chưa được xác nhận
     CONFIRMED("Đã xác nhận"),      // Clinic đã xác nhận lịch hẹn
 
     // === CHECK-IN & TREATMENT STAGE ===

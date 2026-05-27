@@ -36,6 +36,11 @@ public class SequenceServiceImpl implements SequenceService {
         return format("LH", SequenceName.APPOINTMENT,8);
     }
 
+    @Override
+    public String generateBookingRequestCode() {
+        return format("YC", SequenceName.BOOKING_REQUEST, 8);
+    }
+
 
     @Override
     public String generateMedicalRecordCode() {

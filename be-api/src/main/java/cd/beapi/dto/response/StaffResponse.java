@@ -4,7 +4,6 @@ import cd.beapi.enumerate.StaffType;
 
 import java.time.Instant;
 import java.time.LocalDate;
-
 public record StaffResponse(
         Long id,
         String code,

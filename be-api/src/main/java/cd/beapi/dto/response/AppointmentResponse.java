@@ -15,7 +15,6 @@ public record AppointmentResponse(
         String symptom,
         String note,
         AppointmentStatus status,
-        Integer queueNumber,
         Long version,
         Long patientId,
         String patientCode,

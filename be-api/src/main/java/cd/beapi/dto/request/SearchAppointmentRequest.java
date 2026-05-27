@@ -1,5 +1,6 @@
 package cd.beapi.dto.request;
 
+import cd.beapi.enumerate.AppointmentSortOption;
 import cd.beapi.enumerate.AppointmentStatus;
 import lombok.AccessLevel;
 import lombok.Getter;

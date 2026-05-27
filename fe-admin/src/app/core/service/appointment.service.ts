@@ -64,6 +64,10 @@ export class AppointmentService {
         return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/no-show`, {});
     }
 
+    updateStatus(id: number, status: AppointmentResponse['status']): Observable<SuccessResponse<AppointmentResponse>> {
+        return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/status`, {status});
+    }
+
     getAvailableSlots(dentistId: number, date: string, estimatedDurationMinutes: number): Observable<SuccessResponse<AvailableSlotResponse>> {
         const params = new HttpParams()
             .set('dentistId', dentistId)
