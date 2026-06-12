@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SearchPatientRequest extends PaginationFormat {
     PatientSortOption sortBy;
+    String keyword;
     String codeKeyword;
     String nameKeyword;
     String phoneKeyword;

@@ -125,6 +125,81 @@
     padding-top: 14px;
 }
 
+.patient-picker-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.patient-picker-field label {
+    color: #475569;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.patient-picker-control {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+}
+
+.patient-picker-control input {
+    width: 100%;
+}
+
+.patient-lookup {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.patient-lookup-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.patient-lookup-toolbar p-iconfield {
+    flex: 1;
+}
+
+.patient-lookup-toolbar input {
+    width: 100%;
+}
+
+.update-date-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 4px;
+}
+
+.update-date-dialog p {
+    color: #475569;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.update-date-time-row {
+    display: flex;
+    gap: 30px;
+}
+
+.update-date-time-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.update-date-time-field label {
+    color: #334155;
+    font-weight: 700;
+}
+
+.update-date-time-field p-select {
+    width: 72px;
+}
+
 .date-time-grid {
     display: grid;
     grid-template-columns: 1fr 180px 160px;
@@ -132,7 +207,13 @@
 }
 
 @media (max-width: 640px) {
+    .patient-picker-control,
     .date-time-grid {
         grid-template-columns: 1fr;
+    }
+
+    .patient-lookup-toolbar {
+        align-items: stretch;
+        flex-direction: column;
     }
 }

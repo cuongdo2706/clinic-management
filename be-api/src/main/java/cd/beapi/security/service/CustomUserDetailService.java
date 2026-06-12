@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -25,6 +26,8 @@ import java.util.stream.Collectors;
 @Setter
 @RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
+    private static final String ADMIN_ROLE_CODE = "ADMIN";
+
     private final UserRepository userRepository;
 
     @Override
@@ -42,12 +45,16 @@ public class CustomUserDetailService implements UserDetailsService {
             }
         }
         if (user.getRole() != null) {
-            authorities.addAll(user.getRole().getPermissions().stream()
-                    .filter(permission -> isSupportedPage(permission.getPage().getCode()))
-                    .map(permission -> permission.getPage().getCode() + ":" + permission.getAction().getCode().name())
-                    .filter(Objects::nonNull)
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toSet()));
+            if (ADMIN_ROLE_CODE.equals(user.getRole().getCode())) {
+                authorities.addAll(adminPermissions());
+            } else {
+                authorities.addAll(user.getRole().getPermissions().stream()
+                        .filter(permission -> isSupportedPage(permission.getPage().getCode()))
+                        .map(permission -> permission.getPage().getCode() + ":" + permission.getAction().getCode().name())
+                        .filter(Objects::nonNull)
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toSet()));
+            }
         }
 
         return new org.springframework.security.core.userdetails.User(
@@ -68,5 +75,13 @@ public class CustomUserDetailService implements UserDetailsService {
         } catch (IllegalArgumentException | NullPointerException ignored) {
             return false;
         }
+    }
+
+    private static Set<GrantedAuthority> adminPermissions() {
+        return Arrays.stream(PageType.values())
+                .flatMap(page -> page.getAllowedActions().stream()
+                        .map(action -> page.name() + ":" + action.name()))
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toSet());
     }
 }

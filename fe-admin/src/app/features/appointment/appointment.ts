@@ -42,6 +42,13 @@ interface SelectOption<T> {
 
 type AppointmentAction = 'confirm' | 'arrived' | 'no-show' | 'cancel';
 
+interface PendingStatusAction {
+    appointment: AppointmentResponse;
+    action: AppointmentAction;
+    request: () => Observable<SuccessResponse<AppointmentResponse>>;
+    successMessage: string;
+}
+
 @Component({
     selector: 'app-appointment',
     imports: [
@@ -75,9 +82,15 @@ export class Appointment implements OnInit {
     private readonly confirmationService = inject(ConfirmationService);
 
     appointments = signal<AppointmentResponse[]>([]);
-    patientOptions = signal<SelectOption<number>[]>([]);
     dentistOptions = signal<SelectOption<number>[]>([]);
     slotOptions = signal<SelectOption<string>[]>([]);
+    patientLookupItems = signal<PatientResponse[]>([]);
+    patientLookupLoading = signal(false);
+    patientLookupVisible = signal(false);
+    patientLookupFirst = signal(0);
+    patientLookupTotalRecords = signal(0);
+    selectedPatientLabel = signal('');
+    updateDateDialogVisible = signal(false);
     loading = signal(false);
     saving = signal(false);
     actionLoading = signal<string | null>(null);
@@ -90,6 +103,11 @@ export class Appointment implements OnInit {
     sortBy: AppointmentSortOption = 'APPOINTMENT_DATE';
     appointmentDate: Date | null = null;
     appointmentTime = '';
+    patientLookupKeyword = '';
+    patientLookupRows = 10;
+    updateDateHour = 8;
+    updateDateMinute = 30;
+    pendingStatusAction: PendingStatusAction | null = null;
     selectedId: number | null = null;
 
     readonly statusOptions: SelectOption<AppointmentStatus>[] = [
@@ -107,6 +125,12 @@ export class Appointment implements OnInit {
         {label: 'Gần nhất', value: 'APPOINTMENT_DATE'},
         {label: 'Xa nhất', value: 'APPOINTMENT_DATE_DESC'},
     ];
+
+    readonly updateHourOptions: SelectOption<number>[] = Array.from({length: 13}, (_, index) => index + 8)
+        .map(hour => ({label: String(hour).padStart(2, '0'), value: hour}));
+
+    readonly updateMinuteOptions: SelectOption<number>[] = [0, 15, 30, 45]
+        .map(minute => ({label: String(minute).padStart(2, '0'), value: minute}));
 
     formData: CreateAppointmentRequest & { version: number | null } = this.emptyForm();
 
@@ -151,6 +175,7 @@ export class Appointment implements OnInit {
         this.formData = this.emptyForm();
         this.appointmentDate = null;
         this.appointmentTime = '';
+        this.selectedPatientLabel.set('');
         this.slotOptions.set([]);
         this.selectedId = null;
         this.isEdit.set(false);
@@ -172,6 +197,11 @@ export class Appointment implements OnInit {
         const date = this.parseDateTime(appointment.appointmentDate);
         this.appointmentDate = date;
         this.appointmentTime = date ? this.toTimeString(date) : '';
+        this.selectedPatientLabel.set(this.toPatientLabel(
+            appointment.patientCode,
+            appointment.patientName,
+            appointment.patientPhone
+        ));
         this.isEdit.set(true);
         this.dialogVisible.set(true);
         this.loadAvailableSlots();
@@ -368,22 +398,64 @@ export class Appointment implements OnInit {
         return !!this.formData.dentistId && !!this.appointmentDate && !!this.formData.estimatedDurationMinutes;
     }
 
+    openPatientLookup(): void {
+        if (this.isDentistView) return;
+        this.patientLookupVisible.set(true);
+        this.patientLookupFirst.set(0);
+        this.loadPatientLookup(0, this.patientLookupRows);
+    }
+
+    onPatientLookupSearch(): void {
+        this.patientLookupFirst.set(0);
+        this.loadPatientLookup(0, this.patientLookupRows);
+    }
+
+    onPatientLookupLazyLoad(event: { first?: number | null; rows?: number | null }): void {
+        const rows = event.rows ?? this.patientLookupRows;
+        const first = event.first ?? 0;
+        this.patientLookupRows = rows;
+        this.patientLookupFirst.set(first);
+        this.loadPatientLookup(Math.floor(first / rows), rows);
+    }
+
+    selectPatient(patient: PatientResponse): void {
+        this.formData.patientId = patient.id;
+        this.selectedPatientLabel.set(this.toPatientOption(patient).label);
+        this.patientLookupVisible.set(false);
+    }
+
     private loadLookups() {
+        this.loadPatientLookup(0, this.patientLookupRows);
+
+        this.staffService.findDentistOptions().subscribe({
+            next: (res) => this.dentistOptions.set((res.data ?? []).map(staff => this.toDentistOption(staff))),
+        });
+    }
+
+    private loadPatientLookup(page: number, size: number): void {
+        this.patientLookupLoading.set(true);
         this.patientService.search({
-            page: 0,
-            size: 100,
+            page,
+            size,
             sortBy: 'CREATED_AT_DESC',
+            keyword: this.patientLookupKeyword,
             codeKeyword: '',
             nameKeyword: '',
             phoneKeyword: '',
             guardianNameKeyword: '',
             guardianPhoneKeyword: '',
         }).subscribe({
-            next: (res) => this.patientOptions.set((res.data?.content ?? []).map(patient => this.toPatientOption(patient))),
-        });
-
-        this.staffService.findDentistOptions().subscribe({
-            next: (res) => this.dentistOptions.set((res.data ?? []).map(staff => this.toDentistOption(staff))),
+            next: (res) => {
+                const data = res.data;
+                this.patientLookupItems.set(data?.content ?? []);
+                this.patientLookupTotalRecords.set(data?.totalElements ?? 0);
+                this.patientLookupLoading.set(false);
+            },
+            error: () => {
+                this.patientLookupItems.set([]);
+                this.patientLookupTotalRecords.set(0);
+                this.patientLookupLoading.set(false);
+            },
         });
     }
 
@@ -490,6 +562,71 @@ export class Appointment implements OnInit {
         request: () => Observable<SuccessResponse<AppointmentResponse>>,
         successMessage: string,
     ): void {
+        if (!this.isAppointmentToday(appointment)) {
+            this.openUpdateDateDialog({appointment, action, request, successMessage});
+            return;
+        }
+        this.executeAppointmentAction(appointment, action, request, successMessage);
+    }
+
+    updateAppointmentToToday(): void {
+        if (!this.pendingStatusAction) {
+            this.updateDateDialogVisible.set(false);
+            return;
+        }
+        const appointment = this.pendingStatusAction.appointment;
+        const appointmentDate = this.todayDateTimeString(this.updateDateHour, this.updateDateMinute);
+        const request: UpdateAppointmentRequest = {
+            patientId: appointment.patientId,
+            dentistId: appointment.dentistId,
+            appointmentDate,
+            estimatedDurationMinutes: appointment.estimatedDurationMinutes,
+            symptom: appointment.symptom ?? '',
+            note: appointment.note ?? '',
+            version: appointment.version,
+        };
+
+        this.actionLoading.set(this.actionKey(appointment, this.pendingStatusAction.action));
+        this.appointmentService.update(appointment.id, request).subscribe({
+            next: () => {
+                const pendingAction = this.pendingStatusAction;
+                this.updateDateDialogVisible.set(false);
+                this.pendingStatusAction = null;
+                if (pendingAction) {
+                    this.executeAppointmentAction(
+                        pendingAction.appointment,
+                        pendingAction.action,
+                        pendingAction.request,
+                        pendingAction.successMessage,
+                    );
+                }
+            },
+            error: (err: HttpErrorResponse) => {
+                this.actionLoading.set(null);
+                this.showError(err);
+            },
+        });
+    }
+
+    closeUpdateDateDialog(): void {
+        this.pendingStatusAction = null;
+        this.updateDateDialogVisible.set(false);
+    }
+
+    updateDatePromptText(): string {
+        const appointmentDate = this.pendingStatusAction?.appointment.appointmentDate;
+        const date = appointmentDate ? this.parseDateTime(appointmentDate) : null;
+        const appointmentText = date ? `${this.toTimeString(date)} ${this.toDisplayDate(date)}` : 'ngày khác';
+        const todayText = this.toDisplayDate(new Date());
+        return `Ngày giờ của lịch hẹn này là ${appointmentText}. Bạn có muốn cập nhật lịch hẹn này sang ngày hôm nay ${todayText} không?`;
+    }
+
+    private executeAppointmentAction(
+        appointment: AppointmentResponse,
+        action: AppointmentAction,
+        request: () => Observable<SuccessResponse<AppointmentResponse>>,
+        successMessage: string,
+    ): void {
         this.actionLoading.set(this.actionKey(appointment, action));
         request().subscribe({
             next: res => {
@@ -508,13 +645,40 @@ export class Appointment implements OnInit {
         });
     }
 
+    private openUpdateDateDialog(pendingAction: PendingStatusAction): void {
+        const date = this.parseDateTime(pendingAction.appointment.appointmentDate);
+        this.updateDateHour = date ? date.getHours() : 8;
+        this.updateDateMinute = date ? date.getMinutes() : 30;
+        this.pendingStatusAction = pendingAction;
+        this.updateDateDialogVisible.set(true);
+    }
+
+    private isAppointmentToday(appointment: AppointmentResponse): boolean {
+        const date = this.parseDateTime(appointment.appointmentDate);
+        if (!date) return false;
+        return this.toDateString(date) === this.toDateString(new Date());
+    }
+
+    private todayDateTimeString(hour: number, minute: number): string {
+        const today = this.toDateString(new Date());
+        return `${today}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+    }
+
+    private toDisplayDate(date: Date): string {
+        return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+    }
+
     private actionKey(appointment: AppointmentResponse, action: AppointmentAction): string {
         return `${appointment.id}:${action}`;
     }
 
     private toPatientOption(patient: PatientResponse): SelectOption<number> {
         const phone = patient.phone || patient.guardianPhone || 'Chưa có SĐT';
-        return {label: `${patient.code} - ${patient.fullName} - ${phone}`, value: patient.id};
+        return {label: this.toPatientLabel(patient.code, patient.fullName, phone), value: patient.id};
+    }
+
+    private toPatientLabel(code: string, fullName: string, phone: string | null): string {
+        return `${code} - ${fullName} - ${phone || 'Chưa có SĐT'}`;
     }
 
     private toDentistOption(staff: Pick<StaffResponse, 'id' | 'code' | 'fullName'>): SelectOption<number> {

@@ -151,18 +151,18 @@
           [draggable]="false"
           [resizable]="false">
     <div class="appointment-form">
-        <p-floatlabel variant="on">
-            <p-select inputId="patientId"
-                      [options]="patientOptions()"
-                      [(ngModel)]="formData.patientId"
-                      optionLabel="label"
-                      optionValue="value"
-                      [filter]="true"
-                      filterBy="label"
-                      appendTo="body"
-                      class="w-full"></p-select>
-            <label for="patientId">Bệnh nhân</label>
-        </p-floatlabel>
+        <div class="patient-picker-field">
+            <label for="selectedPatient">Bệnh nhân</label>
+            <div class="patient-picker-control">
+                <input id="selectedPatient"
+                       pInputText
+                       [value]="selectedPatientLabel()"
+                       readonly
+                       placeholder="Chọn bệnh nhân"/>
+                <p-button label="Chọn" icon="pi pi-search" severity="secondary"
+                          (onClick)="openPatientLookup()"></p-button>
+            </div>
+        </div>
 
         <p-floatlabel variant="on">
             <p-select inputId="dentistId"
@@ -231,4 +231,105 @@
         <p-button label="Lưu" icon="pi pi-check" severity="success" [loading]="saving()"
                   (onClick)="save()"></p-button>
     </ng-template>
+</p-dialog>
+
+<p-dialog header="Cập nhật ngày giờ lịch hẹn?"
+          [(visible)]="updateDateDialogVisible"
+          [style]="{width: '452px'}"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          (onHide)="closeUpdateDateDialog()">
+    <div class="update-date-dialog">
+        <p>{{ updateDatePromptText() }}</p>
+        <div class="update-date-time-row">
+            <div class="update-date-time-field">
+                <label for="updateDateHour">Giờ</label>
+                <p-select inputId="updateDateHour"
+                          [options]="updateHourOptions"
+                          [(ngModel)]="updateDateHour"
+                          optionLabel="label"
+                          optionValue="value"
+                          appendTo="body"></p-select>
+            </div>
+            <div class="update-date-time-field">
+                <label for="updateDateMinute">Phút</label>
+                <p-select inputId="updateDateMinute"
+                          [options]="updateMinuteOptions"
+                          [(ngModel)]="updateDateMinute"
+                          optionLabel="label"
+                          optionValue="value"
+                          appendTo="body"></p-select>
+            </div>
+        </div>
+    </div>
+
+    <ng-template #footer>
+        <p-button label="KHÔNG"
+                  severity="secondary"
+                  [outlined]="true"
+                  (onClick)="closeUpdateDateDialog()"></p-button>
+        <p-button label="CẬP NHẬT"
+                  [loading]="actionLoading() !== null"
+                  (onClick)="updateAppointmentToToday()"></p-button>
+    </ng-template>
+</p-dialog>
+
+<p-dialog header="Chọn bệnh nhân"
+          [(visible)]="patientLookupVisible"
+          [style]="{width: '760px'}"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false">
+    <div class="patient-lookup">
+        <div class="patient-lookup-toolbar">
+            <p-iconfield>
+                <p-inputicon class="pi pi-search"></p-inputicon>
+                <input pInputText
+                       placeholder="Tìm mã, tên, SĐT..."
+                       [(ngModel)]="patientLookupKeyword"
+                       (keyup.enter)="onPatientLookupSearch()"/>
+            </p-iconfield>
+            <p-button icon="pi pi-search" label="Tìm"
+                      [loading]="patientLookupLoading()"
+                      (onClick)="onPatientLookupSearch()"></p-button>
+        </div>
+
+        <p-table [value]="patientLookupItems()"
+                 [lazy]="true"
+                 [loading]="patientLookupLoading()"
+                 [paginator]="true"
+                 [rows]="patientLookupRows"
+                 [first]="patientLookupFirst()"
+                 [totalRecords]="patientLookupTotalRecords()"
+                 [rowsPerPageOptions]="[5, 10, 20]"
+                 [showCurrentPageReport]="true"
+                 currentPageReportTemplate="Hiển thị {first} - {last} / {totalRecords} bệnh nhân"
+                 (onLazyLoad)="onPatientLookupLazyLoad($event)">
+            <ng-template #header>
+                <tr>
+                    <th>Mã BN</th>
+                    <th>Họ tên</th>
+                    <th>Số điện thoại</th>
+                    <th style="width: 96px"></th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-patient>
+                <tr>
+                    <td>{{ patient.code }}</td>
+                    <td>{{ patient.fullName }}</td>
+                    <td>{{ patient.phone || patient.guardianPhone || 'Chưa có SĐT' }}</td>
+                    <td>
+                        <p-button label="Chọn" size="small"
+                                  (onClick)="selectPatient(patient)"></p-button>
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr>
+                    <td colspan="4" class="text-center p-4">Không có bệnh nhân phù hợp</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
 </p-dialog>

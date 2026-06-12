@@ -43,9 +43,11 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CorsConfig corsConfig;
 
-    private record EndpointRule(HttpMethod method, String matcher, String authority) {}
+    private record EndpointRule(HttpMethod method, String matcher, String... authorities) {}
 
     private static final List<EndpointRule> ENDPOINT_RULES = List.of(
+            new EndpointRule(HttpMethod.GET, "/clinic/dashboard/stats", "DASHBOARD:VIEW"),
+
             new EndpointRule(HttpMethod.GET, "/clinic/patients/export", "PATIENT:EXPORT"),
             new EndpointRule(HttpMethod.GET, "/clinic/patients/*/detail", "PATIENT:VIEW"),
             new EndpointRule(HttpMethod.GET, "/clinic/patients/*", "PATIENT:VIEW"),
@@ -61,13 +63,13 @@ public class SecurityConfig {
             new EndpointRule(HttpMethod.PUT, "/clinic/staffs/*", "STAFF:UPDATE"),
             new EndpointRule(HttpMethod.PATCH, "/clinic/staffs/*/status", "STAFF:UPDATE"),
 
-            new EndpointRule(HttpMethod.GET, "/clinic/examinations/**", "DENTIST"),
-            new EndpointRule(HttpMethod.POST, "/clinic/examinations/search", "DENTIST"),
-            new EndpointRule(HttpMethod.POST, "/clinic/examinations/procedures/search", "DENTIST"),
-            new EndpointRule(HttpMethod.POST, "/clinic/examinations/medicines/search", "DENTIST"),
-            new EndpointRule(HttpMethod.PATCH, "/clinic/examinations/*/**", "DENTIST"),
-            new EndpointRule(HttpMethod.POST, "/clinic/examinations/treatments", "DENTIST"),
-            new EndpointRule(HttpMethod.PUT, "/clinic/examinations/treatments/*", "DENTIST"),
+            new EndpointRule(HttpMethod.GET, "/clinic/examinations/**", "DENTIST", "EXAMINATION:VIEW"),
+            new EndpointRule(HttpMethod.POST, "/clinic/examinations/search", "DENTIST", "EXAMINATION:VIEW"),
+            new EndpointRule(HttpMethod.POST, "/clinic/examinations/procedures/search", "DENTIST", "EXAMINATION:VIEW"),
+            new EndpointRule(HttpMethod.POST, "/clinic/examinations/medicines/search", "DENTIST", "EXAMINATION:VIEW"),
+            new EndpointRule(HttpMethod.PATCH, "/clinic/examinations/*/**", "DENTIST", "EXAMINATION:UPDATE"),
+            new EndpointRule(HttpMethod.POST, "/clinic/examinations/treatments", "DENTIST", "EXAMINATION:UPDATE"),
+            new EndpointRule(HttpMethod.PUT, "/clinic/examinations/treatments/*", "DENTIST", "EXAMINATION:UPDATE"),
 
             new EndpointRule(HttpMethod.GET, "/clinic/appointments/available-slots", "APPOINTMENT:VIEW"),
             new EndpointRule(HttpMethod.GET, "/clinic/appointments/*", "APPOINTMENT:VIEW"),
@@ -136,7 +138,7 @@ public class SecurityConfig {
                     ENDPOINT_RULES.forEach(rule ->
                             auth.requestMatchers(rule.method(), rule.matcher())
                                     .access((authentication, _) ->
-                                            hasAllAuthorities(authentication, CLINIC_PORTAL_AUTHORITY, rule.authority())));
+                                            hasAllAuthorities(authentication, clinicAuthorities(rule))));
                     auth.requestMatchers("/clinic/**").hasAuthority(CLINIC_PORTAL_AUTHORITY);
                     auth.anyRequest().authenticated();
                 })
@@ -161,6 +163,13 @@ public class SecurityConfig {
                 .collect(Collectors.toSet());
         boolean granted = Arrays.stream(requiredAuthorities).allMatch(authorities::contains);
         return new AuthorizationDecision(granted);
+    }
+
+    private static String[] clinicAuthorities(EndpointRule rule) {
+        String[] requiredAuthorities = new String[rule.authorities().length + 1];
+        requiredAuthorities[0] = CLINIC_PORTAL_AUTHORITY;
+        System.arraycopy(rule.authorities(), 0, requiredAuthorities, 1, rule.authorities().length);
+        return requiredAuthorities;
     }
 
     @Bean

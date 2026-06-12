@@ -82,6 +82,19 @@ public class PatientServiceImpl implements PatientService {
     public PageData<PatientResponse> search(SearchPatientRequest searchPatientRequest) {
         QPatient p = QPatient.patient;
         BooleanBuilder whereClause = new BooleanBuilder();
+        if (StringUtils.hasText(searchPatientRequest.getKeyword())) {
+            String normalizedKeyword = StringUtil.normalizeKeyword(searchPatientRequest.getKeyword());
+            BooleanBuilder keywordClause = new BooleanBuilder()
+                    .or(Expressions.stringTemplate("cast(ai_ci({0}) as string)", p.code)
+                            .like("%" + normalizedKeyword + "%"))
+                    .or(Expressions.stringTemplate("cast(ai_ci({0}) as string)", p.fullName)
+                            .like("%" + normalizedKeyword + "%"))
+                    .or(p.phone.like("%" + searchPatientRequest.getKeyword() + "%"))
+                    .or(Expressions.stringTemplate("cast(ai_ci({0}) as string)", p.guardianName)
+                            .like("%" + normalizedKeyword + "%"))
+                    .or(p.guardianPhone.like("%" + searchPatientRequest.getKeyword() + "%"));
+            whereClause.and(keywordClause);
+        }
         if (StringUtils.hasText(searchPatientRequest.getCodeKeyword())) {
             whereClause.and(
                     Expressions.stringTemplate("cast(ai_ci({0}) as string)", p.code)

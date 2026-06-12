@@ -22,5 +22,5 @@ export const roleGuard: CanActivateFn = (route) => {
         summary: 'Không có quyền',
         detail: 'Tài khoản của bạn không có quyền truy cập vào chức năng này',
     });
-    return router.createUrlTree(['/dashboard']);
+    return router.createUrlTree(['/404']);
 };

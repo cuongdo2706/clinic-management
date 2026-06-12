@@ -9,15 +9,14 @@ import static cd.beapi.enumerate.ActionType.*;
 
 @Getter
 public enum PageType {
+    DASHBOARD   (EnumSet.of(VIEW)),
     PATIENT     (EnumSet.of(VIEW, CREATE, UPDATE, DELETE, EXPORT)),
     STAFF       (EnumSet.of(VIEW, CREATE, UPDATE, DELETE)),
     APPOINTMENT (EnumSet.of(VIEW, CREATE, UPDATE, DELETE)),
     EXAMINATION (EnumSet.of(VIEW, UPDATE)),
     MEDICINE    (EnumSet.of(VIEW, CREATE, UPDATE, DELETE, EXPORT)),
-    PRESCRIPTION(EnumSet.of(VIEW, CREATE, UPDATE)),
     TREATMENT   (EnumSet.of(VIEW, CREATE, UPDATE)),
-    PROCEDURE   (EnumSet.of(VIEW, CREATE, UPDATE, DELETE)),
-    USER        (EnumSet.of(VIEW, CREATE, UPDATE, DELETE));
+    PROCEDURE   (EnumSet.of(VIEW, CREATE, UPDATE, DELETE));
 
     private final Set<ActionType> allowedActions;
 

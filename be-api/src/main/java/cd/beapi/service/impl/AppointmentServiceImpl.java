@@ -264,6 +264,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentResponse updateStatus(Long id, UpdateAppointmentStatusRequest request, String changedBy, Set<String> roles) {
         Appointment appointment = findAppointment(id);
+        requireAppointmentToday(appointment);
         switch (request.getStatus()) {
             case IN_PROGRESS, COMPLETED ->
                     throw new AppException("Vui lòng xử lý trạng thái khám bệnh tại màn Khám bệnh", HttpStatus.BAD_REQUEST);
@@ -294,6 +295,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentResponse updateArrivalStatus(Long id, UpdateAppointmentArrivalStatusRequest request, String changedBy) {
         Appointment appointment = findAppointment(id);
+        requireAppointmentToday(appointment);
         appointment.setArrivalStatus(request.getArrivalStatus());
         return appointmentMapper.toAppointmentResponse(appointmentRepository.save(appointment));
     }
@@ -310,6 +312,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentResponse confirm(Long id) {
         Appointment appointment = findAppointment(id);
+        requireAppointmentToday(appointment);
         requireStatus(appointment, "Chỉ lịch chờ xác nhận mới được xác nhận", AppointmentStatus.PENDING);
         requireArrivalStatus(appointment, "Không thể xác nhận lịch khi đã xử lý trạng thái đến khám",
                 AppointmentArrivalStatus.NOT_ARRIVED);
@@ -324,6 +327,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentResponse checkIn(Long id, CheckInAppointmentRequest request, String changedBy) {
         Appointment appointment = findAppointment(id);
+        requireAppointmentToday(appointment);
         requireStatus(appointment, "Chỉ lịch đã xác nhận mới được ghi nhận đến khám", AppointmentStatus.CONFIRMED);
         requireArrivalStatus(appointment, "Lịch này đã được xử lý trạng thái đến khám",
                 AppointmentArrivalStatus.NOT_ARRIVED);
@@ -345,6 +349,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse start(Long id, String changedBy) {
         Appointment appointment = findAppointment(id);
         requireOwnAppointmentIfDentist(appointment, changedBy);
+        requireAppointmentToday(appointment);
         requireStatus(appointment, "Chỉ lịch đã xác nhận mới được bắt đầu khám", AppointmentStatus.CONFIRMED);
         requireArrivalStatus(appointment, "Chỉ bệnh nhân đã đến mới được bắt đầu khám", AppointmentArrivalStatus.ARRIVED);
         appointment.setStatus(AppointmentStatus.IN_PROGRESS);
@@ -357,6 +362,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     public AppointmentResponse done(Long id, String changedBy) {
         Appointment appointment = findAppointment(id);
         requireOwnAppointmentIfDentist(appointment, changedBy);
+        requireAppointmentToday(appointment);
         requireStatus(appointment, "Chỉ lịch đang khám mới được kết thúc khám", AppointmentStatus.IN_PROGRESS);
         var treatment = treatmentRepository.findByAppointmentId(id).orElseThrow(
                 () -> new AppException("Vui lòng lưu phiếu khám trước khi kết thúc khám", HttpStatus.BAD_REQUEST)
@@ -371,6 +377,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentResponse cancel(Long id, String changedBy) {
         Appointment appointment = findAppointment(id);
+        requireAppointmentToday(appointment);
         requireStatus(appointment, "Chỉ lịch chờ xác nhận hoặc đã xác nhận mới được hủy",
                 AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED);
         requireArrivalStatus(appointment, "Không thể hủy lịch khi đã xử lý trạng thái đến khám",
@@ -383,6 +390,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public AppointmentResponse noShow(Long id, String changedBy) {
         Appointment appointment = findAppointment(id);
+        requireAppointmentToday(appointment);
         requireStatus(appointment, "Chỉ lịch đã xác nhận mới được đánh dấu không đến", AppointmentStatus.CONFIRMED);
         requireArrivalStatus(appointment, "Chỉ lịch chưa đến mới được đánh dấu không đến",
                 AppointmentArrivalStatus.NOT_ARRIVED);
@@ -647,6 +655,16 @@ public class AppointmentServiceImpl implements AppointmentService {
         );
         if (!List.of(allowedArrivalStatuses).contains(arrivalStatus)) {
             throw new AppException(message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void requireAppointmentToday(Appointment appointment) {
+        if (appointment.getAppointmentDate() == null
+                || !appointment.getAppointmentDate().toLocalDate().equals(LocalDate.now())) {
+            throw new AppException(
+                    "Chỉ được chuyển trạng thái lịch hẹn trong ngày hôm nay. Vui lòng cập nhật ngày giờ lịch hẹn trước.",
+                    HttpStatus.BAD_REQUEST
+            );
         }
     }
 

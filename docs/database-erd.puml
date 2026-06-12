@@ -1,0 +1,281 @@
+@startuml clinic_management_database_erd
+
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam entity {
+  BackgroundColor #ffffff
+  BorderColor #334155
+  FontColor #0f172a
+}
+
+entity "roles" as roles {
+  * id : bigint <<PK>>
+  --
+  * code : varchar <<UK>>
+  name : varchar
+  description : varchar
+}
+
+entity "users" as users {
+  * id : bigint <<PK>>
+  --
+  * username : varchar <<UK>>
+  * password : varchar
+  is_active : boolean
+  locked : boolean
+  must_change_password : boolean
+  last_login_at : timestamp
+  password_changed_at : timestamp
+  deleted_at : timestamp
+  created_at : timestamp
+  modified_at : timestamp
+  role_id : bigint <<FK>>
+}
+
+entity "pages" as pages {
+  * id : smallint <<PK>>
+  --
+  * code : varchar <<UK>>
+  name : varchar
+}
+
+entity "actions" as actions {
+  * id : smallint <<PK>>
+  --
+  * code : varchar <<UK>>
+  name : varchar
+}
+
+entity "permissions" as permissions {
+  * id : bigint <<PK>>
+  --
+  * page_id : smallint <<FK>>
+  * action_id : smallint <<FK>>
+  --
+  UK(page_id, action_id)
+}
+
+entity "role_permissions" as role_permissions {
+  * role_id : bigint <<FK>>
+  * permission_id : bigint <<FK>>
+}
+
+entity "patients" as patients {
+  * id : bigint <<PK>>
+  --
+  * code : varchar <<UK>>
+  full_name : varchar
+  dob : date
+  gender : boolean
+  phone : varchar <<UK>>
+  address : varchar
+  guardian_name : varchar
+  guardian_phone : varchar
+  deleted_at : timestamp
+  version : bigint
+  created_at : timestamp
+  modified_at : timestamp
+  user_id : bigint <<FK, UK>>
+}
+
+entity "staffs" as staffs {
+  * id : bigint <<PK>>
+  --
+  * code : varchar <<UK>>
+  full_name : varchar
+  phone : varchar
+  email : varchar
+  dob : date
+  gender : boolean
+  address : varchar
+  avatar_url : varchar
+  staff_type : varchar
+  is_active : boolean
+  version : bigint
+  created_at : timestamp
+  modified_at : timestamp
+  user_id : bigint <<FK, UK>>
+}
+
+entity "staff_working_schedules" as staff_working_schedules {
+  * id : bigint <<PK>>
+  --
+  * staff_id : bigint <<FK>>
+  * day_of_week : varchar
+  * working : boolean
+  * start_time : time
+  * end_time : time
+  --
+  UK(staff_id, day_of_week)
+}
+
+entity "appointments" as appointments {
+  * id : bigint <<PK>>
+  --
+  * code : varchar <<UK>>
+  appointment_date : timestamp
+  estimated_duration_minutes : int
+  symptom : text
+  note : text
+  status : varchar
+  * arrival_status : varchar
+  dentist_id : bigint <<FK>>
+  receptionist_id : bigint <<FK>>
+  * patient_id : bigint <<FK>>
+  created_at : timestamp
+  modified_at : timestamp
+  deleted_at : timestamp
+  version : bigint
+}
+
+entity "treatments" as treatments {
+  * id : bigint <<PK>>
+  --
+  diagnosis : text
+  note : text
+  treatment_date : timestamp
+  * status : varchar
+  * patient_id : bigint <<FK>>
+  appointment_id : bigint <<FK, UK>>
+  doctor_id : bigint <<FK>>
+  deleted_at : timestamp
+  version : bigint
+  created_at : timestamp
+  modified_at : timestamp
+}
+
+entity "prescriptions" as prescriptions {
+  * id : bigint <<PK>>
+  --
+  * code : varchar <<UK>>
+  prescribed_at : timestamp
+  advice : text
+  re_examination_date : date
+  note : text
+  deleted_at : timestamp
+  created_at : timestamp
+  modified_at : timestamp
+  doctor_id : bigint <<FK>>
+  treatment_id : bigint <<FK, UK>>
+}
+
+entity "prescription_items" as prescription_items {
+  * id : bigint <<PK>>
+  --
+  * prescription_id : bigint <<FK>>
+  * medicine_id : bigint <<FK>>
+  quantity : int
+  dosage : varchar
+  frequency : varchar
+  duration : varchar
+  instruction : text
+  created_at : timestamp
+  modified_at : timestamp
+}
+
+entity "procedure_categories" as procedure_categories {
+  * id : bigint <<PK>>
+  --
+  code : varchar <<UK>>
+  name : varchar
+  description : text
+  version : bigint
+  deleted_at : timestamp
+  created_at : timestamp
+  modified_at : timestamp
+}
+
+entity "procedures" as procedures {
+  * id : bigint <<PK>>
+  --
+  * code : varchar <<UK>>
+  * name : varchar
+  description : text
+  * price : decimal
+  unit : varchar
+  duration_minutes : int
+  is_active : boolean
+  version : bigint
+  procedure_category_id : bigint <<FK>>
+  deleted_at : timestamp
+  created_at : timestamp
+  modified_at : timestamp
+}
+
+entity "treatment_procedures" as treatment_procedures {
+  * id : bigint <<PK>>
+  --
+  * treatment_id : bigint <<FK>>
+  * procedure_id : bigint <<FK>>
+  * quantity : int
+  * unit_price : decimal
+  note : text
+}
+
+entity "medicine_categories" as medicine_categories {
+  * id : bigint <<PK>>
+  --
+  * code : varchar <<UK>>
+  * name : varchar
+  description : text
+  deleted_at : timestamp
+  created_at : timestamp
+  modified_at : timestamp
+}
+
+entity "medicines" as medicines {
+  * id : bigint <<PK>>
+  --
+  * code : varchar <<UK>>
+  name : varchar
+  unit : varchar
+  description : text
+  is_active : boolean
+  price : decimal
+  quantity : int
+  manufacturer : varchar
+  origin : varchar
+  medicine_category_id : bigint <<FK>>
+  deleted_at : timestamp
+  version : bigint
+  created_at : timestamp
+  modified_at : timestamp
+}
+
+entity "sequences" as sequences {
+  * name : varchar <<PK>>
+  --
+  * value : bigint
+}
+
+roles ||--o{ users : role_id
+roles ||--o{ role_permissions : role_id
+permissions ||--o{ role_permissions : permission_id
+pages ||--o{ permissions : page_id
+actions ||--o{ permissions : action_id
+
+users |o--o| patients : user_id
+users |o--o| staffs : user_id
+
+staffs ||--o{ staff_working_schedules : staff_id
+patients ||--o{ appointments : patient_id
+staffs |o--o{ appointments : dentist_id
+staffs |o--o{ appointments : receptionist_id
+
+patients ||--o{ treatments : patient_id
+appointments |o--o| treatments : appointment_id
+staffs |o--o{ treatments : doctor_id
+
+treatments |o--o| prescriptions : treatment_id
+staffs |o--o{ prescriptions : doctor_id
+prescriptions ||--o{ prescription_items : prescription_id
+medicines ||--o{ prescription_items : medicine_id
+
+procedure_categories |o--o{ procedures : procedure_category_id
+treatments ||--o{ treatment_procedures : treatment_id
+procedures ||--o{ treatment_procedures : procedure_id
+
+medicine_categories |o--o{ medicines : medicine_category_id
+
+@enduml
