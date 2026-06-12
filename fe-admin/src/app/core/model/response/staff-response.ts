@@ -1,3 +1,5 @@
+import {StaffWorkingScheduleResponse} from '../staff-working-schedule';
+
 export interface StaffResponse {
     id: number;
     code: string;
@@ -13,4 +15,8 @@ export interface StaffResponse {
     version: number;
     createdAt: Date;
     modifiedAt: Date;
+    userId?: number | null;
+    username?: string | null;
+    workingSchedules: StaffWorkingScheduleResponse[];
+    temporaryPassword?: string | null;
 }

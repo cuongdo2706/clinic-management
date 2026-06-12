@@ -8,6 +8,7 @@ import cd.beapi.entity.Page;
 import cd.beapi.entity.Permission;
 import cd.beapi.entity.Role;
 import cd.beapi.enumerate.ActionType;
+import cd.beapi.enumerate.PageType;
 import cd.beapi.exception.AppException;
 import cd.beapi.mapper.RoleMapper;
 import cd.beapi.repository.jpa.ActionRepository;
@@ -41,7 +42,8 @@ public class PermissionServiceImpl implements PermissionService {
                 .orElseThrow(() -> new AppException("Cannot find role with id: " + roleId, HttpStatus.BAD_REQUEST));
         List<Page> allPages = pageRepository.findAll();
         Set<String> grantedSet = role.getPermissions().stream()
-                .map(p -> p.getPage().getCode().name() + ":" + p.getAction().getCode().name())
+                .filter(permission -> isSupportedPage(permission.getPage().getCode()))
+                .map(p -> p.getPage().getCode() + ":" + p.getAction().getCode().name())
                 .collect(Collectors.toSet());
 
         List<String> allActions = Arrays
@@ -50,15 +52,17 @@ public class PermissionServiceImpl implements PermissionService {
                 .toList();
 
         List<PagePermission> pagePermissions = allPages.stream()
+                .filter(page -> isSupportedPage(page.getCode()))
                 .map(page -> {
-                    Set<ActionType> allowedActions = page.getCode().getAllowedActions();
+                    PageType pageType = PageType.valueOf(page.getCode());
+                    Set<ActionType> allowedActions = pageType.getAllowedActions();
                     Map<String, Boolean> granted = new LinkedHashMap<>();
                     for (ActionType action : ActionType.values()) {
                         if (allowedActions.contains(action)) {
-                            granted.put(action.name(), grantedSet.contains(page.getCode().name() + ":" + action.name()));
+                            granted.put(action.name(), grantedSet.contains(page.getCode() + ":" + action.name()));
                         }
                     }
-                    return new PagePermission(page.getCode().name(), page.getName(), granted);
+                    return new PagePermission(page.getCode(), page.getName(), granted);
                 })
                 .toList();
         return new PermissionResponse(
@@ -77,7 +81,8 @@ public class PermissionServiceImpl implements PermissionService {
             throw new AppException("Admin role permissions cannot be modified", HttpStatus.FORBIDDEN);
         }
         Map<String, Page> pageMap = pageRepository.findAll().stream()
-                .collect(Collectors.toMap(p -> p.getCode().name(), p -> p));
+                .filter(page -> isSupportedPage(page.getCode()))
+                .collect(Collectors.toMap(Page::getCode, p -> p));
         Map<String, Action> actionMap = actionRepository.findAll().stream()
                 .collect(Collectors.toMap(a -> a.getCode().name(), a -> a));
         role.getPermissions().clear();
@@ -91,7 +96,8 @@ public class PermissionServiceImpl implements PermissionService {
                 if (action == null) {
                     throw new AppException("Invalid action code: " + entry.getActionCode(), HttpStatus.BAD_REQUEST);
                 }
-                if (!page.getCode().getAllowedActions().contains(action.getCode())) {
+                PageType pageType = PageType.valueOf(page.getCode());
+                if (!pageType.getAllowedActions().contains(action.getCode())) {
                     throw new AppException(
                             "Action " + entry.getActionCode() + " is not allowed for page " + entry.getPageCode(),
                             HttpStatus.BAD_REQUEST);
@@ -106,5 +112,14 @@ public class PermissionServiceImpl implements PermissionService {
         }
         roleRepository.save(role);
         return getPermissionMatrix(role.getId());
+    }
+
+    private static boolean isSupportedPage(String pageCode) {
+        try {
+            PageType.valueOf(pageCode);
+            return true;
+        } catch (IllegalArgumentException | NullPointerException ignored) {
+            return false;
+        }
     }
 }

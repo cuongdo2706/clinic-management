@@ -1,10 +1,12 @@
 package cd.beapi.repository.jpa;
 
 import cd.beapi.entity.Appointment;
+import cd.beapi.enumerate.AppointmentArrivalStatus;
 import cd.beapi.enumerate.AppointmentStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
 
@@ -42,5 +44,27 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long>,
                                                       @Param("start") LocalDateTime start,
                                                       @Param("end") LocalDateTime end,
                                                       @Param("ignoredStatuses") Collection<AppointmentStatus> ignoredStatuses);
-}
 
+    @EntityGraph(attributePaths = {"patient", "dentist", "receptionist"})
+    List<Appointment> findByPatientIdOrderByAppointmentDateDesc(Long patientId);
+
+    long countByAppointmentDateGreaterThanEqualAndAppointmentDateLessThan(LocalDateTime start, LocalDateTime end);
+
+    long countByAppointmentDateGreaterThanEqualAndAppointmentDateLessThanAndStatus(
+            LocalDateTime start,
+            LocalDateTime end,
+            AppointmentStatus status
+    );
+
+    long countByAppointmentDateGreaterThanEqualAndAppointmentDateLessThanAndArrivalStatus(
+            LocalDateTime start,
+            LocalDateTime end,
+            AppointmentArrivalStatus arrivalStatus
+    );
+
+    List<Appointment> findByAppointmentDateGreaterThanEqualAndAppointmentDateLessThan(LocalDateTime start, LocalDateTime end);
+
+    @EntityGraph(attributePaths = {"patient", "dentist"})
+    @Query("select a from Appointment a where a.appointmentDate is not null order by a.appointmentDate desc")
+    List<Appointment> findRecentAppointments(Pageable pageable);
+}

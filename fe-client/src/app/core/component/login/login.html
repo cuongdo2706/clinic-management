@@ -1,0 +1,47 @@
+<p-dialog
+  header="Đăng nhập"
+  [visible]="true"
+  [modal]="true"
+  [dismissableMask]="true"
+  [closable]="true"
+  [style]="{ width: '420px', maxWidth: 'calc(100vw - 32px)' }"
+  (visibleChange)="onVisibleChange($event)"
+>
+  <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onLogin()">
+    <p class="login-subtitle">Đăng nhập tài khoản bệnh nhân để tiếp tục.</p>
+
+    <label>
+      <span>Tài khoản</span>
+      <input pInputText formControlName="username" autocomplete="username" />
+    </label>
+
+    <label>
+      <span>Mật khẩu</span>
+      <p-iconfield>
+        <input
+          pInputText
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="current-password"
+        />
+        <p-inputicon
+          [class]="showPassword() ? 'pi pi-eye-slash' : 'pi pi-eye'"
+          (click)="showPassword.set(!showPassword())"
+        />
+      </p-iconfield>
+    </label>
+
+    @if (error()) {
+      <p-message severity="error" [text]="error()" />
+    }
+
+    <p-button
+      type="submit"
+      label="Đăng nhập"
+      icon="pi pi-sign-in"
+      [loading]="loading()"
+      [disabled]="loading()"
+      [fluid]="true"
+    />
+  </form>
+</p-dialog>

@@ -1,0 +1,197 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page-header">
+    <div>
+        <h2>Quản lý tài khoản</h2>
+        <p>Quản lý truy cập cho nhân viên và khách hàng đã có hồ sơ liên kết.</p>
+    </div>
+</div>
+
+<div class="account-tabs" role="tablist" aria-label="Loại tài khoản">
+    <button type="button" [class.active]="activeTab() === 'STAFF'" (click)="setTab('STAFF')">
+        <i class="pi pi-id-card"></i>
+        Nhân viên
+    </button>
+    <button type="button" [class.active]="activeTab() === 'CUSTOMER'" (click)="setTab('CUSTOMER')">
+        <i class="pi pi-user"></i>
+        Khách hàng
+    </button>
+</div>
+
+<p-toolbar styleClass="account-toolbar">
+    <ng-template #start>
+        <div class="filter-grid">
+            <input
+                    pInputText
+                    type="text"
+                    name="keyword"
+                    [(ngModel)]="keyword"
+                    (keydown.enter)="search()"
+                    placeholder="Tìm theo username"/>
+
+            @if (activeTab() === 'STAFF') {
+                <p-select
+                        name="roleCode"
+                        [(ngModel)]="roleCode"
+                        [options]="roleOptions()"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Tất cả vai trò"
+                        [showClear]="true"/>
+            }
+
+            <p-select
+                    name="status"
+                    [(ngModel)]="status"
+                    [options]="statusOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Tất cả trạng thái"
+                    [showClear]="true"/>
+
+            <p-button icon="pi pi-search" (onClick)="search()" [loading]="loading()" pTooltip="Tìm kiếm"/>
+            <p-button icon="pi pi-refresh" severity="secondary" (onClick)="resetFilter()" pTooltip="Đặt lại bộ lọc"/>
+        </div>
+    </ng-template>
+</p-toolbar>
+
+<p-table [value]="visibleAccounts()" dataKey="id" [loading]="loading()">
+    <ng-template #loadingicon>
+        <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th>Username</th>
+            <th>{{ getOwnerLabel() }}</th>
+            <th>Vai trò</th>
+            <th>Trạng thái</th>
+            <th>Đổi mật khẩu lần đầu</th>
+            <th>Ngày tạo</th>
+            <th class="action-header">Thao tác</th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-account>
+        <tr>
+            <td>
+                <div class="username-cell">
+                    <i class="pi pi-user"></i>
+                    <span>{{ account.username }}</span>
+                </div>
+            </td>
+            <td>
+                <div class="owner-cell">
+                    <strong>{{ account.ownerName }}</strong>
+                    <span>{{ getContact(account) }}</span>
+                </div>
+            </td>
+            <td>
+                @if (activeTab() === 'STAFF') {
+                    <p-select
+                            class="role-select"
+                            [ngModel]="account.roleCode"
+                            [options]="roleOptions()"
+                            optionLabel="label"
+                            optionValue="value"
+                            appendTo="body"
+                            (onChange)="updateRole(account, $event)"/>
+                } @else {
+                    <p-tag [value]="account.roleName || 'Khách hàng'" severity="info"/>
+                }
+            </td>
+            <td>
+                <p-tag [value]="getStatusLabel(account.status)" [severity]="getStatusSeverity(account.status)"/>
+            </td>
+            <td>
+                @if (account.mustChangePassword) {
+                    <p-tag value="Chưa đổi" severity="warn"/>
+                } @else {
+                    <p-tag value="Đã đổi" severity="success"/>
+                }
+            </td>
+            <td>{{ account.createdAt | date: 'dd/MM/yyyy' }}</td>
+            <td class="action-cell">
+                <div class="action-buttons">
+                    <p-button
+                            icon="pi pi-key"
+                            [rounded]="true"
+                            [text]="true"
+                            severity="warn"
+                            pTooltip="Reset mật khẩu"
+                            (onClick)="openResetPassword(account)"/>
+                    <p-button
+                            [icon]="account.status === 'LOCKED' ? 'pi pi-lock-open' : 'pi pi-lock'"
+                            [rounded]="true"
+                            [text]="true"
+                            [severity]="account.status === 'LOCKED' ? 'success' : 'danger'"
+                            [pTooltip]="account.status === 'LOCKED' ? 'Mở khóa' : 'Khóa tài khoản'"
+                            (onClick)="toggleLock(account)"/>
+                    <p-button
+                            icon="pi pi-trash"
+                            [rounded]="true"
+                            [text]="true"
+                            severity="danger"
+                            pTooltip="Xóa tài khoản"
+                            (onClick)="confirmDelete(account)"/>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+        <tr>
+            <td colspan="7" class="empty-state">
+                <i class="pi pi-info-circle"></i>
+                Không có tài khoản phù hợp
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template #footer>
+        <tr>
+            <td colspan="100%" class="paginator-cell">
+                <p-paginator
+                        (onPageChange)="onPageChange($event)"
+                        [first]="paginatorFirst()"
+                        [rows]="accounts()?.size ?? 10"
+                        [totalRecords]="accounts()?.totalElements ?? 0"
+                        [rowsPerPageOptions]="[10, 20, 30]"
+                        appendTo="body"/>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<p-dialog
+        header="Reset mật khẩu"
+        [visible]="resetDialogVisible()"
+        (visibleChange)="resetDialogVisible.set($event)"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{width: '420px'}">
+    @if (resetAccount()) {
+        <div class="reset-dialog">
+            <div class="dialog-row">
+                <span>Tài khoản</span>
+                <strong>{{ resetAccount()!.username }}</strong>
+            </div>
+            <div class="dialog-row">
+                <span>Người dùng</span>
+                <strong>{{ resetAccount()!.ownerName }}</strong>
+            </div>
+            @if (temporaryPassword()) {
+                <div class="temporary-password">
+                    <span>Mật khẩu tạm thời</span>
+                    <strong>{{ temporaryPassword() }}</strong>
+                </div>
+            }
+            <p class="dialog-note">
+                Sau khi reset, tài khoản sẽ được yêu cầu đổi mật khẩu ở lần đăng nhập tiếp theo.
+            </p>
+        </div>
+    }
+    <ng-template #footer>
+        <p-button label="Đóng" severity="secondary" (onClick)="resetDialogVisible.set(false)"/>
+        <p-button label="Xác nhận reset" icon="pi pi-check" severity="success" (onClick)="confirmResetPassword()"
+                  [disabled]="!!temporaryPassword()"/>
+    </ng-template>
+</p-dialog>

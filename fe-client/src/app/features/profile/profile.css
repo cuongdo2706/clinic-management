@@ -1,0 +1,179 @@
+:host {
+  display: block;
+}
+
+.page {
+  padding: 28px clamp(18px, 4vw, 46px) 52px;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-head p {
+  color: #0f766e;
+  font-weight: 850;
+}
+
+.page-head h1 {
+  margin-top: 6px;
+  color: #102421;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+}
+
+.page-head span {
+  display: block;
+  margin-top: 10px;
+  color: #5d746f;
+  max-width: 580px;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-message,
+.profile-layout {
+  margin-top: 18px;
+}
+
+:host ::ng-deep .profile-card {
+  border: 1px solid #d8ebe4;
+  border-radius: 10px;
+  box-shadow: 0 16px 38px rgb(13 96 84 / 0.07);
+}
+
+:host ::ng-deep .profile-card .p-card-content {
+  padding: 0;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.summary-kicker {
+  color: #0f766e;
+  font-size: 0.85rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.profile-summary h2 {
+  margin-top: 10px;
+  color: #102421;
+  font-size: 1.85rem;
+}
+
+.summary-chip {
+  display: inline-flex;
+  margin-top: 14px;
+  padding: 8px 12px;
+  border: 1px solid #d8ebe4;
+  border-radius: 8px;
+  background: #eef8f4;
+  color: #0f5f55;
+  font-weight: 800;
+}
+
+.summary-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.summary-list div {
+  display: grid;
+  gap: 6px;
+  padding-top: 14px;
+  border-top: 1px solid #ebf3ef;
+}
+
+.summary-list span,
+.field label {
+  color: #667d79;
+  font-size: 0.92rem;
+}
+
+.summary-list strong {
+  color: #102421;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+:host ::ng-deep .field input,
+:host ::ng-deep .field textarea,
+:host ::ng-deep .field .p-select,
+:host ::ng-deep .field .p-datepicker {
+  width: 100%;
+}
+
+:host ::ng-deep .field textarea {
+  resize: vertical;
+  min-height: 112px;
+}
+
+.field-error {
+  color: #c2410c;
+  font-size: 0.83rem;
+}
+
+.notice {
+  border: 1px solid #bfe2d8;
+  border-radius: 8px;
+  background: #f1fbf7;
+  color: #24584e;
+  padding: 13px 14px;
+}
+
+.empty {
+  border: 1px dashed #c7ded6;
+  border-radius: 8px;
+  color: #667d79;
+  padding: 18px;
+}
+
+@media (max-width: 960px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .page-head {
+    flex-direction: column;
+  }
+
+  .page-actions {
+    width: 100%;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

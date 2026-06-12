@@ -5,12 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -35,4 +32,6 @@ public class CreateStaffRequest {
     StaffType staffType;
 
     String roleCode;
+
+    List<StaffWorkingScheduleRequest> workingSchedules;
 }

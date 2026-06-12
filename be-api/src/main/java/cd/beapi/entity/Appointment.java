@@ -1,5 +1,6 @@
 package cd.beapi.entity;
 
+import cd.beapi.enumerate.AppointmentArrivalStatus;
 import cd.beapi.enumerate.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -42,12 +43,15 @@ public class Appointment extends BaseEntity {
     @Enumerated(EnumType.STRING)
     AppointmentStatus status;
 
-    // Bác sĩ được chọn khi đặt lịch (nullable — walk-in có thể không chọn trước)
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    AppointmentArrivalStatus arrivalStatus = AppointmentArrivalStatus.NOT_ARRIVED;
+
     @ManyToOne
     @JoinColumn(name = "dentist_id")
     Staff dentist;
 
-    // Lễ tân tiếp nhận (set khi check-in)
     @ManyToOne
     @JoinColumn(name = "receptionist_id")
     Staff receptionist;

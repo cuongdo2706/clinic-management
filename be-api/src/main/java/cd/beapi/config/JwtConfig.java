@@ -57,11 +57,18 @@ public class JwtConfig {
         permissionConverter.setAuthoritiesClaimName("permission");
         permissionConverter.setAuthorityPrefix("");
 
+        JwtGrantedAuthoritiesConverter portalConverter = new JwtGrantedAuthoritiesConverter();
+        portalConverter.setAuthoritiesClaimName("portal");
+        portalConverter.setAuthorityPrefix("PORTAL:");
+
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             Collection<GrantedAuthority> roles = roleConverter.convert(jwt);
             Collection<GrantedAuthority> permissions = permissionConverter.convert(jwt);
-            return Stream.concat(roles.stream(), permissions.stream()).collect(Collectors.toSet());
+            Collection<GrantedAuthority> portals = portalConverter.convert(jwt);
+            return Stream.of(roles, permissions, portals)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toSet());
         });
         return converter;
     }

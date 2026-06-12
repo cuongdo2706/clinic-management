@@ -67,6 +67,74 @@
     line-height: 1;
 }
 
+.schedule-section {
+    display: grid;
+    gap: 10px;
+}
+
+.schedule-section h3 {
+    margin: 0;
+    color: #166534;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+
+.schedule-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #d1fae5;
+    border-radius: 8px;
+}
+
+.schedule-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.schedule-table th,
+.schedule-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2f5e9;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.schedule-table th {
+    background: #f0fdf4;
+    color: #166534;
+    font-weight: 800;
+}
+
+.schedule-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.time-select {
+    width: 100%;
+    min-height: 36px;
+    padding: 6px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #0f172a;
+    font: inherit;
+}
+
+.time-select:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.work-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #16a34a;
+    cursor: pointer;
+}
+
 .req,
 .error-text {
     color: #dc2626;

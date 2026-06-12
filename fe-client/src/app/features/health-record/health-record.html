@@ -1,0 +1,134 @@
+<section class="page">
+  <header class="page-head">
+    <div>
+      <p>Hồ sơ sức khỏe</p>
+      <h1>Lịch sử điều trị và đơn thuốc</h1>
+    </div>
+    <div class="actions">
+      <p-button
+        label="Tải lại"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="loadRecords()"
+      />
+      <p-button label="Đặt lịch" icon="pi pi-calendar" routerLink="/booking" />
+    </div>
+  </header>
+
+  @if (error()) {
+    <p-message severity="error" [text]="error()" styleClass="page-message" />
+  }
+
+  <p-card styleClass="panel-card">
+    @if (loading()) {
+      <div class="loading-state">
+        <p-progress-spinner ariaLabel="Đang tải hồ sơ sức khỏe" styleClass="small-spinner" />
+        <span>Đang tải hồ sơ sức khỏe...</span>
+      </div>
+    } @else {
+      <div class="record-list">
+        @for (record of records(); track record.id) {
+          <p-card styleClass="record-card">
+            <header>
+              <div>
+                <strong>{{ record.code }}</strong>
+                <span>Ngày khám: {{ formatDateTime(record.appointmentDate || record.createdAt) }}</span>
+              </div>
+              <small>{{ record.dentistName || 'Bác sĩ' }}</small>
+            </header>
+
+            <div class="content-grid">
+              <p><b>Lý do khám:</b> {{ record.chiefComplaint || 'Chưa cập nhật' }}</p>
+              <p><b>Chẩn đoán:</b> {{ record.diagnosis || 'Chưa cập nhật' }}</p>
+              <p><b>Hướng xử lý:</b> {{ record.treatmentPlan || 'Chưa cập nhật' }}</p>
+              <p><b>Ghi chú:</b> {{ record.notes || 'Không có' }}</p>
+            </div>
+
+            <section class="record-section">
+              <div class="section-title">
+                <span>Dịch vụ khám</span>
+                <p-tag
+                  [value]="record.procedures.length + ' dịch vụ'"
+                  severity="success"
+                  [rounded]="true"
+                />
+              </div>
+
+              @if (record.procedures.length) {
+                <div class="line-list">
+                  @for (procedure of record.procedures; track procedure.procedureName) {
+                    <div class="line-item">
+                      <strong>{{ procedure.procedureName || 'Dịch vụ khám' }}</strong>
+                      <span>SL: {{ procedure.quantity }}</span>
+                      <span>{{ formatMoney(procedure.unitPrice) }}</span>
+                      <small>{{ procedure.note || 'Không có ghi chú' }}</small>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="sub-empty">Chưa có dịch vụ khám.</p>
+              }
+            </section>
+
+            <section class="record-section prescription-section">
+              <div class="section-title">
+                <span>Đơn thuốc</span>
+                @if (record.prescription?.items?.length) {
+                  <div class="section-actions">
+                    <p-tag
+                      [value]="record.prescription!.items.length + ' thuốc'"
+                      severity="info"
+                      [rounded]="true"
+                    />
+                    <p-button
+                      label="In"
+                      icon="pi pi-print"
+                      severity="secondary"
+                      [outlined]="true"
+                      size="small"
+                      (onClick)="printPage()"
+                    />
+                  </div>
+                }
+              </div>
+
+              @if (record.prescription?.items?.length) {
+                <div class="prescription-meta">
+                  <span>Mã đơn: {{ record.prescription!.code || 'Chưa có' }}</span>
+                  <span>Ngày kê: {{ formatDate(record.prescription!.createdAt) }}</span>
+                  <span>Lời dặn: {{ record.prescription!.note || 'Không có' }}</span>
+                </div>
+
+                <div class="medicine-table">
+                  <div class="medicine-head">
+                    <span>Thuốc</span>
+                    <span>Liều</span>
+                    <span>Tần suất</span>
+                    <span>Thời gian</span>
+                    <span>SL</span>
+                    <span>Hướng dẫn</span>
+                  </div>
+                  @for (medicine of record.prescription!.items; track medicine.medicineName) {
+                    <div class="medicine-row">
+                      <strong>{{ medicine.medicineName || 'Thuốc' }}</strong>
+                      <span>{{ medicine.dosage || '-' }}</span>
+                      <span>{{ medicine.frequency || '-' }}</span>
+                      <span>{{ medicine.duration || '-' }}</span>
+                      <span>{{ medicine.quantity || 0 }}</span>
+                      <span>{{ medicine.instruction || '-' }}</span>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="sub-empty">Phiếu khám này không có đơn thuốc.</p>
+              }
+            </section>
+          </p-card>
+        } @empty {
+          <p class="empty">Chưa có hồ sơ khám.</p>
+        }
+      </div>
+    }
+  </p-card>
+</section>

@@ -1,0 +1,548 @@
+<p-toast/>
+<p-confirmDialog></p-confirmDialog>
+
+<section class="exam-page">
+    <header class="exam-header">
+        <div>
+            <h2>Khám bệnh</h2>
+            <p>{{ todayLabel() }}</p>
+        </div>
+        <div class="dentist-meta">
+            @if (dentist()) {
+                <span>Nha sĩ phụ trách</span>
+                <strong>{{ dentist()!.fullName }}</strong>
+            }
+            <p-button
+                    icon="pi pi-refresh"
+                    label="Tải lại"
+                    severity="secondary"
+                    [outlined]="true"
+                    [disabled]="loading() || resolvingDentist()"
+                    (onClick)="reload()"/>
+        </div>
+    </header>
+
+    <form class="exam-filter" [formGroup]="searchForm" (ngSubmit)="onSearch()">
+        <p-floatlabel variant="on" class="filter-keyword">
+            <input pInputText id="examKeyword" formControlName="keyword"/>
+            <label for="examKeyword">Mã lịch, tên hoặc SĐT bệnh nhân</label>
+        </p-floatlabel>
+
+        <p-floatlabel variant="on">
+            <input pInputText id="dateFrom" type="date" formControlName="dateFrom"/>
+            <label for="dateFrom">Từ ngày</label>
+        </p-floatlabel>
+
+        <p-floatlabel variant="on">
+            <input pInputText id="dateTo" type="date" formControlName="dateTo"/>
+            <label for="dateTo">Đến ngày</label>
+        </p-floatlabel>
+
+        <p-select
+                class="status-select"
+                formControlName="examStatus"
+                [options]="statusOptions"
+                optionLabel="label"
+                optionValue="value"/>
+
+        <div class="filter-actions">
+            <p-button type="submit" icon="pi pi-search" label="Tìm kiếm" [loading]="loading()"/>
+            <p-button type="button" icon="pi pi-filter-slash" label="Đặt lại" severity="secondary" [outlined]="true"
+                      [disabled]="loading()" (onClick)="onResetFilter()"/>
+        </div>
+    </form>
+
+    @if (error()) {
+        <div class="state-block error">{{ error() }}</div>
+    } @else if (resolvingDentist()) {
+        <div class="state-block loading">
+            <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+            <span>Đang xác định tài khoản nha sĩ...</span>
+        </div>
+    } @else {
+        <p-table
+                [value]="appointments()"
+                [loading]="loading()"
+                dataKey="id"
+                [expandedRowKeys]="expandedRows()"
+                styleClass="exam-table">
+            <ng-template #loadingicon>
+                <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+            </ng-template>
+
+            <ng-template #header>
+                <tr>
+                    <th style="width: 3.5rem"></th>
+                    <th>Mã lịch</th>
+                    <th>Bệnh nhân</th>
+                    <th>SĐT</th>
+                    <th>Giờ hẹn</th>
+                    <th>Lý do khám</th>
+                    <th>Trạng thái</th>
+                    <th>Đến khám</th>
+                </tr>
+            </ng-template>
+
+            <ng-template #body let-appointment let-expanded="expanded">
+                <tr class="exam-row" [class.row-expanded]="expanded" (click)="toggleRow(appointment)">
+                    <td>
+                        <i class="pi" [class.pi-chevron-down]="expanded" [class.pi-chevron-right]="!expanded"></i>
+                    </td>
+                    <td>
+                        <strong class="appointment-code">{{ appointment.code }}</strong>
+                    </td>
+                    <td>
+                        <div class="patient-cell">
+                            <strong>{{ appointment.patientName }}</strong>
+                            <span>{{ appointment.patientCode }}</span>
+                        </div>
+                    </td>
+                    <td>{{ appointment.patientPhone || '—' }}</td>
+                    <td>
+                        <div class="time-cell">
+                            <strong>{{ formatTime(appointment.appointmentDate) }}</strong>
+                            <span>{{ appointment.appointmentDate | date: 'dd/MM/yyyy' }}</span>
+                        </div>
+                    </td>
+                    <td class="reason-cell">{{ appointment.symptom || appointment.note || '—' }}</td>
+                    <td>
+                        <p-tag [value]="examStatusLabel(appointment)"
+                               [severity]="examStatusSeverity(appointment)"></p-tag>
+                    </td>
+                    <td>
+                        <p-tag [value]="arrivalLabel(appointment.arrivalStatus)"
+                               [severity]="arrivalSeverity(appointment.arrivalStatus)"></p-tag>
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template #expandedrow let-appointment>
+                <tr>
+                    <td colspan="8" class="expanded-row-cell">
+                        <div class="exam-detail-panel">
+                            @if (isDetailLoading(appointment.patientId)) {
+                                <div class="detail-loading">
+                                    <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+                                    <span>Đang tải hồ sơ bệnh nhân...</span>
+                                </div>
+                            } @else if (patientDetail(appointment); as detail) {
+                                <div class="exam-detail-actions" (click)="$event.stopPropagation()">
+                                    <p-button
+                                            icon="pi pi-play"
+                                            label="Bắt đầu khám"
+                                            size="small"
+                                            [outlined]="true"
+                                            [disabled]="!canStart(appointment)"
+                                            [loading]="isActionLoading(appointment, 'start')"
+                                            (onClick)="startAppointment(appointment)"/>
+                                    <p-button
+                                            icon="pi pi-check"
+                                            label="Kết thúc khám"
+                                            severity="success"
+                                            size="small"
+                                            [disabled]="!canComplete(appointment)"
+                                            [loading]="isActionLoading(appointment, 'done')"
+                                            (onClick)="completeAppointment(appointment)"/>
+                                </div>
+                                @if (appointment.status === 'IN_PROGRESS' && !currentTreatment(appointment)) {
+                                    <div class="locked-note">
+                                        <i class="pi pi-info-circle"></i>
+                                        <span>Vui lòng lưu phiếu khám tối thiểu trước khi kết thúc buổi khám.</span>
+                                    </div>
+                                }
+                                @if (appointment.status === 'CONFIRMED' && appointment.arrivalStatus !== 'ARRIVED') {
+                                    <div class="locked-note">
+                                        <i class="pi pi-info-circle"></i>
+                                        <span>Bệnh nhân chưa được ghi nhận đã đến. Lễ tân cần bấm Đã đến ở màn Lịch hẹn trước khi bác sĩ bắt đầu khám.</span>
+                                    </div>
+                                }
+                                @if (appointment.status === 'CONFIRMED' && appointment.arrivalStatus === 'ARRIVED' && !isTodayAppointment(appointment)) {
+                                    <div class="locked-note">
+                                        <i class="pi pi-info-circle"></i>
+                                        <span>Lịch hẹn này không phải hôm nay. Khi bấm Bắt đầu khám, hệ thống sẽ yêu cầu xác nhận trước khi chuyển sang đang khám.</span>
+                                    </div>
+                                }
+
+                                <p-tabs value="patient">
+                                    <p-tablist>
+                                        <p-tab value="patient">
+                                            <i class="pi pi-id-card mr-2"></i>Thông tin bệnh nhân
+                                        </p-tab>
+                                        <p-tab value="procedures" [disabled]="!isExamEditable(appointment)">
+                                            <i class="pi pi-list-check mr-2"></i>Dịch vụ khám
+                                        </p-tab>
+                                        <p-tab value="prescription" [disabled]="!isExamEditable(appointment)">
+                                            <i class="pi pi-file-edit mr-2"></i>Đơn thuốc
+                                        </p-tab>
+                                        <p-tab value="history" [disabled]="!isExamEditable(appointment)">
+                                            <i class="pi pi-history mr-2"></i>Lịch sử khám
+                                        </p-tab>
+                                    </p-tablist>
+
+                                    <p-tabpanels>
+                                        <p-tabpanel value="patient">
+                                            <div class="patient-overview">
+                                                <div class="patient-title">
+                                                    <span>{{ detail.patient.code }}</span>
+                                                    <strong>{{ detail.patient.fullName }}</strong>
+                                                    <p-tag [value]="activeLabel(detail.patient.isActive)"
+                                                           [severity]="detail.patient.isActive === false ? 'danger' : 'success'"></p-tag>
+                                                </div>
+                                                <div class="overview-grid">
+                                                    <div>
+                                                        <span>Số điện thoại</span>
+                                                        <strong>{{ detail.patient.phone || '—' }}</strong>
+                                                    </div>
+                                                    <div>
+                                                        <span>Email</span>
+                                                        <strong>{{ detail.patient.email || '—' }}</strong>
+                                                    </div>
+                                                    <div>
+                                                        <span>Giới tính</span>
+                                                        <strong>{{ genderLabel(detail.patient.gender) }}</strong>
+                                                    </div>
+                                                    <div>
+                                                        <span>Ngày sinh</span>
+                                                        <strong>{{ detail.patient.dob | date: 'dd/MM/yyyy' }}</strong>
+                                                    </div>
+                                                    <div>
+                                                        <span>Người giám hộ</span>
+                                                        <strong>{{ detail.patient.guardianName || '—' }}</strong>
+                                                    </div>
+                                                    <div>
+                                                        <span>SĐT giám hộ</span>
+                                                        <strong>{{ detail.patient.guardianPhone || '—' }}</strong>
+                                                    </div>
+                                                    <div class="overview-address">
+                                                        <span>Địa chỉ</span>
+                                                        <strong>{{ detail.patient.address || '—' }}</strong>
+                                                    </div>
+                                                </div>
+                                                <form class="treatment-summary-card"
+                                                      [formGroup]="treatmentForm"
+                                                      (click)="$event.stopPropagation()"
+                                                      (ngSubmit)="saveTreatmentSummary(appointment)">
+                                                    <div class="treatment-summary-head">
+                                                        <div>
+                                                            <strong>Phiếu khám</strong>
+                                                        </div>
+                                                        @if (currentTreatment(appointment)) {
+                                                            <p-tag value="Đã có phiếu"
+                                                                   severity="success"
+                                                                   [rounded]="true"/>
+                                                        } @else {
+                                                            <p-tag value="Chưa lưu phiếu"
+                                                                   severity="warn"
+                                                                   [rounded]="true"/>
+                                                        }
+                                                    </div>
+
+                                                    @if (!isExamEditable(appointment)) {
+                                                        <div class="treatment-summary-note">
+                                                            Bấm Bắt đầu khám để nhập và lưu phiếu khám.
+                                                        </div>
+                                                    }
+
+                                                    <div class="treatment-summary-grid">
+                                                        <label>
+                                                            <span>Kết luận / chẩn đoán</span>
+                                                            <textarea
+                                                                    pTextarea
+                                                                    rows="3"
+                                                                    formControlName="diagnosis"
+                                                                    placeholder="Ví dụ: Chưa phát hiện bất thường"
+                                                                    [readonly]="!isExamEditable(appointment)"
+                                                                    [autoResize]="true"></textarea>
+                                                        </label>
+                                                        <label>
+                                                            <span>Ghi chú</span>
+                                                            <textarea
+                                                                    pTextarea
+                                                                    rows="3"
+                                                                    formControlName="note"
+                                                                    placeholder="Ghi chú thêm nếu có"
+                                                                    [readonly]="!isExamEditable(appointment)"
+                                                                    [autoResize]="true"></textarea>
+                                                        </label>
+                                                    </div>
+
+                                                    <div class="treatment-summary-actions">
+                                                        <p-button
+                                                                type="submit"
+                                                                icon="pi pi-save"
+                                                                label="Lưu phiếu khám"
+                                                                size="small"
+                                                                [disabled]="!isExamEditable(appointment)"
+                                                                [loading]="savingTreatment()"/>
+                                                    </div>
+                                                </form>
+                                                @if (!isExamEditable(appointment)) {
+                                                    <div class="locked-note">
+                                                        <i class="pi pi-lock"></i>
+                                                        <span>Chỉ khi bác sĩ bắt đầu khám mới thao tác được dịch vụ khám, đơn thuốc và lịch sử khám.</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </p-tabpanel>
+
+                                        <p-tabpanel value="procedures">
+                                            <div class="compact-entry" (click)="$event.stopPropagation()">
+                                                <div class="compact-entry-head">
+                                                    <strong>Danh sách dịch vụ</strong>
+                                                    <div>
+                                                        <p-button icon="pi pi-print" label="In" size="small" [outlined]="true" severity="info"/>
+                                                        <p-button
+                                                                icon="pi pi-save"
+                                                                label="Lưu"
+                                                                size="small"
+                                                                [loading]="savingProcedure()"
+                                                                [disabled]="!canEditTreatmentPayload(appointment)"
+                                                                (onClick)="saveProcedures(appointment)"/>
+                                                    </div>
+                                                </div>
+
+                                                <table class="entry-table service-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>STT</th>
+                                                            <th>Mã DV</th>
+                                                            <th>Tên DV</th>
+                                                            <th>ĐVT</th>
+                                                            <th>SL</th>
+                                                            <th>Đơn giá</th>
+                                                            <th>Ghi chú</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @for (row of procedureDrafts(); track row.key) {
+                                                            <tr [class.new-entry-row]="!row.procedureId">
+                                                                <td>
+                                                                    @if (row.procedureId) {
+                                                                        {{ $index + 1 }}
+                                                                    } @else {
+                                                                        <span>Mới</span>
+                                                                    }
+                                                                </td>
+                                                                <td>{{ row.code || selectedProcedure(row.procedureId)?.code || '—' }}</td>
+                                                                <td>
+                                                                    <p-select
+                                                                            [ngModel]="row.procedureId"
+                                                                            [ngModelOptions]="{standalone: true}"
+                                                                            [options]="procedureOptions()"
+                                                                            optionLabel="name"
+                                                                            optionValue="id"
+                                                                            placeholder="Tên dịch vụ"
+                                                                            [filter]="true"
+                                                                            appendTo="body"
+                                                                            (onChange)="onProcedureDraftSelected(row.key, $event.value)"/>
+                                                                </td>
+                                                                <td>{{ row.unit || selectedProcedure(row.procedureId)?.unit || '—' }}</td>
+                                                                <td>
+                                                                    <input pInputText type="number" min="1"
+                                                                           [ngModel]="row.quantity"
+                                                                           [ngModelOptions]="{standalone: true}"
+                                                                           (ngModelChange)="updateProcedureDraft(row.key, {quantity: +$event})"/>
+                                                                </td>
+                                                                <td>{{ row.unitPrice || selectedProcedure(row.procedureId)?.price || '—' }}</td>
+                                                                <td>
+                                                                    <input pInputText
+                                                                           [ngModel]="row.note"
+                                                                           [ngModelOptions]="{standalone: true}"
+                                                                           placeholder="Ghi chú"
+                                                                           (ngModelChange)="updateProcedureDraft(row.key, {note: $event})"/>
+                                                                </td>
+                                                                <td class="row-action-cell">
+                                                                    @if (row.procedureId) {
+                                                                        <p-button
+                                                                                icon="pi pi-trash"
+                                                                                size="small"
+                                                                                severity="danger"
+                                                                                [text]="true"
+                                                                                pTooltip="Xóa dịch vụ"
+                                                                                tooltipPosition="top"
+                                                                                (onClick)="removeProcedureDraft(row.key)"/>
+                                                                    }
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr>
+                                                            <td colspan="5" class="total-label">Tổng chi phí</td>
+                                                            <td colspan="3">{{ procedureTotal() }}</td>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                        </p-tabpanel>
+
+                                        <p-tabpanel value="prescription">
+                                            <div class="compact-entry" (click)="$event.stopPropagation()">
+                                                <div class="compact-entry-head">
+                                                    <strong>Danh sách thuốc</strong>
+                                                    <div>
+                                                        <p-button icon="pi pi-print" label="In" size="small" [outlined]="true" severity="info"/>
+                                                        <p-button
+                                                                icon="pi pi-save"
+                                                                label="Lưu"
+                                                                size="small"
+                                                                [loading]="savingPrescription()"
+                                                                [disabled]="!canEditTreatmentPayload(appointment)"
+                                                                (onClick)="savePrescription(appointment)"/>
+                                                    </div>
+                                                </div>
+
+                                                <div class="prescription-meta-form" [formGroup]="medicineForm">
+                                                    <label>
+                                                        <span>Lời dặn</span>
+                                                        <textarea
+                                                                pTextarea
+                                                                rows="2"
+                                                                formControlName="advice"
+                                                                placeholder="Ví dụ: Uống thuốc sau ăn, tái khám nếu còn đau"
+                                                                [autoResize]="true"></textarea>
+                                                    </label>
+                                                    <label>
+                                                        <span>Ngày tái khám</span>
+                                                        <input
+                                                                pInputText
+                                                                type="date"
+                                                                formControlName="reExaminationDate"/>
+                                                    </label>
+                                                </div>
+
+                                                <table class="entry-table medicine-entry-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>STT</th>
+                                                            <th>Mã thuốc</th>
+                                                            <th>Tên thuốc</th>
+                                                            <th>ĐVT</th>
+                                                            <th>SL</th>
+                                                            <th>Liều dùng</th>
+                                                            <th>Tần suất</th>
+                                                            <th>Thời gian</th>
+                                                            <th>Hướng dẫn</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @for (row of medicineDrafts(); track row.key) {
+                                                            <tr [class.new-entry-row]="!row.medicineId">
+                                                                <td>
+                                                                    @if (row.medicineId) {
+                                                                        {{ $index + 1 }}
+                                                                    } @else {
+                                                                        <span>Mới</span>
+                                                                    }
+                                                                </td>
+                                                                <td>{{ row.code || selectedMedicine(row.medicineId)?.code || '—' }}</td>
+                                                                <td>
+                                                                    <p-select
+                                                                            [ngModel]="row.medicineId"
+                                                                            [ngModelOptions]="{standalone: true}"
+                                                                            [options]="medicineOptions()"
+                                                                            optionLabel="name"
+                                                                            optionValue="id"
+                                                                            placeholder="Tên thuốc"
+                                                                            [filter]="true"
+                                                                            appendTo="body"
+                                                                            (onChange)="onMedicineDraftSelected(row.key, $event.value)"/>
+                                                                </td>
+                                                                <td>{{ row.unit || selectedMedicine(row.medicineId)?.unit || '—' }}</td>
+                                                                <td><input pInputText type="number" min="1"
+                                                                           [ngModel]="row.quantity"
+                                                                           [ngModelOptions]="{standalone: true}"
+                                                                           (ngModelChange)="updateMedicineDraft(row.key, {quantity: +$event})"/></td>
+                                                                <td><input pInputText
+                                                                           [ngModel]="row.dosage"
+                                                                           [ngModelOptions]="{standalone: true}"
+                                                                           (ngModelChange)="updateMedicineDraft(row.key, {dosage: $event})"/></td>
+                                                                <td><input pInputText
+                                                                           [ngModel]="row.frequency"
+                                                                           [ngModelOptions]="{standalone: true}"
+                                                                           (ngModelChange)="updateMedicineDraft(row.key, {frequency: $event})"/></td>
+                                                                <td><input pInputText
+                                                                           [ngModel]="row.duration"
+                                                                           [ngModelOptions]="{standalone: true}"
+                                                                           (ngModelChange)="updateMedicineDraft(row.key, {duration: $event})"/></td>
+                                                                <td>
+                                                                    <input pInputText
+                                                                           [ngModel]="row.instruction"
+                                                                           [ngModelOptions]="{standalone: true}"
+                                                                           (ngModelChange)="updateMedicineDraft(row.key, {instruction: $event})"/>
+                                                                </td>
+                                                                <td class="row-action-cell">
+                                                                    @if (row.medicineId) {
+                                                                        <p-button
+                                                                                icon="pi pi-trash"
+                                                                                size="small"
+                                                                                severity="danger"
+                                                                                [text]="true"
+                                                                                pTooltip="Xóa thuốc"
+                                                                                tooltipPosition="top"
+                                                                                (onClick)="removeMedicineDraft(row.key)"/>
+                                                                    }
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </p-tabpanel>
+
+                                        <p-tabpanel value="history">
+                                            <table class="inner-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Ngày khám</th>
+                                                        <th>Bác sĩ</th>
+                                                        <th>Chẩn đoán</th>
+                                                        <th>Ghi chú</th>
+                                                        <th>Trạng thái</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if (detail.treatments.length) {
+                                                        @for (treatment of detail.treatments; track treatment.id) {
+                                                            <tr [class.current-history-row]="treatment.appointmentId === appointment.id">
+                                                                <td>{{ treatment.treatmentDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+                                                                <td>{{ treatment.doctorName || '—' }}</td>
+                                                                <td>{{ treatment.diagnosis || '—' }}</td>
+                                                                <td>{{ treatment.note || '—' }}</td>
+                                                                <td>
+                                                                    <p-tag [value]="treatmentStatusLabel(treatment.status)"
+                                                                           [severity]="treatmentStatusSeverity(treatment.status)"></p-tag>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    } @else {
+                                                        <tr>
+                                                            <td colspan="5" class="table-empty">Bệnh nhân chưa có lịch sử khám</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </p-tabpanel>
+                                    </p-tabpanels>
+                                </p-tabs>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template #emptymessage>
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-table">
+                            <i class="pi pi-calendar-times"></i>
+                            <span>Không có bệnh nhân chờ khám hoặc đang khám</span>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    }
+</section>

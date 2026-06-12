@@ -10,15 +10,21 @@ import {CreateStaffRequest} from "../model/request/create-staff-request";
 import {UpdateStaffRequest} from "../model/request/update-staff-request";
 import {UpdateStaffStatusRequest} from "../model/request/update-staff-status-request";
 
+type DentistOptionResponse = Pick<StaffResponse, 'id' | 'code' | 'fullName'>;
+
 @Injectable({
     providedIn: 'root',
 })
 export class StaffService {
-    private readonly url = ENV.API_BASE_URL + "clinic/staffs";
+    private readonly url = `${ENV.API_BASE_URL}/clinic/staffs`;
     private readonly http = inject(HttpClient);
 
     search(request: SearchStaffRequest): Observable<SuccessResponse<PageData<StaffResponse>>> {
         return this.http.post<SuccessResponse<PageData<StaffResponse>>>(`${this.url}/search`, request);
+    }
+
+    findDentistOptions(): Observable<SuccessResponse<DentistOptionResponse[]>> {
+        return this.http.get<SuccessResponse<DentistOptionResponse[]>>(`${this.url}/dentist-options`);
     }
 
     findById(id: number): Observable<SuccessResponse<StaffResponse>> {

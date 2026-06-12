@@ -1,16 +1,21 @@
 package cd.beapi.service;
 
 import cd.beapi.dto.request.CreateTreatmentRequest;
-import cd.beapi.dto.request.SearchTreatmentRequest;
 import cd.beapi.dto.request.UpdateTreatmentRequest;
-import cd.beapi.dto.response.PageData;
-import cd.beapi.dto.response.TreatmentResponse;
+import cd.beapi.dto.response.PrescriptionDetailResponse;
+import cd.beapi.dto.response.TreatmentDetailResponse;
+import cd.beapi.dto.response.TreatmentSummaryResponse;
+
+import java.util.List;
 
 public interface TreatmentService {
-    TreatmentResponse findById(Long id);
-    PageData<TreatmentResponse> search(SearchTreatmentRequest request);
-    TreatmentResponse save(CreateTreatmentRequest request);
-    TreatmentResponse update(Long id, UpdateTreatmentRequest request);
-    void delete(Long id);
-}
+    TreatmentDetailResponse findById(Long id);
 
+    List<TreatmentSummaryResponse> findByPatientId(Long patientId);
+
+    List<PrescriptionDetailResponse> findPrescriptionsByPatientId(Long patientId);
+
+    TreatmentDetailResponse save(CreateTreatmentRequest request);
+
+    TreatmentDetailResponse update(Long id, UpdateTreatmentRequest request);
+}

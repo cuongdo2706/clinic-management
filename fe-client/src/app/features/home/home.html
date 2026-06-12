@@ -1,0 +1,29 @@
+<section class="hero">
+  <div class="hero-head">
+    <p class="eyebrow">MC Smiles Clinic</p>
+    <h1>Đặt lịch và xem kết quả khám online</h1>
+    <p class="lead">
+      Khách hàng có thể đặt lịch trước khi tới khám, theo dõi lịch đã đặt và xem lại hồ sơ sức khỏe cá nhân.
+    </p>
+  </div>
+
+  <div class="hero-content">
+    <div class="feature-grid">
+      @for (item of features; track item.route) {
+        <a class="feature-link" [routerLink]="item.route">
+          <p-card styleClass="feature-card">
+            <i [class]="item.icon"></i>
+            <div>
+              <h2>{{ item.title }}</h2>
+              <p>{{ item.description }}</p>
+            </div>
+          </p-card>
+        </a>
+      }
+    </div>
+
+    <figure class="hero-media">
+      <img src="/mcsmile.png" alt="MC Smiles" />
+    </figure>
+  </div>
+</section>

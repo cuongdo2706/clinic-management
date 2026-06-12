@@ -117,6 +117,76 @@
     display: none;
 }
 
+.detail-loading {
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #64748b;
+}
+
+.patient-overview {
+    padding: 18px 20px;
+    border-bottom: 1px solid #d1fae5;
+    background: #f8fafc;
+}
+
+.overview-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.overview-main strong {
+    font-size: 1.05rem;
+    color: #0f172a;
+}
+
+.overview-code {
+    padding: 4px 9px;
+    border-radius: 6px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.overview-grid div {
+    min-width: 0;
+}
+
+.overview-grid span,
+.dialog-grid span,
+.long-text span {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.overview-grid strong,
+.dialog-grid strong {
+    display: block;
+    color: #0f172a;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.overview-address {
+    grid-column: span 1;
+}
+
 .patient-detail-body {
     display: flex;
     flex-direction: row;
@@ -231,6 +301,7 @@
     padding: 10px 14px;
     border-bottom: 1px solid #f1f5f9;
     color: #334155;
+    vertical-align: middle;
 }
 
 .history-table tbody tr:hover {
@@ -258,3 +329,137 @@
     font-size: 0.9rem;
 }
 
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.detail-dialog-body,
+.prescription-print-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dialog-section {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px;
+    background: #ffffff;
+}
+
+.section-title,
+.section-title-with-action {
+    margin-bottom: 12px;
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: #166534;
+    text-transform: uppercase;
+}
+
+.section-title-with-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dialog-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.long-text {
+    margin-top: 10px;
+}
+
+.long-text p {
+    margin: 0;
+    color: #334155;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.dialog-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+}
+
+.dialog-table th {
+    padding: 9px 10px;
+    background: #f0fdf4;
+    color: #15803d;
+    font-size: 0.76rem;
+    text-align: left;
+    text-transform: uppercase;
+    border-bottom: 1px solid #bbf7d0;
+}
+
+.dialog-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+.dialog-empty {
+    padding: 16px;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.prescription-summary {
+    display: grid;
+    grid-template-columns: 120px 120px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.prescription-summary span {
+    color: #166534;
+    font-weight: 800;
+}
+
+.prescription-summary strong {
+    color: #0f172a;
+}
+
+.prescription-summary p {
+    margin: 0;
+    color: #475569;
+}
+
+@media (max-width: 960px) {
+    .overview-grid,
+    .dialog-grid {
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+    }
+
+    .prescription-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .prescription-print-area,
+    .prescription-print-area * {
+        visibility: visible;
+    }
+
+    .prescription-print-area {
+        position: fixed;
+        inset: 0;
+        padding: 24px;
+        background: #ffffff;
+    }
+}

@@ -11,4 +11,6 @@ import lombok.experimental.FieldDefaults;
 public class UpdateAppointmentStatusRequest {
     @NotNull(message = "Appointment status must not be null")
     AppointmentStatus status;
+
+    String reason;
 }

@@ -1,0 +1,121 @@
+<section class="page">
+  <header class="page-head">
+    <div>
+      <p>Quản lý lịch khám</p>
+      <h1>Lịch khám của tôi</h1>
+    </div>
+    <div class="actions">
+      <p-button
+        label="Tải lại"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="loadData()"
+      />
+      <p-button label="Đặt lịch" icon="pi pi-calendar" routerLink="/booking" />
+    </div>
+  </header>
+
+  @if (error()) {
+    <p-message severity="error" [text]="error()" styleClass="page-message" />
+  }
+
+  @if (message()) {
+    <p-message severity="success" [text]="message()" styleClass="page-message" />
+  }
+
+  <p-card styleClass="panel-card">
+    <div class="filter-row">
+      <span class="p-input-icon-left search-box">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="search"
+          placeholder="Tìm mã lịch, bác sĩ, lý do khám"
+          [ngModel]="keyword()"
+          (ngModelChange)="keyword.set($event)"
+        />
+      </span>
+
+      <p-select
+        [options]="statusFilterOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="statusFilter()"
+        (ngModelChange)="statusFilter.set($event)"
+        appendTo="body"
+        styleClass="status-select"
+      />
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state">
+        <p-progress-spinner ariaLabel="Đang tải lịch khám" styleClass="small-spinner" />
+        <span>Đang tải lịch khám...</span>
+      </div>
+    } @else {
+      <div class="appointment-list">
+        @for (item of filteredAppointments(); track item.id) {
+          <p-card styleClass="appointment-card">
+            <div class="card-top">
+              <div class="main-info">
+                <strong>{{ item.code }}</strong>
+                <span>{{ formatDateTime(item.appointmentDate) }}</span>
+                <small>{{ item.dentistName || 'Chưa phân bác sĩ' }}</small>
+              </div>
+
+              <div class="meta">
+                <span>{{ item.estimatedDurationMinutes }} phút</span>
+                <p-tag
+                  [value]="statusLabel(item.status)"
+                  [severity]="statusSeverity(item.status)"
+                  [rounded]="true"
+                />
+                <p-tag
+                  [value]="arrivalStatusLabel(item.arrivalStatus)"
+                  [severity]="arrivalSeverity(item.arrivalStatus)"
+                  [rounded]="true"
+                />
+              </div>
+            </div>
+
+            <div class="detail-grid">
+              <div>
+                <span>Ngày tạo</span>
+                <strong>{{ formatDate(item.createdAt) }}</strong>
+              </div>
+              <div>
+                <span>Bệnh nhân</span>
+                <strong>{{ item.patientName || 'Tài khoản hiện tại' }}</strong>
+              </div>
+              <div>
+                <span>Lý do khám</span>
+                <strong>{{ item.symptom || 'Chưa nhập' }}</strong>
+              </div>
+              <div>
+                <span>Ghi chú</span>
+                <strong>{{ item.note || 'Không có' }}</strong>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              @if (canCancel(item)) {
+                <p-button
+                  label="Hủy lịch"
+                  icon="pi pi-times"
+                  severity="danger"
+                  [outlined]="true"
+                  [loading]="cancellingId() === item.id"
+                  [disabled]="cancellingId() !== null"
+                  (onClick)="cancelAppointment(item)"
+                />
+              }
+            </div>
+          </p-card>
+        } @empty {
+          <p class="empty">Không có lịch khám phù hợp.</p>
+        }
+      </div>
+    }
+  </p-card>
+</section>

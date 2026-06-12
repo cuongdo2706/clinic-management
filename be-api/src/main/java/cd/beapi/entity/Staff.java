@@ -11,6 +11,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
@@ -59,4 +61,8 @@ public class Staff extends BaseEntity{
     @OneToOne
     @JoinColumn(name = "user_id",unique = true)
     User user;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "staff", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<StaffWorkingSchedule> workingSchedules = new ArrayList<>();
 }

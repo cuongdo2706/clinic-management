@@ -5,12 +5,14 @@ import {Observable} from "rxjs";
 import {SuccessResponse} from "../model/response/success-response";
 
 export interface DashboardStats {
-    totalDentists: number;
-    totalPatients: number;
     totalAppointmentsToday: number;
-    totalServices: number;
+    pendingAppointmentsToday: number;
+    arrivedPatientsToday: number;
+    completedAppointmentsToday: number;
     recentAppointments: RecentAppointment[];
     appointmentsByMonth: MonthlyAppointment[];
+    appointmentsByDay: DailyAppointment[];
+    appointmentsByHour: HourlyAppointment[];
     serviceUsage: ServiceUsage[];
 }
 
@@ -28,6 +30,16 @@ export interface MonthlyAppointment {
     count: number;
 }
 
+export interface DailyAppointment {
+    day: string;
+    count: number;
+}
+
+export interface HourlyAppointment {
+    hour: string;
+    count: number;
+}
+
 export interface ServiceUsage {
     serviceName: string;
     count: number;
@@ -37,7 +49,7 @@ export interface ServiceUsage {
     providedIn: 'root',
 })
 export class DashboardService {
-    private readonly url = ENV.API_BASE_URL + "dashboard";
+    private readonly url = `${ENV.API_BASE_URL}/clinic/dashboard`;
     private readonly http = inject(HttpClient);
 
     getStats(): Observable<SuccessResponse<DashboardStats>> {

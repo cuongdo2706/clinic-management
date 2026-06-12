@@ -55,7 +55,7 @@ export class Login {
         };
         
         this.authService.login(payload).subscribe({
-            next: res => {
+            next: () => {
                 const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
                 this.router.navigateByUrl(returnUrl);
             },

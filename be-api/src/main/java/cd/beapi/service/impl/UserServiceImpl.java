@@ -59,6 +59,7 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(temporaryPassword))
                 .role(role)
                 .isActive(true)
+                .mustChangePassword(true)
                 .build();
 
         return new CreatedStaffUser(userRepository.save(user), temporaryPassword);

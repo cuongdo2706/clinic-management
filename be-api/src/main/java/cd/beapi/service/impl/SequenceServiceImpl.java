@@ -37,29 +37,18 @@ public class SequenceServiceImpl implements SequenceService {
     }
 
     @Override
-    public String generateBookingRequestCode() {
-        return format("YC", SequenceName.BOOKING_REQUEST, 8);
-    }
-
-
-    @Override
-    public String generateMedicalRecordCode() {
-        return format("BA", SequenceName.MEDICAL_RECORD,8);
-    }
-
-    @Override
     public String generatePrescriptionCode() {
         return format("DT", SequenceName.PRESCRIPTION,8);
     }
 
     @Override
-    public String generateTreatmentCode() {
-        return format("DV",SequenceName.TREATMENT,8);
+    public String generateProcedureCode() {
+        return format("DV",SequenceName.PROCEDURE,8);
     }
 
     @Override
-    public String generateTreatmentCategoryCode() {
-        return format("DMDV",SequenceName.TREATMENT_CATEGORY,3);
+    public String generateProcedureCategoryCode() {
+        return format("DMDV",SequenceName.PROCEDURE_CATEGORY,3);
     }
 
     private String format(String prefix, SequenceName sequenceName,int numberLength) {

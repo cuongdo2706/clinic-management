@@ -1,5 +1,6 @@
 package cd.beapi.entity;
 
+import cd.beapi.enumerate.TreatmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -10,46 +11,53 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "treatments")
 @Getter
 @Setter
-@EntityListeners(AuditingEntityListener.class)
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SQLRestriction("deleted_at is null")
 @SQLDelete(sql = "UPDATE treatments SET deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND version = ?")
 public class Treatment extends BaseEntity {
-    @Column(unique = true, nullable = false)
-    String code;
-
-    @Column(nullable = false)
-    String name;
+    @Column(columnDefinition = "TEXT")
+    String diagnosis;
 
     @Column(columnDefinition = "TEXT")
-    String description;
+    String note;
 
+    LocalDateTime treatmentDate;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    BigDecimal price;
+    TreatmentStatus status;
 
-    String unit;
+    @ManyToOne
+    @JoinColumn(name = "patient_id", nullable = false)
+    Patient patient;
 
-    Boolean isActive;
+    @OneToOne
+    @JoinColumn(name = "appointment_id", unique = true)
+    Appointment appointment;
+
+    @ManyToOne
+    @JoinColumn(name = "doctor_id")
+    Staff doctor;
+
+    @OneToOne(mappedBy = "treatment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    Prescription prescription;
+
+    Instant deletedAt;
 
     @Version
     @ColumnDefault("0")
     Long version;
-
-    @ManyToOne
-    @JoinColumn(name = "treatment_category_id")
-    TreatmentCategory treatmentCategory;
-
-    Instant deletedAt;
 
     @CreatedDate
     @Column(updatable = false)

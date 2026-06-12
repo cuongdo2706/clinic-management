@@ -109,6 +109,61 @@
             }
         </div>
 
+        <section class="schedule-section">
+            <h3>LỊCH LÀM VIỆC TRONG TUẦN</h3>
+            <div class="schedule-table-wrap">
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            <th>Làm việc</th>
+                            <th>Giờ bắt đầu</th>
+                            <th>Giờ kết thúc</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (row of workingSchedules(); track row.dayOfWeek) {
+                            <tr>
+                                <td>{{ row.label }}</td>
+                                <td>
+                                    <input
+                                            class="work-checkbox"
+                                            type="checkbox"
+                                            [checked]="row.working"
+                                            (change)="updateScheduleWorking(row.dayOfWeek, $any($event.target).checked)"/>
+                                </td>
+                                <td>
+                                    <select
+                                            class="time-select"
+                                            [value]="row.startTime"
+                                            [disabled]="!row.working"
+                                            (change)="updateScheduleTime(row.dayOfWeek, 'startTime', $any($event.target).value)">
+                                        @for (time of timeOptions; track time) {
+                                            <option [value]="time">{{ time }}</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <select
+                                            class="time-select"
+                                            [value]="row.endTime"
+                                            [disabled]="!row.working"
+                                            (change)="updateScheduleTime(row.dayOfWeek, 'endTime', $any($event.target).value)">
+                                        @for (time of timeOptions; track time) {
+                                            <option [value]="time">{{ time }}</option>
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (errors()['workingSchedules']) {
+                <small class="error-text">{{ errors()['workingSchedules'] }}</small>
+            }
+        </section>
+
         <div class="form-actions">
             <p-button type="button" label="Hủy" severity="secondary" icon="pi pi-times"
                       (onClick)="cancelled.emit()" [disabled]="loading()"/>

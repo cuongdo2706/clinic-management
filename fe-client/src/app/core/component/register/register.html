@@ -1,0 +1,172 @@
+<p-dialog
+  header="Đăng ký tài khoản"
+  [visible]="true"
+  [modal]="true"
+  [dismissableMask]="true"
+  [closable]="true"
+  [style]="{ width: '460px', maxWidth: 'calc(100vw - 32px)' }"
+  (visibleChange)="onVisibleChange($event)"
+>
+  <form class="register-form" [formGroup]="registerForm" (ngSubmit)="onRegister()" novalidate>
+    <p class="register-subtitle">
+      Tạo tài khoản bệnh nhân để đặt lịch và theo dõi hồ sơ khám.
+    </p>
+
+    <label>
+      <span>Họ tên</span>
+      <input
+        pInputText
+        formControlName="fullName"
+        autocomplete="name"
+        (input)="clearFieldError('fullName')"
+        [class.ng-invalid]="fieldErrors()['fullName']"
+      />
+      @if (fieldErrors()['fullName']) {
+        <small>{{ fieldErrors()['fullName'] }}</small>
+      }
+    </label>
+
+    <div class="field-row">
+      <label>
+        <span>Ngày sinh</span>
+        <p-datepicker
+          formControlName="dob"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [inputStyleClass]="fieldErrors()['dob'] ? 'ng-invalid w-full' : 'w-full'"
+          styleClass="w-full"
+          appendTo="body"
+          (onSelect)="clearFieldError('dob')"
+        />
+        @if (fieldErrors()['dob']) {
+          <small>{{ fieldErrors()['dob'] }}</small>
+        }
+      </label>
+
+      <label>
+        <span>Giới tính</span>
+        <p-select
+          formControlName="gender"
+          [options]="genderOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Chọn"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </label>
+    </div>
+
+    @if (isAdult()) {
+      <label>
+        <span>Số điện thoại</span>
+        <input
+          pInputText
+          formControlName="phone"
+          autocomplete="tel"
+          (input)="clearFieldError('phone')"
+          [class.ng-invalid]="fieldErrors()['phone']"
+        />
+        @if (fieldErrors()['phone']) {
+          <small>{{ fieldErrors()['phone'] }}</small>
+        }
+      </label>
+    } @else {
+      <p-message
+        severity="info"
+        text="Bệnh nhân dưới 14 tuổi cần thông tin người giám hộ."
+      />
+
+      <div class="field-row">
+        <label>
+          <span>Người giám hộ</span>
+          <input
+            pInputText
+            formControlName="guardianName"
+            (input)="clearFieldError('guardianName')"
+            [class.ng-invalid]="fieldErrors()['guardianName']"
+          />
+          @if (fieldErrors()['guardianName']) {
+            <small>{{ fieldErrors()['guardianName'] }}</small>
+          }
+        </label>
+
+        <label>
+          <span>SĐT giám hộ</span>
+          <input
+            pInputText
+            formControlName="guardianPhone"
+            autocomplete="tel"
+            (input)="clearFieldError('guardianPhone')"
+            [class.ng-invalid]="fieldErrors()['guardianPhone']"
+          />
+          @if (fieldErrors()['guardianPhone']) {
+            <small>{{ fieldErrors()['guardianPhone'] }}</small>
+          }
+        </label>
+      </div>
+    }
+
+    <label>
+      <span>Địa chỉ</span>
+      <textarea pTextarea formControlName="address" rows="2"></textarea>
+    </label>
+
+    <label>
+      <span>Tài khoản</span>
+      <input
+        pInputText
+        formControlName="username"
+        autocomplete="username"
+        (input)="clearFieldError('username')"
+        [class.ng-invalid]="fieldErrors()['username']"
+      />
+      @if (fieldErrors()['username']) {
+        <small>{{ fieldErrors()['username'] }}</small>
+      }
+    </label>
+
+    <label>
+      <span>Mật khẩu</span>
+      <input
+        pInputText
+        type="password"
+        formControlName="password"
+        autocomplete="new-password"
+        (input)="clearFieldError('password')"
+        [class.ng-invalid]="fieldErrors()['password']"
+      />
+      @if (fieldErrors()['password']) {
+        <small>{{ fieldErrors()['password'] }}</small>
+      }
+    </label>
+
+    <label>
+      <span>Xác nhận mật khẩu</span>
+      <input
+        pInputText
+        type="password"
+        formControlName="confirmPassword"
+        autocomplete="new-password"
+        (input)="clearFieldError('confirmPassword')"
+        [class.ng-invalid]="fieldErrors()['confirmPassword']"
+      />
+      @if (fieldErrors()['confirmPassword']) {
+        <small>{{ fieldErrors()['confirmPassword'] }}</small>
+      }
+    </label>
+
+    @if (error()) {
+      <p-message severity="error" [text]="error()" />
+    }
+
+    <p-button
+      type="submit"
+      label="Đăng ký"
+      icon="pi pi-user-plus"
+      [fluid]="true"
+      [loading]="loading()"
+      [disabled]="loading()"
+    />
+  </form>
+</p-dialog>

@@ -1,6 +1,7 @@
 package cd.beapi.security.service;
 
 import cd.beapi.entity.User;
+import cd.beapi.enumerate.PageType;
 import cd.beapi.repository.jpa.UserRepository;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,12 +33,40 @@ public class CustomUserDetailService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("Cannot find user with username: " + username));
 
         Set<GrantedAuthority> authorities = new HashSet<>();
-        authorities.add(new SimpleGrantedAuthority(user.getRole().getName()));
-        authorities.addAll(user.getRole().getPermissions().stream()
-                .map(permission -> permission.getPage().getCode().name() + ":" + permission.getAction().getCode().name())
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toSet()));
+        if (user.getRole() != null) {
+            if (user.getRole().getCode() != null) {
+                authorities.add(new SimpleGrantedAuthority(user.getRole().getCode()));
+            }
+            if (user.getRole().getName() != null) {
+                authorities.add(new SimpleGrantedAuthority(user.getRole().getName()));
+            }
+        }
+        if (user.getRole() != null) {
+            authorities.addAll(user.getRole().getPermissions().stream()
+                    .filter(permission -> isSupportedPage(permission.getPage().getCode()))
+                    .map(permission -> permission.getPage().getCode() + ":" + permission.getAction().getCode().name())
+                    .filter(Objects::nonNull)
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toSet()));
+        }
 
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), List.copyOf(authorities));
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                Boolean.TRUE.equals(user.getIsActive()),
+                true,
+                true,
+                !Boolean.TRUE.equals(user.getLocked()),
+                List.copyOf(authorities)
+        );
+    }
+
+    private static boolean isSupportedPage(String pageCode) {
+        try {
+            PageType.valueOf(pageCode);
+            return true;
+        } catch (IllegalArgumentException | NullPointerException ignored) {
+            return false;
+        }
     }
 }

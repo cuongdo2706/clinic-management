@@ -10,6 +10,7 @@ import {provideHttpClient, withInterceptors} from "@angular/common/http";
 import {authInterceptor} from "./core/interceptor/auth.interceptor";
 import {AuthService} from "./core/service/auth.service";
 import {catchError, of} from "rxjs";
+import {MessageService} from "primeng/api";
 
 registerLocaleData(localeVi);
 
@@ -49,6 +50,7 @@ export const appConfig: ApplicationConfig = {
             }
         }),
         provideHttpClient(withInterceptors([authInterceptor])),
+        MessageService,
         provideAppInitializer(() => {
             const authService = inject(AuthService);
             if (!authService.hasSession()) {

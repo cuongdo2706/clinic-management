@@ -6,6 +6,9 @@ import java.util.List;
 public record AvailableSlotResponse(
         Long dentistId,
         LocalDate date,
-        List<String> slots
+        Integer durationMinutes,
+        Integer slotStepMinutes,
+        List<String> slots,
+        List<AvailableSlotItemResponse> slotDetails
 ) {
 }

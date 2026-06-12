@@ -1,0 +1,185 @@
+.page-header {
+    margin-bottom: 12px;
+}
+
+.page-header h2 {
+    margin: 0;
+    color: #14532d;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.page-header p {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.account-tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 12px;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    background: #f0fdf4;
+}
+
+.account-tabs button {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #166534;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.account-tabs button.active {
+    background: #ffffff;
+    color: #14532d;
+    box-shadow: 0 1px 4px rgba(20, 83, 45, 0.14);
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: minmax(18rem, 2fr) minmax(12rem, 1fr) minmax(12rem, 1fr) auto auto;
+    gap: 0.75rem;
+    align-items: center;
+    width: min(100%, 62rem);
+}
+
+.filter-grid input,
+.filter-grid p-select {
+    width: 100%;
+}
+
+:host ::ng-deep .account-toolbar {
+    margin-bottom: 12px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.username-cell,
+.owner-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.username-cell {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    color: #14532d;
+    font-weight: 700;
+}
+
+.username-cell i {
+    color: #22c55e;
+}
+
+.owner-cell strong {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.owner-cell span,
+.muted {
+    color: #64748b;
+    font-size: 0.82rem;
+}
+
+.action-header,
+.action-cell {
+    text-align: center;
+}
+
+.action-cell {
+    white-space: nowrap;
+}
+
+.action-buttons {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.role-select {
+    width: 12rem;
+}
+
+.paginator-cell {
+    background: #ffffff !important;
+    padding: 0 !important;
+}
+
+.empty-state {
+    padding: 28px !important;
+    text-align: center;
+    color: #64748b;
+}
+
+.empty-state i {
+    margin-right: 6px;
+    color: #16a34a;
+}
+
+.reset-dialog {
+    display: grid;
+    gap: 12px;
+}
+
+.dialog-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: #475569;
+}
+
+.temporary-password {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    background: #f0fdf4;
+}
+
+.temporary-password span {
+    color: #166534;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.temporary-password strong {
+    color: #14532d;
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+}
+
+.dialog-note {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.86rem;
+    line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+    .filter-grid {
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .account-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+}

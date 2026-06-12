@@ -1,3 +1,5 @@
+import {StaffWorkingSchedulePayload} from '../staff-working-schedule';
+
 export interface UpdateStaffRequest {
     code: string;
     fullName: string;
@@ -9,4 +11,5 @@ export interface UpdateStaffRequest {
     staffType: string;
     isActive: boolean;
     version: number;
+    workingSchedules: StaffWorkingSchedulePayload[];
 }

@@ -1,3 +1,5 @@
+import {StaffWorkingSchedulePayload} from '../staff-working-schedule';
+
 export interface CreateStaffRequest {
     code: string;
     fullName: string;
@@ -9,4 +11,5 @@ export interface CreateStaffRequest {
     staffType: string;
     isActive: boolean;
     roleCode: string | null;
+    workingSchedules: StaffWorkingSchedulePayload[];
 }

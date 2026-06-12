@@ -9,17 +9,19 @@
 
     <!-- Menu -->
     <nav class="sidebar-menu">
-        @for (item of menuItems; track item.route) {
-            <a [routerLink]="item.route"
-               routerLinkActive="active"
-               class="menu-item"
-               [pTooltip]="collapsed() ? item.label : ''"
-               tooltipPosition="right">
-                <i [class]="item.icon" class="menu-icon"></i>
-                @if (!collapsed()) {
-                    <span class="menu-label">{{ item.label }}</span>
-                }
-            </a>
+        @for (item of menuItems(); track item.label) {
+            @if (canShow(item)) {
+                <a [routerLink]="item.route"
+                   routerLinkActive="active"
+                   class="menu-item"
+                   [pTooltip]="collapsed() ? item.label : ''"
+                   tooltipPosition="right">
+                    <i [class]="item.icon" class="menu-icon"></i>
+                    @if (!collapsed()) {
+                        <span class="menu-label">{{ item.label }}</span>
+                    }
+                </a>
+            }
         }
     </nav>
 

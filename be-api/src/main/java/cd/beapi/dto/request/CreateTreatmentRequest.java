@@ -1,29 +1,35 @@
 package cd.beapi.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
+import cd.beapi.enumerate.TreatmentStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateTreatmentRequest {
-    String code;
+    @NotNull(message = "Patient must not be null")
+    Long patientId;
 
-    @NotBlank(message = "Name must not be blank")
-    String name;
+    Long appointmentId;
 
-    String description;
+    Long doctorId;
 
-    @NotNull(message = "Price must not be null")
-    BigDecimal price;
+    String diagnosis;
 
-    String unit;
+    String note;
 
+    LocalDateTime treatmentDate;
 
-    Long treatmentCategoryId;
+    TreatmentStatus status;
+
+    @Valid
+    PrescriptionRequest prescription;
+
+    List<@Valid TreatmentProcedureRequest> procedures;
 }
-

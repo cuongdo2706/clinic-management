@@ -15,6 +15,12 @@
     color: #6b7280;
 }
 
+.dashboard-error {
+    margin-top: 10px;
+    color: #b91c1c;
+    font-size: 0.9rem;
+}
+
 /* Stat Cards Grid */
 .stat-grid {
     display: grid;
@@ -86,6 +92,18 @@
     font-weight: 600;
     color: #14532d;
     margin: 0 0 16px;
+}
+
+.chart-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.chart-card-header h3 {
+    margin: 0;
 }
 
 .chart-wrapper {

@@ -1,6 +1,8 @@
 package cd.beapi.security.jwt;
 
+import cd.beapi.enumerate.AuthPortal;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -51,27 +53,30 @@ public class JwtTokenProvider {
                 .collect(Collectors.toSet());
     }
 
-    public String generateAccessToken(Authentication authentication) {
-        return Jwts.builder()
+    public String generateAccessToken(Authentication authentication, AuthPortal portal) {
+        JwtBuilder builder = Jwts.builder()
                 .id(UUID.randomUUID().toString())
                 .subject(authentication.getName())
                 .claim("role", extractRole(authentication))
                 .claim("permission", extractPerm(authentication))
-                .claim("type", "access").issuedAt(new Date())
+                .claim("portal", portal.name())
+                .claim("type", "access")
+                .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessExpiration))
-                .signWith(key())
-                .compact();
+                .signWith(key());
+        return builder.compact();
     }
 
-    public String generateRefreshToken(Authentication authentication) {
-        return Jwts.builder()
+    public String generateRefreshToken(Authentication authentication, AuthPortal portal) {
+        JwtBuilder builder = Jwts.builder()
                 .id(UUID.randomUUID().toString())
                 .subject(authentication.getName())
                 .claim("type", "refresh")
+                .claim("portal", portal.name())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshExpiration))
-                .signWith(key())
-                .compact();
+                .signWith(key());
+        return builder.compact();
     }
 
     public long getAccessExpirationInSeconds() {

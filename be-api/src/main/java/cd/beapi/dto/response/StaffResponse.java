@@ -4,6 +4,8 @@ import cd.beapi.enumerate.StaffType;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
+
 public record StaffResponse(
         Long id,
         String code,
@@ -21,5 +23,6 @@ public record StaffResponse(
         Instant modifiedAt,
         Long userId,
         String username,
+        List<StaffWorkingScheduleResponse> workingSchedules,
         String temporaryPassword) {
 }

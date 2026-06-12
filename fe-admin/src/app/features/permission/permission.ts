@@ -6,7 +6,6 @@ import {Toast} from "primeng/toast";
 import {TableModule} from "primeng/table";
 import {Button} from "primeng/button";
 import {ProgressSpinner} from "primeng/progressspinner";
-import {Tag} from "primeng/tag";
 import {UpdatePermissionRequest} from "../../core/model/request/update-permission-request";
 import {Checkbox} from "primeng/checkbox";
 import {FormsModule} from "@angular/forms";
@@ -26,7 +25,6 @@ interface MatrixRow {
         TableModule,
         Button,
         ProgressSpinner,
-        Tag,
         Checkbox,
         FormsModule,
     ],

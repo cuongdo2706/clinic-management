@@ -5,6 +5,7 @@ import cd.beapi.dto.request.SearchStaffRequest;
 import cd.beapi.dto.request.UpdateStaffRequest;
 import cd.beapi.dto.request.UpdateStaffStatusRequest;
 import cd.beapi.dto.response.PageData;
+import cd.beapi.dto.response.PublicDentistResponse;
 import cd.beapi.dto.response.StaffResponse;
 import cd.beapi.dto.response.SuccessResponse;
 import cd.beapi.service.StaffService;
@@ -25,12 +26,19 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/clinic/staffs")
 public class StaffController {
     private final StaffService staffService;
+
+//    @PreAuthorize("hasAnyAuthority('STAFF:VIEW')")
+    @GetMapping("/dentist-options")
+    public SuccessResponse<List<PublicDentistResponse>> findDentistOptions() {
+        return new SuccessResponse<>(HttpStatus.OK.value(), "Get data successfully", Instant.now(), staffService.findDentistOptions());
+    }
 
 //    @PreAuthorize("hasAnyAuthority('STAFF:VIEW')")
     @GetMapping("/{id}")

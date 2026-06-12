@@ -36,21 +36,15 @@ public class ImageServiceImpl implements ImageService {
         Path fullPath = null;
         try {
             validateFile(file);
-            //Lấy file extension
             String extension = getFileExtension(file.getOriginalFilename());
-            //Tạo đường dẫn tương đối ("path-prefix"/"gen UUID file name")
             String relativePath = normalizePath(path) + "/" + generateFileName(extension);
-            //Build full path : D:/.../image/staff/jdkf7823r-1dsqaqw.jpg
             fullPath = buildFullPathFromRelativePath(relativePath);
-            //Tạo folder nếu chưa có
             Files.createDirectories(fullPath.getParent());
-            //Copy file vào ổ
             Files.copy(file.getInputStream(), fullPath, StandardCopyOption.REPLACE_EXISTING);
             return relativePath;
         } catch (AppException e) {
             throw e;
         } catch (IOException e) {
-            //Xoá nếu đã tồn tại
             deleteQuietly(fullPath);
             throw new AppException("Cannot save image file", HttpStatus.INTERNAL_SERVER_ERROR);
         }

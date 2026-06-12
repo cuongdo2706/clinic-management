@@ -1,0 +1,183 @@
+<section class="page">
+  <header class="page-head">
+    <div>
+      <p>Thông tin cá nhân</p>
+      <h1>Hồ sơ bệnh nhân</h1>
+      <span>Kiểm tra và cập nhật thông tin đang dùng cho lịch hẹn và hồ sơ khám.</span>
+    </div>
+    <div class="page-actions">
+      <p-button
+        label="Tải lại"
+        icon="pi pi-refresh"
+        severity="secondary"
+        [outlined]="true"
+        [disabled]="loading() || saving()"
+        (onClick)="loadProfile()"
+      />
+      <p-button
+        label="Cập nhật"
+        icon="pi pi-check"
+        [loading]="saving()"
+        [disabled]="loading()"
+        (onClick)="updateProfile()"
+      />
+    </div>
+  </header>
+
+  @if (error()) {
+    <p-message severity="error" [text]="error()" styleClass="page-message" />
+  }
+
+  @if (message()) {
+    <p-message severity="success" [text]="message()" styleClass="page-message" />
+  }
+
+  @if (loading()) {
+    <p-card styleClass="profile-card">
+      <p class="empty">Đang tải thông tin cá nhân...</p>
+    </p-card>
+  } @else if (profile()) {
+    <div class="profile-layout">
+      <p-card styleClass="profile-card profile-summary">
+        <div class="summary-kicker">Bệnh nhân</div>
+        <h2>{{ profile()!.fullName }}</h2>
+        <div class="summary-chip">{{ profile()!.code }}</div>
+
+        <div class="summary-list">
+          <div>
+            <span>Ngày sinh</span>
+            <strong>{{ formatDate(profile()!.dob) }}</strong>
+          </div>
+          <div>
+            <span>Giới tính</span>
+            <strong>{{ genderLabel(profile()!.gender) }}</strong>
+          </div>
+          <div>
+            <span>Liên hệ</span>
+            <strong>{{ profile()!.phone || profile()!.guardianPhone || 'Chưa cập nhật' }}</strong>
+          </div>
+          <div>
+            <span>Địa chỉ</span>
+            <strong>{{ profile()!.address || 'Chưa cập nhật' }}</strong>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card styleClass="profile-card profile-form-card">
+        <form [formGroup]="profileForm" class="profile-form" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label for="pf-code">Mã bệnh nhân</label>
+              <input pInputText id="pf-code" formControlName="code" />
+            </div>
+
+            <div class="field">
+              <label for="pf-full-name">Họ và tên</label>
+              <input
+                pInputText
+                id="pf-full-name"
+                formControlName="fullName"
+                (input)="clearFieldError('fullName')"
+                [class.ng-invalid]="fieldErrors()['fullName']"
+              />
+              @if (fieldErrors()['fullName']) {
+                <small class="field-error">{{ fieldErrors()['fullName'] }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="pf-dob">Ngày sinh</label>
+              <p-datepicker
+                inputId="pf-dob"
+                formControlName="dob"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                [inputStyleClass]="fieldErrors()['dob'] ? 'ng-invalid w-full' : 'w-full'"
+                styleClass="w-full"
+                (onSelect)="clearFieldError('dob')"
+              />
+              @if (fieldErrors()['dob']) {
+                <small class="field-error">{{ fieldErrors()['dob'] }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="pf-gender">Giới tính</label>
+              <p-select
+                inputId="pf-gender"
+                formControlName="gender"
+                [options]="genderOptions"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Chọn giới tính"
+                styleClass="w-full"
+                [class.ng-invalid]="fieldErrors()['gender']"
+                (onChange)="clearFieldError('gender')"
+              />
+              @if (fieldErrors()['gender']) {
+                <small class="field-error">{{ fieldErrors()['gender'] }}</small>
+              }
+            </div>
+
+            @if (isAdult()) {
+              <div class="field field-wide">
+                <label for="pf-phone">Số điện thoại</label>
+                <input
+                  pInputText
+                  id="pf-phone"
+                  formControlName="phone"
+                  (input)="clearFieldError('phone')"
+                  [class.ng-invalid]="fieldErrors()['phone']"
+                />
+                @if (fieldErrors()['phone']) {
+                  <small class="field-error">{{ fieldErrors()['phone'] }}</small>
+                }
+              </div>
+            } @else {
+              <div class="notice field-wide">
+                Bệnh nhân dưới 14 tuổi cần nhập thông tin người giám hộ để phòng khám liên hệ.
+              </div>
+
+              <div class="field">
+                <label for="pf-guardian-name">Người giám hộ</label>
+                <input
+                  pInputText
+                  id="pf-guardian-name"
+                  formControlName="guardianName"
+                  (input)="clearFieldError('guardianName')"
+                  [class.ng-invalid]="fieldErrors()['guardianName']"
+                />
+                @if (fieldErrors()['guardianName']) {
+                  <small class="field-error">{{ fieldErrors()['guardianName'] }}</small>
+                }
+              </div>
+
+              <div class="field">
+                <label for="pf-guardian-phone">SĐT người giám hộ</label>
+                <input
+                  pInputText
+                  id="pf-guardian-phone"
+                  formControlName="guardianPhone"
+                  (input)="clearFieldError('guardianPhone')"
+                  [class.ng-invalid]="fieldErrors()['guardianPhone']"
+                />
+                @if (fieldErrors()['guardianPhone']) {
+                  <small class="field-error">{{ fieldErrors()['guardianPhone'] }}</small>
+                }
+              </div>
+            }
+
+            <div class="field field-wide">
+              <label for="pf-address">Địa chỉ</label>
+              <textarea pTextarea id="pf-address" formControlName="address" rows="4"></textarea>
+            </div>
+          </div>
+        </form>
+      </p-card>
+    </div>
+  } @else {
+    <p-card styleClass="profile-card">
+      <p class="empty">Chưa có thông tin cá nhân.</p>
+    </p-card>
+  }
+</section>

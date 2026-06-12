@@ -12,10 +12,11 @@ public enum PageType {
     PATIENT     (EnumSet.of(VIEW, CREATE, UPDATE, DELETE, EXPORT)),
     STAFF       (EnumSet.of(VIEW, CREATE, UPDATE, DELETE)),
     APPOINTMENT (EnumSet.of(VIEW, CREATE, UPDATE, DELETE)),
+    EXAMINATION (EnumSet.of(VIEW, UPDATE)),
     MEDICINE    (EnumSet.of(VIEW, CREATE, UPDATE, DELETE, EXPORT)),
-    INVOICE     (EnumSet.of(VIEW, EXPORT)),
     PRESCRIPTION(EnumSet.of(VIEW, CREATE, UPDATE)),
-    TREATMENT   (EnumSet.of(VIEW, CREATE, UPDATE, DELETE)),
+    TREATMENT   (EnumSet.of(VIEW, CREATE, UPDATE)),
+    PROCEDURE   (EnumSet.of(VIEW, CREATE, UPDATE, DELETE)),
     USER        (EnumSet.of(VIEW, CREATE, UPDATE, DELETE));
 
     private final Set<ActionType> allowedActions;

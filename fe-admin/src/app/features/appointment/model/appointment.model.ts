@@ -3,11 +3,20 @@ import {PaginationFormat} from "../../../core/model/request/pagination-format";
 export type AppointmentStatus =
     'PENDING'
     | 'CONFIRMED'
-    | 'IN_QUEUE'
     | 'IN_PROGRESS'
-    | 'DONE'
-    | 'CANCELLED'
+    | 'COMPLETED'
+    | 'CANCELLED';
+
+export type AppointmentArrivalStatus =
+    'NOT_ARRIVED'
+    | 'ARRIVED'
     | 'NO_SHOW';
+
+export type AppointmentSortOption =
+    'APPOINTMENT_DATE'
+    | 'APPOINTMENT_DATE_DESC'
+    | 'CREATED_AT'
+    | 'CREATED_AT_DESC';
 
 export interface AppointmentResponse {
     id: number;
@@ -19,6 +28,7 @@ export interface AppointmentResponse {
     symptom: string | null;
     note: string | null;
     status: AppointmentStatus;
+    arrivalStatus: AppointmentArrivalStatus;
     queueNumber: number | null;
     version: number;
     patientId: number;
@@ -55,13 +65,24 @@ export interface SearchAppointmentRequest extends PaginationFormat {
     status: AppointmentStatus | null;
     dateFrom: string | null;
     dateTo: string | null;
-    sortBy: string;
+    sortBy: AppointmentSortOption;
 }
 
 export interface AvailableSlotResponse {
     dentistId: number;
     date: string;
+    durationMinutes: number;
+    slotStepMinutes: number;
     slots: string[];
+    slotDetails: AvailableSlotItemResponse[];
+}
+
+export interface AvailableSlotItemResponse {
+    time: string;
+    startAt: string;
+    endAt: string;
+    available: boolean;
+    reason: string | null;
 }
 
 export interface CheckInAppointmentRequest {

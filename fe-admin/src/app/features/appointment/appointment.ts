@@ -2,6 +2,7 @@ import {DatePipe} from '@angular/common';
 import {Component, inject, OnInit, signal} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {HttpErrorResponse} from '@angular/common/http';
+import {Observable} from 'rxjs';
 import {MessageService, ConfirmationService} from 'primeng/api';
 import {Button} from 'primeng/button';
 import {ConfirmDialog} from 'primeng/confirmdialog';
@@ -22,8 +23,12 @@ import {StaffResponse} from '../../core/model/response/staff-response';
 import {AppointmentService} from '../../core/service/appointment.service';
 import {PatientService} from '../../core/service/patient.service';
 import {StaffService} from '../../core/service/staff.service';
+import {AuthService} from '../../core/service/auth.service';
+import {SuccessResponse} from '../../core/model/response/success-response';
 import {
+    AppointmentArrivalStatus,
     AppointmentResponse,
+    AppointmentSortOption,
     AppointmentStatus,
     CreateAppointmentRequest,
     SearchAppointmentRequest,
@@ -34,6 +39,8 @@ interface SelectOption<T> {
     label: string;
     value: T;
 }
+
+type AppointmentAction = 'confirm' | 'arrived' | 'no-show' | 'cancel';
 
 @Component({
     selector: 'app-appointment',
@@ -60,11 +67,10 @@ interface SelectOption<T> {
     styleUrl: './appointment.css',
 })
 export class Appointment implements OnInit {
-    private static readonly DEFAULT_TIME_OPTIONS = Appointment.generateTimeOptions();
-
     private readonly appointmentService = inject(AppointmentService);
     private readonly patientService = inject(PatientService);
     private readonly staffService = inject(StaffService);
+    private readonly authService = inject(AuthService);
     private readonly messageService = inject(MessageService);
     private readonly confirmationService = inject(ConfirmationService);
 
@@ -74,12 +80,14 @@ export class Appointment implements OnInit {
     slotOptions = signal<SelectOption<string>[]>([]);
     loading = signal(false);
     saving = signal(false);
-    updatingStatusId = signal<number | null>(null);
+    actionLoading = signal<string | null>(null);
     dialogVisible = signal(false);
     isEdit = signal(false);
     searchKeyword = signal('');
 
     statusFilter: AppointmentStatus | null = null;
+    filterDate: Date | null = new Date();
+    sortBy: AppointmentSortOption = 'APPOINTMENT_DATE';
     appointmentDate: Date | null = null;
     appointmentTime = '';
     selectedId: number | null = null;
@@ -87,26 +95,23 @@ export class Appointment implements OnInit {
     readonly statusOptions: SelectOption<AppointmentStatus>[] = [
         {label: 'Chờ xác nhận', value: 'PENDING'},
         {label: 'Đã xác nhận', value: 'CONFIRMED'},
-        {label: 'Đang chờ khám', value: 'IN_QUEUE'},
         {label: 'Đang khám', value: 'IN_PROGRESS'},
-        {label: 'Hoàn thành', value: 'DONE'},
+        {label: 'Hoàn thành', value: 'COMPLETED'},
         {label: 'Đã hủy', value: 'CANCELLED'},
-        {label: 'Không đến', value: 'NO_SHOW'},
     ];
-    private readonly statusTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
-        PENDING: ['CONFIRMED', 'IN_QUEUE', 'CANCELLED', 'NO_SHOW'],
-        CONFIRMED: ['IN_QUEUE', 'CANCELLED', 'NO_SHOW'],
-        IN_QUEUE: ['IN_PROGRESS', 'CANCELLED'],
-        IN_PROGRESS: ['DONE'],
-        DONE: [],
-        CANCELLED: [],
-        NO_SHOW: [],
-    };
 
     readonly durationOptions: SelectOption<number>[] = [15, 30, 45, 60, 75, 90, 105, 120]
         .map(minutes => ({label: this.formatDurationLabel(minutes), value: minutes}));
 
+    readonly sortOptions: SelectOption<AppointmentSortOption>[] = [
+        {label: 'Gần nhất', value: 'APPOINTMENT_DATE'},
+        {label: 'Xa nhất', value: 'APPOINTMENT_DATE_DESC'},
+    ];
+
     formData: CreateAppointmentRequest & { version: number | null } = this.emptyForm();
+
+    readonly isDentistView = this.authService.hasRole('DENTIST')
+        && !this.authService.hasAnyRole(['ADMIN', 'MANAGER', 'RECEPTIONIST']);
 
     ngOnInit() {
         this.loadLookups();
@@ -131,20 +136,29 @@ export class Appointment implements OnInit {
     onResetFilter() {
         this.searchKeyword.set('');
         this.statusFilter = null;
+        this.filterDate = new Date();
+        this.sortBy = 'APPOINTMENT_DATE';
+        this.loadData();
+    }
+
+    onFilterDateChange(value: Date | null) {
+        this.filterDate = value;
         this.loadData();
     }
 
     openNew() {
+        if (this.isDentistView) return;
         this.formData = this.emptyForm();
         this.appointmentDate = null;
         this.appointmentTime = '';
-        this.slotOptions.set(Appointment.DEFAULT_TIME_OPTIONS);
+        this.slotOptions.set([]);
         this.selectedId = null;
         this.isEdit.set(false);
         this.dialogVisible.set(true);
     }
 
     openEdit(appointment: AppointmentResponse) {
+        if (this.isDentistView) return;
         this.selectedId = appointment.id;
         this.formData = {
             patientId: appointment.patientId,
@@ -164,12 +178,13 @@ export class Appointment implements OnInit {
     }
 
     save() {
+        if (this.isDentistView) return;
         const appointmentDate = this.toDateTimeString(this.appointmentDate, this.appointmentTime);
-        if (!this.formData.patientId || !appointmentDate || !this.formData.estimatedDurationMinutes) {
+        if (!this.formData.patientId || !this.formData.dentistId || !appointmentDate || !this.formData.estimatedDurationMinutes) {
             this.messageService.add({
                 severity: 'warn',
                 summary: 'Thiếu thông tin',
-                detail: 'Vui lòng chọn bệnh nhân, ngày hẹn, giờ hẹn và thời gian dự kiến'
+                detail: 'Vui lòng chọn bệnh nhân, nha sĩ, ngày hẹn, giờ hẹn và thời gian dự kiến'
             });
             return;
         }
@@ -215,7 +230,7 @@ export class Appointment implements OnInit {
         const date = this.toDateString(this.appointmentDate);
         const dentistId = this.formData.dentistId;
         const estimatedDurationMinutes = this.formData.estimatedDurationMinutes;
-        this.slotOptions.set(Appointment.DEFAULT_TIME_OPTIONS);
+        this.slotOptions.set([]);
         if (!date || !dentistId || !estimatedDurationMinutes) {
             return;
         }
@@ -231,11 +246,12 @@ export class Appointment implements OnInit {
                     this.appointmentTime = '';
                 }
             },
-            error: () => this.slotOptions.set(Appointment.DEFAULT_TIME_OPTIONS),
+            error: () => this.slotOptions.set([]),
         });
     }
 
     confirmDelete(appointment: AppointmentResponse) {
+        if (this.isDentistView) return;
         this.confirmationService.confirm({
             message: `Xoá dữ liệu lịch hẹn <b>${appointment.code}</b> của <b>${appointment.patientName}</b>? Thao tác này chỉ dùng khi tạo nhầm dữ liệu, không dùng để huỷ lịch hẹn.`,
             header: 'Xoá dữ liệu lịch hẹn',
@@ -255,37 +271,87 @@ export class Appointment implements OnInit {
         });
     }
 
-    getAvailableStatusOptions(appointment: AppointmentResponse): SelectOption<AppointmentStatus>[] {
-        const available = new Set([appointment.status, ...this.statusTransitions[appointment.status]]);
-        return this.statusOptions.filter(option => available.has(option.value));
-    }
-
-    onStatusChange(appointment: AppointmentResponse, nextStatus: AppointmentStatus) {
-        if (appointment.status === nextStatus) {
-            return;
-        }
-        const update = () => this.updateStatus(appointment, nextStatus);
-        if (nextStatus === 'CANCELLED' || nextStatus === 'NO_SHOW') {
-            this.confirmationService.confirm({
-                message: `Chuyển lịch hẹn <b>${appointment.code}</b> của <b>${appointment.patientName}</b> sang trạng thái <b>${this.statusLabel(nextStatus)}</b>?`,
-                header: 'Xác nhận trạng thái',
-                icon: 'pi pi-exclamation-triangle',
-                acceptLabel: 'Xác nhận',
-                rejectLabel: 'Huỷ',
-                acceptButtonStyleClass: nextStatus === 'CANCELLED' ? 'p-button-danger' : 'p-button-warn',
-                accept: update,
-            });
-            return;
-        }
-        update();
-    }
-
     canEdit(appointment: AppointmentResponse): boolean {
-        return ['PENDING', 'CONFIRMED', 'IN_QUEUE'].includes(appointment.status);
+        if (this.isDentistView) return false;
+        return ['PENDING', 'CONFIRMED'].includes(appointment.status)
+            && appointment.arrivalStatus === 'NOT_ARRIVED';
     }
 
     canHardDelete(appointment: AppointmentResponse): boolean {
-        return appointment.status === 'PENDING' || appointment.status === 'CONFIRMED';
+        if (this.isDentistView) return false;
+        return !['IN_PROGRESS', 'COMPLETED'].includes(appointment.status);
+    }
+
+    canConfirm(appointment: AppointmentResponse): boolean {
+        if (this.isDentistView) return false;
+        return appointment.status === 'PENDING'
+            && appointment.arrivalStatus === 'NOT_ARRIVED';
+    }
+
+    canMarkArrived(appointment: AppointmentResponse): boolean {
+        if (this.isDentistView) return false;
+        return appointment.status === 'CONFIRMED'
+            && appointment.arrivalStatus === 'NOT_ARRIVED';
+    }
+
+    canMarkNoShow(appointment: AppointmentResponse): boolean {
+        if (this.isDentistView) return false;
+        return appointment.status === 'CONFIRMED'
+            && appointment.arrivalStatus === 'NOT_ARRIVED';
+    }
+
+    canCancel(appointment: AppointmentResponse): boolean {
+        if (this.isDentistView) return false;
+        return ['PENDING', 'CONFIRMED'].includes(appointment.status)
+            && appointment.arrivalStatus === 'NOT_ARRIVED';
+    }
+
+    confirmAppointment(appointment: AppointmentResponse): void {
+        this.runAppointmentAction(
+            appointment,
+            'confirm',
+            () => this.appointmentService.confirm(appointment.id),
+            'Đã xác nhận lịch hẹn',
+        );
+    }
+
+    markArrived(appointment: AppointmentResponse): void {
+        this.runAppointmentAction(
+            appointment,
+            'arrived',
+            () => this.appointmentService.checkIn(appointment.id),
+            'Đã ghi nhận bệnh nhân đến',
+        );
+    }
+
+    markNoShow(appointment: AppointmentResponse): void {
+        this.runAppointmentAction(
+            appointment,
+            'no-show',
+            () => this.appointmentService.noShow(appointment.id),
+            'Đã đánh dấu bệnh nhân không đến',
+        );
+    }
+
+    cancelAppointment(appointment: AppointmentResponse): void {
+        this.confirmationService.confirm({
+            message: `Hủy lịch hẹn <b>${appointment.code}</b> của <b>${appointment.patientName}</b>?`,
+            header: 'Hủy lịch hẹn',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Hủy lịch',
+            rejectLabel: 'Đóng',
+            acceptButtonStyleClass: 'p-button-danger',
+            accept: () => this.runAppointmentAction(
+                appointment,
+                'cancel',
+                () => this.appointmentService.cancel(appointment.id),
+                'Đã hủy lịch hẹn',
+            ),
+        });
+    }
+
+    isActionLoading(appointment: AppointmentResponse, action: AppointmentAction): boolean {
+        return this.actionLoading() === this.actionKey(appointment, action);
     }
 
     getTimePlaceholder(): string {
@@ -293,7 +359,13 @@ export class Appointment implements OnInit {
     }
 
     getTimeEmptyMessage(): string {
-        return 'Không có giờ trống';
+        return this.canSelectTime()
+            ? 'Không có giờ trống'
+            : 'Chọn nha sĩ, ngày hẹn và thời gian dự kiến trước';
+    }
+
+    canSelectTime(): boolean {
+        return !!this.formData.dentistId && !!this.appointmentDate && !!this.formData.estimatedDurationMinutes;
     }
 
     private loadLookups() {
@@ -310,17 +382,8 @@ export class Appointment implements OnInit {
             next: (res) => this.patientOptions.set((res.data?.content ?? []).map(patient => this.toPatientOption(patient))),
         });
 
-        this.staffService.search({
-            page: 0,
-            size: 100,
-            sortBy: 'NAME',
-            codeKeyword: '',
-            nameKeyword: '',
-            phoneKeyword: '',
-            staffType: 'DENTIST',
-            isActive: true,
-        }).subscribe({
-            next: (res) => this.dentistOptions.set((res.data?.content ?? []).map(staff => this.toDentistOption(staff))),
+        this.staffService.findDentistOptions().subscribe({
+            next: (res) => this.dentistOptions.set((res.data ?? []).map(staff => this.toDentistOption(staff))),
         });
     }
 
@@ -333,9 +396,9 @@ export class Appointment implements OnInit {
             patientKeyword: '',
             dentistKeyword: '',
             status: this.statusFilter,
-            dateFrom: null,
-            dateTo: null,
-            sortBy: 'APPOINTMENT_DATE_DESC',
+            dateFrom: this.toDateString(this.filterDate),
+            dateTo: this.toDateString(this.filterDate),
+            sortBy: this.sortBy,
         };
     }
 
@@ -364,29 +427,89 @@ export class Appointment implements OnInit {
     }
 
     private showError(err: HttpErrorResponse) {
-        this.messageService.add({severity: 'error', summary: 'Lỗi', detail: err.error?.message || 'Có lỗi xảy ra'});
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Lỗi',
+            detail: this.toUserSafeErrorMessage(err),
+        });
     }
 
-    private statusLabel(status: AppointmentStatus): string {
+    private toUserSafeErrorMessage(err: HttpErrorResponse): string {
+        const message = typeof err.error?.message === 'string' ? err.error.message : '';
+        if (!message) {
+            return 'Có lỗi xảy ra, vui lòng thử lại';
+        }
+
+        const lowerMessage = message.toLowerCase();
+        const isInternalError = [
+            'sql ',
+            'constraint',
+            'could not execute',
+            'batch entry',
+            'jdbc',
+            'hibernate',
+            'psqlexception',
+            'violates check constraint',
+        ].some(keyword => lowerMessage.includes(keyword));
+
+        if (isInternalError) {
+            return 'Không thể cập nhật dữ liệu, vui lòng kiểm tra lại hoặc thử lại sau';
+        }
+
+        return message;
+    }
+
+    statusLabel(status: AppointmentStatus): string {
         return this.statusOptions.find(option => option.value === status)?.label ?? status;
     }
 
-    private updateStatus(appointment: AppointmentResponse, status: AppointmentStatus) {
-        this.updatingStatusId.set(appointment.id);
-        this.appointmentService.updateStatus(appointment.id, status).subscribe({
-            next: (res) => {
-                const updated = res.data;
-                if (updated) {
-                    this.appointments.update(items => items.map(item => item.id === updated.id ? updated : item));
+    statusClass(status: AppointmentStatus | null | undefined): string {
+        return status ? `status-badge status-${status.toLowerCase()}` : 'status-badge';
+    }
+
+    arrivalLabel(status: AppointmentArrivalStatus | null | undefined): string {
+        switch (status) {
+            case 'ARRIVED':
+                return 'Đã đến';
+            case 'NO_SHOW':
+                return 'Không đến';
+            case 'NOT_ARRIVED':
+                return 'Chưa đến';
+            default:
+                return 'Chưa rõ';
+        }
+    }
+
+    arrivalClass(status: AppointmentArrivalStatus | null | undefined): string {
+        return status ? `arrival-badge arrival-${status.toLowerCase()}` : 'arrival-badge';
+    }
+
+    private runAppointmentAction(
+        appointment: AppointmentResponse,
+        action: AppointmentAction,
+        request: () => Observable<SuccessResponse<AppointmentResponse>>,
+        successMessage: string,
+    ): void {
+        this.actionLoading.set(this.actionKey(appointment, action));
+        request().subscribe({
+            next: res => {
+                this.actionLoading.set(null);
+                if (res.data) {
+                    this.appointments.update(items => items.map(item => item.id === res.data.id ? res.data : item));
+                } else {
+                    this.loadData();
                 }
-                this.updatingStatusId.set(null);
-                this.messageService.add({severity: 'success', summary: 'Thành công', detail: 'Đã cập nhật trạng thái lịch hẹn'});
+                this.messageService.add({severity: 'success', summary: 'Thành công', detail: successMessage});
             },
             error: (err: HttpErrorResponse) => {
-                this.updatingStatusId.set(null);
+                this.actionLoading.set(null);
                 this.showError(err);
             },
         });
+    }
+
+    private actionKey(appointment: AppointmentResponse, action: AppointmentAction): string {
+        return `${appointment.id}:${action}`;
     }
 
     private toPatientOption(patient: PatientResponse): SelectOption<number> {
@@ -394,7 +517,7 @@ export class Appointment implements OnInit {
         return {label: `${patient.code} - ${patient.fullName} - ${phone}`, value: patient.id};
     }
 
-    private toDentistOption(staff: StaffResponse): SelectOption<number> {
+    private toDentistOption(staff: Pick<StaffResponse, 'id' | 'code' | 'fullName'>): SelectOption<number> {
         return {label: `${staff.code} - ${staff.fullName}`, value: staff.id};
     }
 
@@ -431,16 +554,5 @@ export class Appointment implements OnInit {
         return remainingMinutes === 0
             ? `${hours} giờ`
             : `${hours} giờ ${remainingMinutes} phút`;
-    }
-
-    private static generateTimeOptions(): SelectOption<string>[] {
-        const options: SelectOption<string>[] = [];
-        for (let hour = 8; hour < 17; hour++) {
-            for (const minute of [0, 15, 30, 45]) {
-                const value = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-                options.push({label: value, value});
-            }
-        }
-        return options;
     }
 }

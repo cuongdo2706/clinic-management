@@ -1,7 +1,15 @@
-import {afterNextRender, Component, ElementRef, inject, OnDestroy, signal, viewChild} from '@angular/core';
-import {DashboardService, RecentAppointment} from "../../core/service/dashboard.service";
+import {afterNextRender, Component, computed, ElementRef, inject, OnDestroy, signal, viewChild} from '@angular/core';
+import {FormsModule} from '@angular/forms';
+import {
+    DailyAppointment,
+    DashboardService,
+    HourlyAppointment,
+    MonthlyAppointment,
+    RecentAppointment
+} from "../../core/service/dashboard.service";
 import {Tag} from "primeng/tag";
 import {TableModule} from "primeng/table";
+import {Select} from "primeng/select";
 import {Chart, registerables} from 'chart.js';
 
 Chart.register(...registerables);
@@ -14,9 +22,18 @@ interface StatCard {
     bg: string;
 }
 
+type AppointmentChartMode = 'MONTH' | 'DAY' | 'HOUR';
+
+interface AppointmentChartPoint {
+    label: string;
+    count: number;
+}
+
 @Component({
     selector: 'app-dashboard',
     imports: [
+        FormsModule,
+        Select,
         Tag,
         TableModule,
     ],
@@ -33,15 +50,35 @@ export class Dashboard implements OnDestroy {
     pieCanvas = viewChild<ElementRef<HTMLCanvasElement>>('pieCanvas');
 
     loading = signal(true);
+    error = signal('');
+    appointmentChartMode = signal<AppointmentChartMode>('MONTH');
+    appointmentChartModeOptions = [
+        {label: 'Theo tháng', value: 'MONTH'},
+        {label: 'Theo ngày', value: 'DAY'},
+        {label: 'Theo giờ', value: 'HOUR'},
+    ];
+    appointmentChartTitle = computed(() => {
+        switch (this.appointmentChartMode()) {
+            case 'DAY':
+                return 'Lịch hẹn theo ngày';
+            case 'HOUR':
+                return 'Lịch hẹn theo giờ';
+            default:
+                return 'Lịch hẹn theo tháng';
+        }
+    });
 
     statCards = signal<StatCard[]>([
-        {label: 'Nha sĩ', value: 0, icon: 'pi pi-users', color: '#16a34a', bg: '#dcfce7'},
-        {label: 'Bệnh nhân', value: 0, icon: 'pi pi-user', color: '#0891b2', bg: '#cffafe'},
         {label: 'Lịch hẹn hôm nay', value: 0, icon: 'pi pi-calendar', color: '#d97706', bg: '#fef3c7'},
-        {label: 'Dịch vụ', value: 0, icon: 'pi pi-list', color: '#7c3aed', bg: '#ede9fe'},
+        {label: 'Chờ xác nhận', value: 0, icon: 'pi pi-clock', color: '#7c3aed', bg: '#ede9fe'},
+        {label: 'Bệnh nhân đã đến', value: 0, icon: 'pi pi-user-check', color: '#0891b2', bg: '#cffafe'},
+        {label: 'Hoàn thành hôm nay', value: 0, icon: 'pi pi-check-circle', color: '#16a34a', bg: '#dcfce7'},
     ]);
 
     recentAppointments = signal<RecentAppointment[]>([]);
+    appointmentsByMonth = signal<MonthlyAppointment[]>([]);
+    appointmentsByDay = signal<DailyAppointment[]>([]);
+    appointmentsByHour = signal<HourlyAppointment[]>([]);
 
     constructor() {
         afterNextRender(() => this.loadData());
@@ -54,67 +91,62 @@ export class Dashboard implements OnDestroy {
 
     loadData() {
         this.loading.set(true);
+        this.error.set('');
         this.dashboardService.getStats().subscribe({
             next: (res) => {
                 const stats = res.data;
                 if (stats) {
                     this.statCards.set([
-                        {label: 'Nha sĩ', value: stats.totalDentists, icon: 'pi pi-users', color: '#16a34a', bg: '#dcfce7'},
-                        {label: 'Bệnh nhân', value: stats.totalPatients, icon: 'pi pi-user', color: '#0891b2', bg: '#cffafe'},
                         {label: 'Lịch hẹn hôm nay', value: stats.totalAppointmentsToday, icon: 'pi pi-calendar', color: '#d97706', bg: '#fef3c7'},
-                        {label: 'Dịch vụ', value: stats.totalServices, icon: 'pi pi-list', color: '#7c3aed', bg: '#ede9fe'},
+                        {label: 'Chờ xác nhận', value: stats.pendingAppointmentsToday, icon: 'pi pi-clock', color: '#7c3aed', bg: '#ede9fe'},
+                        {label: 'Bệnh nhân đã đến', value: stats.arrivedPatientsToday, icon: 'pi pi-user-check', color: '#0891b2', bg: '#cffafe'},
+                        {label: 'Hoàn thành hôm nay', value: stats.completedAppointmentsToday, icon: 'pi pi-check-circle', color: '#16a34a', bg: '#dcfce7'},
                     ]);
                     this.recentAppointments.set(stats.recentAppointments ?? []);
-                    this.renderBarChart(stats.appointmentsByMonth ?? []);
+                    this.appointmentsByMonth.set(stats.appointmentsByMonth ?? []);
+                    this.appointmentsByDay.set(stats.appointmentsByDay ?? []);
+                    this.appointmentsByHour.set(stats.appointmentsByHour ?? []);
+                    this.renderAppointmentChart();
                     this.renderPieChart(stats.serviceUsage ?? []);
                 }
                 this.loading.set(false);
             },
             error: () => {
-                this.setDemoData();
+                this.error.set('Không tải được dữ liệu tổng quan');
+                this.recentAppointments.set([]);
+                this.appointmentsByMonth.set([]);
+                this.appointmentsByDay.set([]);
+                this.appointmentsByHour.set([]);
+                this.renderAppointmentChart();
+                this.renderPieChart([]);
                 this.loading.set(false);
             },
         });
     }
 
-    /** Demo data khi API chưa có */
-    private setDemoData() {
-        this.statCards.set([
-            {label: 'Nha sĩ', value: 12, icon: 'pi pi-users', color: '#16a34a', bg: '#dcfce7'},
-            {label: 'Bệnh nhân', value: 248, icon: 'pi pi-user', color: '#0891b2', bg: '#cffafe'},
-            {label: 'Lịch hẹn hôm nay', value: 8, icon: 'pi pi-calendar', color: '#d97706', bg: '#fef3c7'},
-            {label: 'Dịch vụ', value: 15, icon: 'pi pi-list', color: '#7c3aed', bg: '#ede9fe'},
-        ]);
-        this.recentAppointments.set([
-            {id: '1', patientName: 'Nguyễn Văn A', dentistName: 'BS. Trần B', appointmentDate: '2026-03-08', timeSlot: '08:00 - 09:00', status: 'CONFIRMED'},
-            {id: '2', patientName: 'Lê Thị C', dentistName: 'BS. Phạm D', appointmentDate: '2026-03-08', timeSlot: '09:00 - 10:00', status: 'PENDING'},
-            {id: '3', patientName: 'Hoàng Văn E', dentistName: 'BS. Trần B', appointmentDate: '2026-03-08', timeSlot: '10:00 - 11:00', status: 'COMPLETED'},
-            {id: '4', patientName: 'Trần Thị F', dentistName: 'BS. Nguyễn G', appointmentDate: '2026-03-08', timeSlot: '13:00 - 14:00', status: 'CANCELLED'},
-            {id: '5', patientName: 'Võ Minh H', dentistName: 'BS. Phạm D', appointmentDate: '2026-03-08', timeSlot: '14:00 - 15:00', status: 'CONFIRMED'},
-        ]);
-        this.renderBarChart([
-            {month: 'T1', count: 45}, {month: 'T2', count: 52}, {month: 'T3', count: 61},
-            {month: 'T4', count: 48}, {month: 'T5', count: 55}, {month: 'T6', count: 70},
-            {month: 'T7', count: 63}, {month: 'T8', count: 58}, {month: 'T9', count: 72},
-            {month: 'T10', count: 80}, {month: 'T11', count: 67}, {month: 'T12', count: 75},
-        ]);
-        this.renderPieChart([
-            {serviceName: 'Nhổ răng', count: 35},
-            {serviceName: 'Trám răng', count: 50},
-            {serviceName: 'Tẩy trắng', count: 25},
-            {serviceName: 'Niềng răng', count: 18},
-            {serviceName: 'Bọc sứ', count: 30},
-        ]);
+    onAppointmentChartModeChange(mode: AppointmentChartMode): void {
+        this.appointmentChartMode.set(mode);
+        this.renderAppointmentChart();
     }
 
-    private renderBarChart(data: { month: string; count: number }[]) {
+    private renderAppointmentChart(): void {
+        const mode = this.appointmentChartMode();
+        const data: AppointmentChartPoint[] = mode === 'MONTH'
+            ? this.appointmentsByMonth().map(item => ({label: item.month, count: item.count}))
+            : mode === 'DAY'
+                ? this.appointmentsByDay().map(item => ({label: item.day, count: item.count}))
+                : this.appointmentsByHour().map(item => ({label: item.hour, count: item.count}));
+        this.renderBarChart(data);
+    }
+
+    private renderBarChart(data: AppointmentChartPoint[]) {
         const canvas = this.barCanvas()?.nativeElement;
         if (!canvas) return;
         this.barChart?.destroy();
         this.barChart = new Chart(canvas, {
             type: 'bar',
             data: {
-                labels: data.map(d => d.month),
+                labels: data.map(d => d.label),
                 datasets: [{
                     label: 'Lịch hẹn',
                     data: data.map(d => d.count),
@@ -163,18 +195,20 @@ export class Dashboard implements OnDestroy {
 
     getStatusLabel(status: string): string {
         switch (status?.toUpperCase()) {
-            case 'CONFIRMED': return 'Đã xác nhận';
             case 'PENDING': return 'Chờ xác nhận';
+            case 'CONFIRMED': return 'Đã xác nhận';
+            case 'IN_PROGRESS': return 'Đang khám';
             case 'COMPLETED': return 'Hoàn thành';
-            case 'CANCELLED': return 'Đã huỷ';
+            case 'CANCELLED': return 'Đã hủy';
             default: return status;
         }
     }
 
     getStatusSeverity(status: string): "success" | "info" | "warn" | "danger" | "secondary" {
         switch (status?.toUpperCase()) {
-            case 'CONFIRMED': return 'success';
             case 'PENDING': return 'warn';
+            case 'CONFIRMED': return 'success';
+            case 'IN_PROGRESS': return 'info';
             case 'COMPLETED': return 'info';
             case 'CANCELLED': return 'danger';
             default: return 'secondary';

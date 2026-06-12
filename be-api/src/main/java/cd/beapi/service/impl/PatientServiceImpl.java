@@ -3,15 +3,22 @@ package cd.beapi.service.impl;
 import cd.beapi.dto.request.CreatePatientRequest;
 import cd.beapi.dto.request.SearchPatientRequest;
 import cd.beapi.dto.request.UpdatePatientRequest;
+import cd.beapi.dto.response.AppointmentResponse;
 import cd.beapi.dto.response.PageData;
+import cd.beapi.dto.response.PatientDetailResponse;
+import cd.beapi.dto.response.PatientInfoResponse;
 import cd.beapi.dto.response.PatientResponse;
 import cd.beapi.entity.Patient;
 import cd.beapi.entity.QPatient;
+import cd.beapi.entity.User;
 import cd.beapi.exception.AppException;
+import cd.beapi.mapper.AppointmentMapper;
 import cd.beapi.mapper.PatientMapper;
+import cd.beapi.repository.jpa.AppointmentRepository;
 import cd.beapi.repository.jpa.PatientRepository;
 import cd.beapi.service.PatientService;
 import cd.beapi.service.SequenceService;
+import cd.beapi.service.TreatmentService;
 import cd.beapi.utility.ExcelUtil;
 import cd.beapi.utility.StringUtil;
 import com.querydsl.core.BooleanBuilder;
@@ -38,8 +45,11 @@ import java.util.List;
 public class PatientServiceImpl implements PatientService {
     private static final int MAX_AGE_UNDER_SUPERVISION = 14;
     private final PatientRepository patientRepository;
+    private final AppointmentRepository appointmentRepository;
     private final SequenceService sequenceService;
     private final PatientMapper patientMapper;
+    private final AppointmentMapper appointmentMapper;
+    private final TreatmentService treatmentService;
 
     @Override
     public PatientResponse findById(Long id) {
@@ -47,6 +57,24 @@ public class PatientServiceImpl implements PatientService {
                 patientRepository.findById(id).orElseThrow(
                         () -> new AppException("Cannot find patient with id: " + id, HttpStatus.BAD_REQUEST)
                 )
+        );
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public PatientDetailResponse findDetail(Long id) {
+        Patient patient = patientRepository.findById(id).orElseThrow(
+                () -> new AppException("Cannot find patient with id: " + id, HttpStatus.BAD_REQUEST)
+        );
+        List<AppointmentResponse> appointments = appointmentRepository.findByPatientIdOrderByAppointmentDateDesc(id)
+                .stream()
+                .map(appointmentMapper::toAppointmentResponse)
+                .toList();
+        return new PatientDetailResponse(
+                toPatientInfo(patient),
+                treatmentService.findByPatientId(id),
+                treatmentService.findPrescriptionsByPatientId(id),
+                appointments
         );
     }
 
@@ -230,5 +258,22 @@ public class PatientServiceImpl implements PatientService {
         } catch (IOException e) {
             throw new AppException("Cannot export patient data to Excel", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private PatientInfoResponse toPatientInfo(Patient patient) {
+        User user = patient.getUser();
+        return new PatientInfoResponse(
+                patient.getId(),
+                patient.getCode(),
+                patient.getFullName(),
+                patient.getPhone() != null ? patient.getPhone() : patient.getGuardianPhone(),
+                user == null ? null : user.getUsername(),
+                patient.getGender(),
+                patient.getDob(),
+                patient.getAddress(),
+                user == null ? Boolean.TRUE : user.getIsActive(),
+                patient.getGuardianName(),
+                patient.getGuardianPhone()
+        );
     }
 }

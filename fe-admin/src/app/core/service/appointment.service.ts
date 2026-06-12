@@ -6,6 +6,7 @@ import {SuccessResponse} from "../model/response/success-response";
 import {PageData} from "../model/response/page-data";
 import {
     AppointmentResponse,
+    AppointmentArrivalStatus,
     AvailableSlotResponse,
     CheckInAppointmentRequest,
     CreateAppointmentRequest,
@@ -17,7 +18,7 @@ import {
     providedIn: 'root',
 })
 export class AppointmentService {
-    private readonly url = ENV.API_BASE_URL + "clinic/appointments";
+    private readonly url = `${ENV.API_BASE_URL}/clinic/appointments`;
     private readonly http = inject(HttpClient);
 
     search(request: SearchAppointmentRequest): Observable<SuccessResponse<PageData<AppointmentResponse>>> {
@@ -64,8 +65,12 @@ export class AppointmentService {
         return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/no-show`, {});
     }
 
-    updateStatus(id: number, status: AppointmentResponse['status']): Observable<SuccessResponse<AppointmentResponse>> {
-        return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/status`, {status});
+    updateStatus(id: number, status: AppointmentResponse['status'], reason?: string): Observable<SuccessResponse<AppointmentResponse>> {
+        return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/status`, {status, reason});
+    }
+
+    updateArrivalStatus(id: number, arrivalStatus: AppointmentArrivalStatus): Observable<SuccessResponse<AppointmentResponse>> {
+        return this.http.patch<SuccessResponse<AppointmentResponse>>(`${this.url}/${id}/arrival-status`, {arrivalStatus});
     }
 
     getAvailableSlots(dentistId: number, date: string, estimatedDurationMinutes: number): Observable<SuccessResponse<AvailableSlotResponse>> {

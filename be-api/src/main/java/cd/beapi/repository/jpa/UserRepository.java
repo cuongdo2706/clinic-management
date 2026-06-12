@@ -35,4 +35,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
                     AND u.isActive = TRUE
             """)
     Optional<User> findByUsernameWithRolePermissions(@Param("username") String username);
+
+    @EntityGraph(attributePaths = {"role"})
+    @Query("""
+            SELECT u FROM User u
+            WHERE u.id = :id
+            """)
+    Optional<User> findByIdWithRole(@Param("id") Long id);
 }

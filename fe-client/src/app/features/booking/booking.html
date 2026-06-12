@@ -1,0 +1,143 @@
+<section class="page">
+  <header class="page-head">
+    <div>
+      <p>Đặt lịch khám</p>
+      <h1>Chọn giờ khám phù hợp</h1>
+    </div>
+    <p-button
+      label="Lịch đã đặt"
+      icon="pi pi-calendar"
+      severity="secondary"
+      [outlined]="true"
+      routerLink="/appointments"
+    />
+  </header>
+
+  <div class="summary-row">
+    <p-card styleClass="summary-card">
+      <span>Bệnh nhân</span>
+      <strong>{{ profile()?.fullName || 'Tài khoản bệnh nhân' }}</strong>
+    </p-card>
+    <p-card styleClass="summary-card">
+      <span>Mã hồ sơ</span>
+      <strong>{{ profile()?.code || 'Đang tải' }}</strong>
+    </p-card>
+    <p-card styleClass="summary-card">
+      <span>Lịch sắp tới</span>
+      <strong>
+        {{
+          upcomingAppointment()?.appointmentDate
+            ? formatDateTime(upcomingAppointment()!.appointmentDate)
+            : 'Chưa có'
+        }}
+      </strong>
+    </p-card>
+  </div>
+
+  @if (message()) {
+    <p-message severity="success" [text]="message()" styleClass="page-message" />
+  }
+  @if (error()) {
+    <p-message severity="error" [text]="error()" styleClass="page-message" />
+  }
+
+  <p-card styleClass="booking-panel-card">
+    <section class="booking-panel">
+      <form class="booking-form" (ngSubmit)="bookAppointment()">
+      <div class="section-head">
+        <div>
+          <h2>Thông tin lịch khám</h2>
+          <span>Slot 15 phút, khung giờ trống được lấy theo lịch làm việc của bác sĩ</span>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          <span>Bác sĩ</span>
+          <p-select
+            name="dentistId"
+            [options]="dentistOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="booking.dentistId"
+            [filter]="true"
+            appendTo="body"
+            styleClass="w-full"
+            (ngModelChange)="onSlotContextChange()"
+          />
+        </label>
+
+        <label>
+          <span>Ngày khám</span>
+          <input
+            pInputText
+            name="date"
+            type="date"
+            [min]="tomorrow"
+            [(ngModel)]="booking.date"
+            (ngModelChange)="onSlotContextChange()"
+          />
+        </label>
+      </div>
+
+      <div class="slot-head">
+        <h3>Chọn giờ</h3>
+        <span>
+          @if (slotLoading()) {
+            <p-progress-spinner ariaLabel="Đang tải khung giờ" styleClass="tiny-spinner" />
+          } @else {
+            Còn {{ slots().length }} khung giờ trống
+          }
+        </span>
+      </div>
+
+      @if (!booking.dentistId || !booking.date) {
+        <p class="slot-hint">Chọn bác sĩ và ngày khám để kiểm tra lịch trống.</p>
+      }
+
+      <div class="slots">
+        @for (slot of slots(); track slot.time) {
+          <p-button
+            type="button"
+            [label]="slot.time"
+            [outlined]="booking.time !== slot.time"
+            [disabled]="!slot.available"
+            [title]="slot.reason || 'Có thể đặt'"
+            [styleClass]="slotButtonClass(slot)"
+            (onClick)="selectSlot(slot)"
+          />
+        } @empty {
+          <p class="empty">Chưa có khung giờ phù hợp.</p>
+        }
+      </div>
+
+      <label class="full">
+        <span>Lý do khám</span>
+        <textarea pTextarea name="symptom" [(ngModel)]="booking.symptom" rows="3" [autoResize]="true"></textarea>
+      </label>
+
+      <p-button
+        type="submit"
+        label="Xác nhận đặt lịch"
+        icon="pi pi-check"
+        [loading]="submitting()"
+        [disabled]="submitting()"
+        [fluid]="true"
+      />
+      </form>
+
+      <p-card header="Tóm tắt" styleClass="booking-summary">
+        <dl>
+          <dt>Bác sĩ</dt>
+          <dd>{{ selectedDentist()?.fullName || 'Chưa chọn' }}</dd>
+          <dt>Ngày giờ</dt>
+          <dd>{{ booking.date }} - {{ booking.time || '--:--' }}</dd>
+          <dt>Thời lượng</dt>
+          <dd>{{ consultationDurationMinutes }} phút</dd>
+          <dt>Trạng thái</dt>
+          <dd>Gửi yêu cầu chờ xác nhận</dd>
+        </dl>
+      </p-card>
+    </section>
+  </p-card>
+</section>

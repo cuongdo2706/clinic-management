@@ -1,5 +1,6 @@
 package cd.beapi.dto.response;
 
+import cd.beapi.enumerate.AppointmentArrivalStatus;
 import cd.beapi.enumerate.AppointmentStatus;
 
 import java.time.Instant;
@@ -15,6 +16,8 @@ public record AppointmentResponse(
         String symptom,
         String note,
         AppointmentStatus status,
+        AppointmentArrivalStatus arrivalStatus,
+        Integer queueNumber,
         Long version,
         Long patientId,
         String patientCode,

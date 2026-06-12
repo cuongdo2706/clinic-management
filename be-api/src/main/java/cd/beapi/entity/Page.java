@@ -1,6 +1,5 @@
 package cd.beapi.entity;
 
-import cd.beapi.enumerate.PageType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -17,9 +16,8 @@ public class Page {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Short id;
 
-    @Enumerated(EnumType.STRING)
     @Column(unique = true, nullable = false)
-    PageType code;
+    String code;
 
     String name;
 }

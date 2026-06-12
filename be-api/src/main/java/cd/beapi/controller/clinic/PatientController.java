@@ -4,6 +4,7 @@ import cd.beapi.dto.request.CreatePatientRequest;
 import cd.beapi.dto.request.SearchPatientRequest;
 import cd.beapi.dto.request.UpdatePatientRequest;
 import cd.beapi.dto.response.PageData;
+import cd.beapi.dto.response.PatientDetailResponse;
 import cd.beapi.dto.response.PatientResponse;
 import cd.beapi.dto.response.SuccessResponse;
 import cd.beapi.service.PatientService;
@@ -27,6 +28,11 @@ public class PatientController {
     @GetMapping("/{id}")
     public SuccessResponse<PatientResponse> findById(@PathVariable Long id) {
         return new SuccessResponse<>(HttpStatus.OK.value(), "Get data successfully", Instant.now(), patientService.findById(id));
+    }
+
+    @GetMapping("/{id}/detail")
+    public SuccessResponse<PatientDetailResponse> findDetail(@PathVariable Long id) {
+        return new SuccessResponse<>(HttpStatus.OK.value(), "Get data successfully", Instant.now(), patientService.findDetail(id));
     }
 
 //    @PreAuthorize("hasAnyAuthority('PATIENT:VIEW')")

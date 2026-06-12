@@ -8,12 +8,13 @@ import {CreatePatientRequest} from "../model/request/create-patient-request";
 import {UpdatePatientRequest} from "../model/request/update-patient-request";
 import {PageData} from "../model/response/page-data";
 import {SearchPatientRequest} from "../model/request/search-patient-request";
+import {PatientDetailResponse} from "../model/response/patient-detail-response";
 
 @Injectable({
     providedIn: 'root',
 })
 export class PatientService {
-    private readonly url = ENV.API_BASE_URL + "clinic/patients";
+    private readonly url = `${ENV.API_BASE_URL}/clinic/patients`;
     private readonly http = inject(HttpClient);
 
     search(searchPatientRequest: SearchPatientRequest): Observable<SuccessResponse<PageData<PatientResponse>>> {
@@ -22,6 +23,10 @@ export class PatientService {
 
     findById(id: string): Observable<SuccessResponse<PatientResponse>> {
         return this.http.get<SuccessResponse<PatientResponse>>(`${this.url}/${id}`);
+    }
+
+    findDetail(id: number): Observable<SuccessResponse<PatientDetailResponse>> {
+        return this.http.get<SuccessResponse<PatientDetailResponse>>(`${this.url}/${id}/detail`);
     }
 
     create(createPatientRequest: CreatePatientRequest): Observable<SuccessResponse<PatientResponse>> {

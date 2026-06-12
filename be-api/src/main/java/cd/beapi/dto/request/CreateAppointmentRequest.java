@@ -14,6 +14,7 @@ public class CreateAppointmentRequest {
     @NotNull(message = "Patient must not be null")
     Long patientId;
 
+    @NotNull(message = "Vui lòng chọn nha sĩ")
     Long dentistId;
 
     @NotNull(message = "Appointment date must not be null")

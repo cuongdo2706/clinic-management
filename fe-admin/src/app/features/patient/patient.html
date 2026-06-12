@@ -93,105 +93,199 @@
             <tr>
                 <td colspan="6" class="expanded-row-cell">
                     <div class="patient-detail-card">
-                        <p-tabs value="info">
-                            <p-tablist>
-                                <p-tab value="info">
-                                    <i class="pi pi-user mr-2"></i>Thông tin bệnh nhân
-                                </p-tab>
-                                <p-tab value="history">
-                                    <i class="pi pi-history mr-2"></i>Lịch sử khám
-                                </p-tab>
-                            </p-tablist>
-
-                            <p-tabpanels>
-                                <!-- TAB 1: Thông tin -->
-                                <p-tabpanel value="info">
-                                    <div class="patient-detail-body">
-                                        <div class="detail-group">
-                                            <div class="detail-group-title">Thông tin cá nhân</div>
-                                            <div class="detail-item">
-                                                <span class="detail-label"><i class="pi pi-id-card"></i> Mã bệnh nhân</span>
-                                                <span class="detail-value">{{ patient.code }}</span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-label"><i class="pi pi-user"></i> Họ và tên</span>
-                                                <span class="detail-value">{{ patient.fullName }}</span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-label"><i class="pi pi-phone"></i> Số điện thoại</span>
-                                                <span class="detail-value">{{ patient.phone }}</span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-label"><i class="pi pi-calendar"></i> Ngày sinh</span>
-                                                <span class="detail-value">{{ patient.dob | date: 'dd/MM/yyyy' }}</span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-label"><i class="pi pi-venus-mars"></i> Giới tính</span>
-                                                <span class="detail-value">
-                                                    <span class="badge" [class.badge-male]="patient.gender" [class.badge-female]="!patient.gender">
-                                                        {{ getGenderLabel(patient.gender) }}
-                                                    </span>
-                                                </span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-label"><i class="pi pi-map-marker"></i> Địa chỉ</span>
-                                                <span class="detail-value">{{ patient.address || '—' }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="detail-divider"></div>
-                                        <div class="detail-group">
-                                            <div class="detail-group-title">Người giám hộ</div>
-                                            <div class="detail-item">
-                                                <span class="detail-label"><i class="pi pi-users"></i> Họ và tên</span>
-                                                <span class="detail-value">{{ patient.guardianName || '—' }}</span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-label"><i class="pi pi-phone"></i> Số điện thoại</span>
-                                                <span class="detail-value">{{ patient.guardianPhone || '—' }}</span>
-                                            </div>
-                                            <div class="detail-divider-h"></div>
-                                            <div class="detail-group-title">Lịch sử hệ thống</div>
-                                            <div class="detail-item">
-                                                <span class="detail-label"><i class="pi pi-clock"></i> Ngày tạo</span>
-                                                <span class="detail-value">{{ patient.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
-                                            </div>
-                                            <div class="detail-item">
-                                                <span class="detail-label"><i class="pi pi-refresh"></i> Cập nhật lần cuối</span>
-                                                <span class="detail-value">{{ patient.modifiedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
-                                            </div>
-                                        </div>
+                        @if (isDetailLoading(patient.id)) {
+                            <div class="detail-loading">
+                                <p-progressSpinner strokeWidth="4" ariaLabel="loading"/>
+                                <span>Đang tải chi tiết bệnh nhân...</span>
+                            </div>
+                        } @else if (patientDetail(patient.id); as detail) {
+                            <div class="patient-overview">
+                                <div class="overview-main">
+                                    <span class="overview-code">{{ detail.patient.code }}</span>
+                                    <strong>{{ detail.patient.fullName }}</strong>
+                                    <p-tag [value]="getActiveLabel(detail.patient.isActive)"
+                                           [severity]="detail.patient.isActive === false ? 'danger' : 'success'"></p-tag>
+                                </div>
+                                <div class="overview-grid">
+                                    <div>
+                                        <span>Số điện thoại</span>
+                                        <strong>{{ detail.patient.phone || '—' }}</strong>
                                     </div>
-                                </p-tabpanel>
-
-                                <!-- TAB 2: Lịch sử khám -->
-                                <p-tabpanel value="history">
-                                    <div class="history-panel">
-                                        <table class="history-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Ngày khám</th>
-                                                    <th>Nha sĩ</th>
-                                                    <th>Dịch vụ</th>
-                                                    <th>Chẩn đoán</th>
-                                                    <th>Trạng thái</th>
-                                                    <th></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr class="history-empty">
-                                                    <td colspan="6">
-                                                        <div class="history-empty-content">
-                                                            <i class="pi pi-calendar-times"></i>
-                                                            <span>Chưa có lịch sử khám</span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                    <div>
+                                        <span>Email</span>
+                                        <strong>{{ detail.patient.email || '—' }}</strong>
                                     </div>
-                                </p-tabpanel>
-                            </p-tabpanels>
-                        </p-tabs>
+                                    <div>
+                                        <span>Giới tính</span>
+                                        <strong>{{ getGenderLabel(detail.patient.gender) }}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Ngày sinh</span>
+                                        <strong>{{ detail.patient.dob | date: 'dd/MM/yyyy' }}</strong>
+                                    </div>
+                                    <div class="overview-address">
+                                        <span>Địa chỉ</span>
+                                        <strong>{{ detail.patient.address || '—' }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p-tabs value="treatments">
+                                <p-tablist>
+                                    <p-tab value="treatments">
+                                        <i class="pi pi-clipboard mr-2"></i>Điều trị
+                                    </p-tab>
+                                    <p-tab value="prescriptions">
+                                        <i class="pi pi-file-edit mr-2"></i>Đơn thuốc
+                                    </p-tab>
+                                    <p-tab value="appointments">
+                                        <i class="pi pi-calendar mr-2"></i>Lịch hẹn
+                                    </p-tab>
+                                </p-tablist>
+
+                                <p-tabpanels>
+                                    <p-tabpanel value="treatments">
+                                        <div class="history-panel">
+                                            <table class="history-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Ngày điều trị</th>
+                                                        <th>Bác sĩ</th>
+                                                        <th>Chẩn đoán</th>
+                                                        <th>Ghi chú</th>
+                                                        <th>Trạng thái</th>
+                                                        <th>Thao tác</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if (detail.treatments.length) {
+                                                        @for (treatment of detail.treatments; track treatment.id) {
+                                                            <tr>
+                                                                <td>{{ treatment.treatmentDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+                                                                <td>{{ treatment.doctorName || '—' }}</td>
+                                                                <td>{{ treatment.diagnosis || '—' }}</td>
+                                                                <td>{{ treatment.note || '—' }}</td>
+                                                                <td>
+                                                                    <p-tag [value]="getTreatmentStatusLabel(treatment.status)"
+                                                                           [severity]="getTreatmentStatusSeverity(treatment.status)"></p-tag>
+                                                                </td>
+                                                                <td class="table-actions">
+                                                                    <p-button icon="pi pi-eye" [rounded]="true" [text]="true"
+                                                                              pTooltip="Xem chi tiết" tooltipPosition="top"
+                                                                              (onClick)="openTreatmentDetail(treatment)"></p-button>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    } @else {
+                                                        <tr class="history-empty">
+                                                            <td colspan="6">
+                                                                <div class="history-empty-content">
+                                                                    <i class="pi pi-clipboard"></i>
+                                                                    <span>Chưa có phiếu điều trị</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </p-tabpanel>
+
+                                    <p-tabpanel value="prescriptions">
+                                        <div class="history-panel">
+                                            <table class="history-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Ngày kê đơn</th>
+                                                        <th>Bác sĩ kê đơn</th>
+                                                        <th>Chẩn đoán liên quan</th>
+                                                        <th>Số loại thuốc</th>
+                                                        <th>Lời dặn</th>
+                                                        <th>Thao tác</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if (detail.prescriptions.length) {
+                                                        @for (prescription of detail.prescriptions; track prescription.id) {
+                                                            <tr>
+                                                                <td>{{ prescription.prescribedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                                                                <td>{{ prescription.doctor?.fullName || '—' }}</td>
+                                                                <td>{{ prescription.treatmentDiagnosis || '—' }}</td>
+                                                                <td>{{ prescription.itemCount }}</td>
+                                                                <td>{{ prescription.advice || '—' }}</td>
+                                                                <td class="table-actions">
+                                                                    <p-button icon="pi pi-eye" [rounded]="true" [text]="true"
+                                                                              pTooltip="Xem đơn thuốc" tooltipPosition="top"
+                                                                              (onClick)="openPrescriptionDetail(prescription)"></p-button>
+                                                                    <p-button icon="pi pi-print" [rounded]="true" [text]="true" severity="secondary"
+                                                                              pTooltip="In đơn thuốc" tooltipPosition="top"
+                                                                              (onClick)="printPrescription(prescription)"></p-button>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    } @else {
+                                                        <tr class="history-empty">
+                                                            <td colspan="6">
+                                                                <div class="history-empty-content">
+                                                                    <i class="pi pi-file-edit"></i>
+                                                                    <span>Chưa có đơn thuốc</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </p-tabpanel>
+
+                                    <p-tabpanel value="appointments">
+                                        <div class="history-panel">
+                                            <table class="history-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Ngày giờ hẹn</th>
+                                                        <th>Bác sĩ</th>
+                                                        <th>Dịch vụ khám</th>
+                                                        <th>Trạng thái</th>
+                                                        <th>Ghi chú</th>
+                                                        <th>Thao tác</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if (detail.appointments.length) {
+                                                        @for (appointment of detail.appointments; track appointment.id) {
+                                                            <tr>
+                                                                <td>{{ appointment.appointmentDate | date: 'dd/MM/yyyy HH:mm' }}</td>
+                                                                <td>{{ appointment.dentistName || '—' }}</td>
+                                                                <td>{{ appointment.symptom || '—' }}</td>
+                                                                <td>
+                                                                    <p-tag [value]="getAppointmentStatusLabel(appointment.status)"
+                                                                           [severity]="getAppointmentStatusSeverity(appointment.status)"></p-tag>
+                                                                </td>
+                                                                <td>{{ appointment.note || '—' }}</td>
+                                                                <td class="table-actions">
+                                                                    <p-button icon="pi pi-eye" [rounded]="true" [text]="true"
+                                                                              pTooltip="Xem lịch hẹn" tooltipPosition="top"></p-button>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    } @else {
+                                                        <tr class="history-empty">
+                                                            <td colspan="6">
+                                                                <div class="history-empty-content">
+                                                                    <i class="pi pi-calendar-times"></i>
+                                                                    <span>Chưa có lịch hẹn</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </p-tabpanel>
+                                </p-tabpanels>
+                            </p-tabs>
+                        }
                     </div>
                 </td>
             </tr>
@@ -231,6 +325,220 @@
         <app-patient-save-form
                 (saved)="onPatientSaved()"
                 (cancelled)="showAddDialog.set(false)"/>
+    }
+</p-dialog>
+
+<p-dialog
+        header="Chi tiết phiếu điều trị"
+        [visible]="showTreatmentDetailDialog()"
+        (visibleChange)="showTreatmentDetailDialog.set($event)"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{width: '940px'}"
+        class="treatment-detail-dialog">
+    @if (selectedTreatment(); as treatment) {
+        <div class="detail-dialog-body">
+            <div class="dialog-section">
+                <div class="section-title">Thông tin phiếu điều trị</div>
+                <div class="dialog-grid">
+                    <div>
+                        <span>Bệnh nhân</span>
+                        <strong>{{ treatment.patient?.fullName || '—' }}</strong>
+                    </div>
+                    <div>
+                        <span>Bác sĩ</span>
+                        <strong>{{ treatment.doctor?.fullName || '—' }}</strong>
+                    </div>
+                    <div>
+                        <span>Ngày điều trị</span>
+                        <strong>{{ treatment.treatmentDate | date: 'dd/MM/yyyy HH:mm' }}</strong>
+                    </div>
+                    <div>
+                        <span>Trạng thái</span>
+                        <p-tag [value]="getTreatmentStatusLabel(treatment.status)"
+                               [severity]="getTreatmentStatusSeverity(treatment.status)"></p-tag>
+                    </div>
+                </div>
+                <div class="long-text">
+                    <span>Chẩn đoán</span>
+                    <p>{{ treatment.diagnosis || '—' }}</p>
+                </div>
+                <div class="long-text">
+                    <span>Ghi chú</span>
+                    <p>{{ treatment.note || '—' }}</p>
+                </div>
+            </div>
+
+            <div class="dialog-section">
+                <div class="section-title">Danh sách dịch vụ</div>
+                @if (treatment.procedures.length) {
+                    <table class="dialog-table">
+                        <thead>
+                            <tr>
+                                <th>Tên dịch vụ</th>
+                                <th>Số lượng</th>
+                                <th>Đơn giá</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (procedure of treatment.procedures; track procedure.id) {
+                                <tr>
+                                    <td>{{ procedure.name || '—' }}</td>
+                                    <td>{{ procedure.quantity || 0 }}</td>
+                                    <td>{{ procedure.unitPrice || 0 }}</td>
+                                    <td>{{ procedure.note || '—' }}</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                } @else {
+                    <div class="dialog-empty">Chưa có dịch vụ trong phiếu điều trị</div>
+                }
+            </div>
+
+            <div class="dialog-section">
+                <div class="section-title-with-action">
+                    <span>Đơn thuốc</span>
+                    @if (treatment.prescription) {
+                        <p-button label="In đơn thuốc" icon="pi pi-print" size="small" severity="secondary"
+                                  (onClick)="printPrescription(treatment.prescription)"></p-button>
+                    }
+                </div>
+                @if (treatment.prescription) {
+                    <table class="dialog-table">
+                        <thead>
+                            <tr>
+                                <th>Mã thuốc</th>
+                                <th>Tên thuốc</th>
+                                <th>ĐVT</th>
+                                <th>Số lượng</th>
+                                <th>Liều dùng</th>
+                                <th>Tần suất</th>
+                                <th>Thời gian dùng</th>
+                                <th>Hướng dẫn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (treatment.prescription.items.length) {
+                                @for (item of treatment.prescription.items; track item.id) {
+                                    <tr>
+                                        <td>{{ item.medicineCode || '—' }}</td>
+                                        <td>{{ item.medicineName || '—' }}</td>
+                                        <td>{{ item.medicineUnit || '—' }}</td>
+                                        <td>{{ item.quantity || 0 }}</td>
+                                        <td>{{ item.dosage || '—' }}</td>
+                                        <td>{{ item.frequency || '—' }}</td>
+                                        <td>{{ item.duration || '—' }}</td>
+                                        <td>{{ item.instruction || '—' }}</td>
+                                    </tr>
+                                }
+                            } @else {
+                                <tr>
+                                    <td colspan="8" class="dialog-empty">Chưa có thuốc trong đơn</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <div class="long-text">
+                        <span>Lời dặn</span>
+                        <p>{{ treatment.prescription.advice || '—' }}</p>
+                    </div>
+                } @else {
+                    <div class="dialog-empty">Phiếu điều trị này chưa kê đơn thuốc</div>
+                }
+            </div>
+        </div>
+    }
+</p-dialog>
+
+<p-dialog
+        header="Chi tiết đơn thuốc"
+        [visible]="showPrescriptionDetailDialog()"
+        (visibleChange)="showPrescriptionDetailDialog.set($event)"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        [style]="{width: '860px'}"
+        class="prescription-detail-dialog">
+    @if (selectedPrescription(); as prescription) {
+        <div class="prescription-print-area">
+            <div class="dialog-section">
+                <div class="section-title-with-action">
+                    <span>Thông tin đơn thuốc</span>
+                    <p-button label="In" icon="pi pi-print" size="small" severity="secondary"
+                              (onClick)="printPrescription(prescription)"></p-button>
+                </div>
+                <div class="dialog-grid">
+                    <div>
+                        <span>Bệnh nhân</span>
+                        <strong>{{ prescription.patient?.fullName || '—' }}</strong>
+                    </div>
+                    <div>
+                        <span>Bác sĩ kê đơn</span>
+                        <strong>{{ prescription.doctor?.fullName || '—' }}</strong>
+                    </div>
+                    <div>
+                        <span>Ngày kê đơn</span>
+                        <strong>{{ prescription.prescribedAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
+                    </div>
+                    <div>
+                        <span>Ngày tái khám</span>
+                        <strong>{{ prescription.reExaminationDate | date: 'dd/MM/yyyy' }}</strong>
+                    </div>
+                </div>
+                <div class="long-text">
+                    <span>Chẩn đoán liên quan</span>
+                    <p>{{ prescription.treatmentDiagnosis || '—' }}</p>
+                </div>
+            </div>
+
+            <div class="dialog-section">
+                <div class="section-title">Danh sách thuốc</div>
+                <table class="dialog-table">
+                    <thead>
+                        <tr>
+                            <th>Tên thuốc</th>
+                            <th>Liều dùng</th>
+                            <th>Tần suất</th>
+                            <th>Thời gian dùng</th>
+                            <th>Số lượng</th>
+                            <th>Hướng dẫn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (prescription.items.length) {
+                            @for (item of prescription.items; track item.id) {
+                                <tr>
+                                    <td>{{ item.medicineName || '—' }}</td>
+                                    <td>{{ item.dosage || '—' }}</td>
+                                    <td>{{ item.frequency || '—' }}</td>
+                                    <td>{{ item.duration || '—' }}</td>
+                                    <td>{{ item.quantity || 0 }} {{ item.medicineUnit || '' }}</td>
+                                    <td>{{ item.instruction || '—' }}</td>
+                                </tr>
+                            }
+                        } @else {
+                            <tr>
+                                <td colspan="6" class="dialog-empty">Chưa có thuốc trong đơn</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="dialog-section">
+                <div class="long-text">
+                    <span>Lời dặn</span>
+                    <p>{{ prescription.advice || '—' }}</p>
+                </div>
+                <div class="long-text">
+                    <span>Ghi chú</span>
+                    <p>{{ prescription.note || '—' }}</p>
+                </div>
+            </div>
+        </div>
     }
 </p-dialog>
 

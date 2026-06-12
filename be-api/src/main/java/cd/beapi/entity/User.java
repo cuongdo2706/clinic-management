@@ -32,6 +32,16 @@ public class User extends BaseEntity {
     @Builder.Default
     Boolean isActive = true;
 
+    @Builder.Default
+    Boolean locked = false;
+
+    @Builder.Default
+    Boolean mustChangePassword = false;
+
+    Instant lastLoginAt;
+
+    Instant passwordChangedAt;
+
     Instant deletedAt;
 
     @CreatedDate

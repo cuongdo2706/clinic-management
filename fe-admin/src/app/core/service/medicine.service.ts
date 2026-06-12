@@ -13,7 +13,7 @@ import {UpdateMedicineRequest} from "../model/request/update-medicine-request";
     providedIn: 'root',
 })
 export class MedicineService {
-    private readonly url = ENV.API_BASE_URL + "clinic/medicines";
+    private readonly url = `${ENV.API_BASE_URL}/clinic/medicines`;
     private readonly http = inject(HttpClient);
 
     search(searchMedicineRequest: SearchMedicineRequest): Observable<SuccessResponse<PageData<MedicineResponse>>> {

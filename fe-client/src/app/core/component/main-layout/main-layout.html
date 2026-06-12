@@ -1,0 +1,18 @@
+<div class="layout-wrapper">
+  <app-navbar></app-navbar>
+  <div class="layout-body">
+    <main class="layout-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <app-footer></app-footer>
+
+  @if (showLoginModal()) {
+    <app-login [returnUrl]="loginReturnUrl()" (closed)="closeLoginModal()"></app-login>
+  }
+
+  @if (showRegisterModal()) {
+    <app-register (closed)="closeRegisterModal()"></app-register>
+  }
+</div>

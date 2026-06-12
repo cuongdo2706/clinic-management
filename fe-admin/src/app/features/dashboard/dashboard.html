@@ -1,6 +1,9 @@
 <div class="page-header">
     <h2>Tổng quan</h2>
     <span class="page-subtitle">Chào mừng bạn quay trở lại!</span>
+    @if (error()) {
+        <div class="dashboard-error">{{ error() }}</div>
+    }
 </div>
 
 <!-- Stat Cards -->
@@ -21,7 +24,17 @@
 <!-- Charts -->
 <div class="chart-grid">
     <div class="chart-card">
-        <h3>Lịch hẹn theo tháng</h3>
+        <div class="chart-card-header">
+            <h3>{{ appointmentChartTitle() }}</h3>
+            <p-select
+                    [options]="appointmentChartModeOptions"
+                    [ngModel]="appointmentChartMode()"
+                    (ngModelChange)="onAppointmentChartModeChange($event)"
+                    optionLabel="label"
+                    optionValue="value"
+                    size="small">
+            </p-select>
+        </div>
         <div class="chart-wrapper">
             <canvas #barCanvas></canvas>
         </div>

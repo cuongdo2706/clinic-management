@@ -15,13 +15,14 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
     @Query("""
             SELECT r FROM Role r
+            WHERE r.code <> 'PATIENT'
             ORDER BY r.name
             """)
     List<Role> findAllRolesForSecurity();
 
     @Query("""
             SELECT r FROM Role r
-            WHERE r.code <> 'ADMIN'
+            WHERE r.code NOT IN ('ADMIN', 'PATIENT')
             ORDER BY r.name
             """)
     List<Role> findAllRolesExceptAdmin();

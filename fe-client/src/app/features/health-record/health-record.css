@@ -1,0 +1,219 @@
+:host {
+  display: block;
+}
+
+.page {
+  padding: 28px clamp(18px, 4vw, 46px) 46px;
+}
+
+h1,
+p {
+  margin: 0;
+}
+
+.page-head,
+.actions,
+.record-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.page-head p {
+  color: #0f766e;
+  font-weight: 850;
+}
+
+.page-head h1 {
+  margin-top: 6px;
+  color: #102421;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+}
+
+.page-message,
+.panel-card {
+  margin-top: 18px;
+}
+
+:host ::ng-deep .panel-card {
+  border: 1px solid #d8ebe4;
+  box-shadow: 0 16px 38px rgb(13 96 84 / 0.07);
+}
+
+:host ::ng-deep .panel-card > .p-card-body {
+  padding: clamp(18px, 3vw, 28px);
+}
+
+:host ::ng-deep .panel-card > .p-card-body > .p-card-content {
+  padding: 0;
+}
+
+.record-list {
+  display: grid;
+  gap: 14px;
+}
+
+:host ::ng-deep .record-card .p-card-content {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+}
+
+:host ::ng-deep .record-card .p-card-body {
+  padding: 18px;
+}
+
+.record-card header div {
+  display: grid;
+  gap: 5px;
+}
+
+.record-card header span,
+.record-card header small {
+  color: #667d79;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.content-grid p {
+  color: #31514d;
+  line-height: 1.55;
+}
+
+.record-section {
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid #edf5f2;
+}
+
+.section-title,
+.section-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.section-title > span {
+  color: #102421;
+  font-weight: 850;
+}
+
+.line-list {
+  display: grid;
+  gap: 8px;
+}
+
+.line-item {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 70px 120px minmax(160px, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #e2eee9;
+  border-radius: 8px;
+  background: #f8fdfa;
+  padding: 10px 12px;
+}
+
+.line-item strong,
+.medicine-row strong {
+  color: #102421;
+}
+
+.line-item span,
+.line-item small,
+.prescription-meta,
+.medicine-row span {
+  color: #5d746f;
+}
+
+.prescription-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+.medicine-table {
+  overflow-x: auto;
+  border: 1px solid #e2eee9;
+  border-radius: 8px;
+}
+
+.medicine-head,
+.medicine-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.2fr) minmax(90px, 0.8fr) minmax(100px, 0.8fr) minmax(100px, 0.8fr) 60px minmax(160px, 1.2fr);
+  gap: 12px;
+  min-width: 820px;
+  align-items: center;
+  padding: 10px 12px;
+}
+
+.medicine-head {
+  background: #eef8f4;
+  color: #31514d;
+  font-weight: 850;
+}
+
+.medicine-row + .medicine-row {
+  border-top: 1px solid #edf5f2;
+}
+
+.sub-empty {
+  border: 1px dashed #c7ded6;
+  border-radius: 8px;
+  color: #667d79;
+  margin: 0;
+  padding: 12px;
+}
+
+.empty {
+  border: 1px dashed #c7ded6;
+  border-radius: 8px;
+  color: #667d79;
+  padding: 18px;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #667d79;
+}
+
+:host ::ng-deep .small-spinner {
+  width: 24px;
+  height: 24px;
+}
+
+@media (max-width: 760px) {
+  .page-head,
+  .actions,
+  .record-card header,
+  .section-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .line-item {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .page-head .actions,
+  .footer,
+  .navbar {
+    display: none !important;
+  }
+}

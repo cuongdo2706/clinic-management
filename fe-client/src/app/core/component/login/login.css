@@ -1,0 +1,31 @@
+:host {
+  color: #132522;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.login-form {
+  display: grid;
+  gap: 18px;
+  padding-top: 4px;
+}
+
+.login-subtitle {
+  margin: 0;
+  color: #607773;
+  line-height: 1.5;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  color: #31514d;
+  font-weight: 800;
+}
+
+input {
+  width: 100%;
+}
+
+p-inputicon {
+  cursor: pointer;
+}

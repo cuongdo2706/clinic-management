@@ -10,7 +10,7 @@ import {UpdatePermissionRequest} from "../model/request/update-permission-reques
     providedIn: 'root',
 })
 export class PermissionService {
-    private readonly url = ENV.API_BASE_URL + "clinic/permissions";
+    private readonly url = `${ENV.API_BASE_URL}/clinic/permissions`;
     private readonly http = inject(HttpClient);
 
 

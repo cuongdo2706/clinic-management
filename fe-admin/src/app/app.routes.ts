@@ -10,8 +10,10 @@ import {Patient} from "./features/patient/patient";
 import {Medicine} from "./features/medicine/medicine";
 import {Staff} from "./features/staff/staff";
 import {Permission} from "./features/permission/permission";
-import {Treatment} from "./features/treatment/treatment";
-import {Invoice} from "./features/invoice/invoice";
+import {Procedure} from "./features/procedure/procedure";
+import {roleGuard} from "./core/guard/role-guard";
+import {Examination} from "./features/examination/examination";
+import {Accounts} from "./features/accounts/accounts";
 
 export const routes: Routes = [
     {
@@ -46,14 +48,21 @@ export const routes: Routes = [
                 component: Appointment,
             },
             {
+                path: "examinations",
+                title: "Khám bệnh",
+                component: Examination,
+                canActivate: [roleGuard],
+                data: {roles: ['DENTIST']},
+            },
+            {
                 path: "patients",
                 title: "Bệnh nhân",
                 component: Patient,
             },
             {
-                path: "treatments",
+                path: "procedures",
                 title: "Dịch vụ",
-                component: Treatment,
+                component: Procedure,
             },
             {
                 path: "medicines",
@@ -64,11 +73,15 @@ export const routes: Routes = [
                 path: "permissions",
                 title: "Phân quyền",
                 component: Permission,
+                canActivate: [roleGuard],
+                data: {roles: ['ADMIN']},
             },
             {
-                path: "invoices",
-                title: "Hoá đơn",
-                component: Invoice
+                path: "accounts",
+                title: "Tài khoản",
+                component: Accounts,
+                canActivate: [roleGuard],
+                data: {roles: ['ADMIN']},
             }
         ]
     },

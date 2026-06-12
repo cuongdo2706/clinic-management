@@ -211,7 +211,7 @@ export class Staff implements OnInit {
     getAvatarUrl(avatarUrl: string | null | undefined): string {
         if (!avatarUrl) return ENV.BASE_IMAGE;
         if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) return avatarUrl;
-        return `${ENV.API_BASE_URL}images/${avatarUrl.replace(/^\/+/, '')}`;
+        return `${ENV.API_BASE_URL}/images/${avatarUrl.replace(/^\/+/, '')}`;
     }
 
     onImageError(event: Event): void {

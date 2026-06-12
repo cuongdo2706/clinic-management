@@ -2,12 +2,16 @@ package cd.beapi.service.impl;
 
 import cd.beapi.dto.request.CreateStaffRequest;
 import cd.beapi.dto.request.SearchStaffRequest;
+import cd.beapi.dto.request.StaffWorkingScheduleRequest;
 import cd.beapi.dto.request.UpdateStaffRequest;
 import cd.beapi.dto.request.UpdateStaffStatusRequest;
 import cd.beapi.dto.response.PageData;
+import cd.beapi.dto.response.PublicDentistResponse;
 import cd.beapi.dto.response.StaffResponse;
 import cd.beapi.entity.QStaff;
 import cd.beapi.entity.Staff;
+import cd.beapi.entity.StaffWorkingSchedule;
+import cd.beapi.enumerate.StaffType;
 import cd.beapi.exception.AppException;
 import cd.beapi.mapper.StaffMapper;
 import cd.beapi.repository.jpa.StaffRepository;
@@ -29,10 +33,20 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class StaffServiceImpl implements StaffService {
     private static final String STAFF_FOLDER_NAME = "staff";
+    private static final int SLOT_MINUTES = 30;
+    private static final LocalTime DEFAULT_WORK_START = LocalTime.of(8, 30);
+    private static final LocalTime DEFAULT_WORK_END = LocalTime.of(20, 0);
 
     private final StaffRepository staffRepository;
     private final StaffMapper staffMapper;
@@ -88,6 +102,31 @@ public class StaffServiceImpl implements StaffService {
 
     @Transactional(readOnly = true)
     @Override
+    public List<PublicDentistResponse> findDentistOptions() {
+        return staffRepository.findActiveByStaffType(StaffType.DENTIST).stream()
+                .map(staff -> new PublicDentistResponse(
+                        staff.getId(),
+                        staff.getCode(),
+                        staff.getFullName(),
+                        staff.getAvatarUrl()
+                ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public StaffResponse findCurrentDentist(String username) {
+        Staff staff = staffRepository.findByUsername(username).orElseThrow(
+                () -> new AppException("Không tìm thấy nha sĩ ứng với tài khoản hiện tại", HttpStatus.BAD_REQUEST)
+        );
+        if (staff.getStaffType() != StaffType.DENTIST || !Boolean.TRUE.equals(staff.getIsActive())) {
+            throw new AppException("Tài khoản hiện tại không phải nha sĩ đang hoạt động", HttpStatus.BAD_REQUEST);
+        }
+        return staffMapper.toStaffResponse(staff);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public StaffResponse findById(Long id) {
         return staffMapper.toStaffResponse(
                 staffRepository.findById(id).orElseThrow(
@@ -121,6 +160,7 @@ public class StaffServiceImpl implements StaffService {
         if (file != null && !file.isEmpty()) {
             newStaff.setAvatarUrl(imageService.upload(file, STAFF_FOLDER_NAME));
         }
+        replaceWorkingSchedules(newStaff, createStaffRequest.getWorkingSchedules());
         UserService.CreatedStaffUser createdUser = null;
         if (StringUtils.hasText(createStaffRequest.getRoleCode())) {
             createdUser = userService.createStaffUser(
@@ -153,6 +193,7 @@ public class StaffServiceImpl implements StaffService {
                 response.modifiedAt(),
                 response.userId(),
                 response.username(),
+                response.workingSchedules(),
                 temporaryPassword
         );
     }
@@ -179,6 +220,7 @@ public class StaffServiceImpl implements StaffService {
         existedStaff.setAddress(updateStaffRequest.getAddress());
         existedStaff.setStaffType(updateStaffRequest.getStaffType());
         existedStaff.setVersion(updateStaffRequest.getVersion());
+        replaceWorkingSchedules(existedStaff, updateStaffRequest.getWorkingSchedules());
         if (file != null && !file.isEmpty()) {
             existedStaff.setAvatarUrl(imageService.update(file, oldAvatarUrl, STAFF_FOLDER_NAME));
         }
@@ -198,5 +240,78 @@ public class StaffServiceImpl implements StaffService {
         }
 
         return staffMapper.toStaffResponse(staffRepository.save(existedStaff));
+    }
+
+    private void replaceWorkingSchedules(Staff staff, List<StaffWorkingScheduleRequest> requests) {
+        if (staff.getWorkingSchedules() == null) {
+            staff.setWorkingSchedules(new java.util.ArrayList<>());
+        }
+
+        Map<DayOfWeek, StaffWorkingSchedule> existingScheduleByDay = staff.getWorkingSchedules().stream()
+                .filter(schedule -> schedule.getDayOfWeek() != null)
+                .collect(Collectors.toMap(StaffWorkingSchedule::getDayOfWeek, Function.identity(), (first, second) -> first));
+        Map<DayOfWeek, StaffWorkingSchedule> normalizedScheduleByDay = normalizeWorkingSchedules(requests).stream()
+                .collect(Collectors.toMap(StaffWorkingSchedule::getDayOfWeek, Function.identity()));
+
+        staff.getWorkingSchedules().removeIf(schedule -> !normalizedScheduleByDay.containsKey(schedule.getDayOfWeek()));
+        normalizedScheduleByDay.forEach((dayOfWeek, normalizedSchedule) -> {
+            StaffWorkingSchedule existingSchedule = existingScheduleByDay.get(dayOfWeek);
+            if (existingSchedule == null) {
+                normalizedSchedule.setStaff(staff);
+                staff.getWorkingSchedules().add(normalizedSchedule);
+                return;
+            }
+            existingSchedule.setWorking(normalizedSchedule.getWorking());
+            existingSchedule.setStartTime(normalizedSchedule.getStartTime());
+            existingSchedule.setEndTime(normalizedSchedule.getEndTime());
+        });
+    }
+
+    private List<StaffWorkingSchedule> normalizeWorkingSchedules(List<StaffWorkingScheduleRequest> requests) {
+        Map<DayOfWeek, StaffWorkingScheduleRequest> requestByDay = requests == null
+                ? Map.of()
+                : requests.stream()
+                .filter(request -> request.getDayOfWeek() != null)
+                .collect(Collectors.toMap(StaffWorkingScheduleRequest::getDayOfWeek, Function.identity(), (first, second) -> second));
+
+        return List.of(DayOfWeek.values()).stream()
+                .map(dayOfWeek -> toWorkingSchedule(dayOfWeek, requestByDay.get(dayOfWeek)))
+                .toList();
+    }
+
+    private StaffWorkingSchedule toWorkingSchedule(DayOfWeek dayOfWeek, StaffWorkingScheduleRequest request) {
+        boolean working = request == null || request.getWorking() == null || request.getWorking();
+        LocalTime startTime = request == null || request.getStartTime() == null ? DEFAULT_WORK_START : request.getStartTime();
+        LocalTime endTime = request == null || request.getEndTime() == null ? DEFAULT_WORK_END : request.getEndTime();
+        validateWorkingSchedule(dayOfWeek, working, startTime, endTime);
+
+        return StaffWorkingSchedule.builder()
+                .dayOfWeek(dayOfWeek)
+                .working(working)
+                .startTime(startTime)
+                .endTime(endTime)
+                .build();
+    }
+
+    private void validateWorkingSchedule(DayOfWeek dayOfWeek, boolean working, LocalTime startTime, LocalTime endTime) {
+        if (!working) {
+            return;
+        }
+        if (!startTime.isBefore(endTime)) {
+            throw new AppException("Giờ bắt đầu phải nhỏ hơn giờ kết thúc trong lịch làm việc " + dayOfWeek, HttpStatus.BAD_REQUEST);
+        }
+        if (startTime.isBefore(DEFAULT_WORK_START) || endTime.isAfter(DEFAULT_WORK_END)) {
+            throw new AppException("Giờ làm việc phải trong khoảng 08:30 đến 20:00", HttpStatus.BAD_REQUEST);
+        }
+        if (!isSlotAligned(startTime) || !isSlotAligned(endTime)) {
+            throw new AppException("Giờ làm việc phải theo mốc 30 phút", HttpStatus.BAD_REQUEST);
+        }
+        if (startTime.plusMinutes(SLOT_MINUTES).isAfter(endTime)) {
+            throw new AppException("Giờ bắt đầu và giờ kết thúc phải cách nhau ít nhất 30 phút", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private boolean isSlotAligned(LocalTime time) {
+        return time.getMinute() % SLOT_MINUTES == 0 && time.getSecond() == 0 && time.getNano() == 0;
     }
 }

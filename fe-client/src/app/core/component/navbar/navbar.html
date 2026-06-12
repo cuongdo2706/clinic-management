@@ -1,0 +1,30 @@
+<header class="navbar">
+  <a class="brand" routerLink="/">
+    <img src="/mcsmile.png" alt="MC Smiles" />
+    <span>MC Smiles</span>
+  </a>
+
+  <div class="nav-actions">
+    @if (isLoggedIn()) {
+      <p-menu #userMenu [model]="userMenuItems" [popup]="true" />
+      <p-button
+        icon="pi pi-user"
+        severity="secondary"
+        [outlined]="true"
+        [rounded]="true"
+        ariaLabel="Tài khoản"
+        (onClick)="userMenu.toggle($event)"
+      />
+    } @else {
+      <p-button
+        label="Đăng ký"
+        icon="pi pi-user-plus"
+        severity="secondary"
+        [outlined]="true"
+        routerLink="/"
+        [queryParams]="{ register: 'true' }"
+      />
+      <p-button label="Đăng nhập" icon="pi pi-user" routerLink="/" [queryParams]="{ login: 'true' }" />
+    }
+  </div>
+</header>
